@@ -1,3 +1,7 @@
+project('semba', 'c', default_options : 'warning_level=3')
+
+fs = import('fs')
+
 nim = find_program('nim', required : true)
 sqlite3_c = fs.copyfile('sqlite3.c')
 
