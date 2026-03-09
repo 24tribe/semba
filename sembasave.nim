@@ -347,6 +347,8 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   db.exec(sql"DELETE FROM missions")
   # load missions from savefile
 
+  db.exec(sql"UPDATE userData SET val = 'false' WHERE keyName = 'firstLogin'")
+
   db.exec(sql"COMMIT")
 
   db.exec(sql"BEGIN")

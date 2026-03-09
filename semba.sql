@@ -43434,6 +43434,8 @@ VALUES
 ,("freeGems", '9999999')
 ,("paidGems", '9999999')
 ,("nextEntityId", '10000')
+,("firstLogin", "true")
+,("skipTutorial", "true")
 ;
 
 INSERT INTO areaBgm (areaId, id, eventName) VALUES
