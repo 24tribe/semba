@@ -1,3 +1,5 @@
+// needed for a bug in meson test with custom targets
+
 #include <stdlib.h>
 #include <stdio.h>
 
