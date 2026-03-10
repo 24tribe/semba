@@ -7,8 +7,6 @@ sqlite3_c = fs.copyfile('sqlite3.c')
 
 sqlite3 = executable('sqlite3', 'shell.c', 'sqlite3.c')
 
-semba_extra = static_library('semba_extra', 'NimInit.c')
-
 semba_core_files = [
     'sembacore.nim',
     'sembademo.nim',
@@ -41,14 +39,22 @@ semba_db = custom_target(
     install_dir : '.'
 )
 
+if get_option('default_library') == 'static'
+    semba_output = 'libsemba.a'
+    app_arg = '--app:staticlib'
+else
+    semba_output = 'libsemba.dll'
+    app_arg = '--app:lib'
+endif
+
 libsemba = custom_target(
     'libsemba',
     depends : [sqlite3_c],
     depend_files : semba_core_files,
     input : ['semba.nim'],
-    output : 'libsemba.a',
+    output : semba_output,
     command : [
-        nim, 'c', '-d:staticSqlite', '--app:staticlib', '--noMain:on', nim_release_args,
+        nim, 'c', '-d:staticSqlite', app_arg, '--noMain:on', nim_release_args,
         '-o:@OUTPUT@', '@INPUT@'
     ],
     build_by_default : true
@@ -92,6 +98,6 @@ test('test semba', test_wrapper, args: test_semba)
 endif
 
 semba_dep = declare_dependency(
-    link_with : [libsemba, semba_extra],
+    link_with : libsemba,
     include_directories : include_directories('.')
 )

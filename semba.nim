@@ -6,6 +6,8 @@ import db_connector/db_sqlite
 
 import sembacore
 
+{.compile("NimInit.c", "-O3").}
+
 type SembaContext = object
   db: DbConn
   remoteUrl: string
