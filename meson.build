@@ -18,10 +18,10 @@ semba_core_files = [
     'sembasave.nim',
 ]
 
+nim_release_args = ['--passL:-static']
+
 if get_option('buildtype') == 'release'
-    nim_release_args = ['-d:release']
-else
-    nim_release_args = []
+    nim_release_args += ['-d:release']
 endif
 
 if build_machine.system() != 'windows'
