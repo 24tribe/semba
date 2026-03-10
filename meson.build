@@ -53,6 +53,8 @@ libsemba = custom_target(
     ]
 )
 
+if get_option('build_semba_server')
+
 sembaserver = custom_target(
     'sembaserver',
     depends : [sqlite3_c, semba_db],
@@ -65,6 +67,10 @@ sembaserver = custom_target(
     ],
     build_by_default : true
 )
+
+endif
+
+if get_option('build_tests')
 
 test_semba = custom_target(
     depends : [sqlite3_c, semba_db],
