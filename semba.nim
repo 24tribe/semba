@@ -20,10 +20,10 @@ proc dupString(str: string): cstring =
   result = cast[cstring](c_malloc((s.len + 1).csize_t))
   copyMem(result, s, s.len + 1)
 
-proc SembaInitOfflineDb*(path: cstring) {.exportc.} = 
+proc SembaInitOfflineDb*(path: cstring) {.exportc, dynlib.} = 
   ctx.db = open($path, "", "", "")
 
-proc SembaSetRemoteUrl(remUrl: cstring) {.exportc.} =
+proc SembaSetRemoteUrl(remUrl: cstring) {.exportc, dynlib.} =
   ctx.remoteUrl = $remUrl
 
 proc sembaCallRemote(uri: string, request: string, version: GameVersion, remoteUrl: string): string =
@@ -40,7 +40,7 @@ proc sembaCallUnsafe*(uri: string, request: string, version: GameVersion): strin
 
   return sembaCallImpl(uri, request, version, ctx.db, ctx.lastBattleInfo)
 
-proc SembaCallDemo(uri: cstring, request: cstring): cstring {.exportc.} =
+proc SembaCallDemo(uri: cstring, request: cstring): cstring {.exportc, dynlib.} =
   try:
     let res = sembaCallUnsafe($uri, $request, gvDemo)
     result = if res != "": dupString(res) else: nil
@@ -50,7 +50,7 @@ proc SembaCallDemo(uri: cstring, request: cstring): cstring {.exportc.} =
     echo e.getStackTrace()
     result = nil
 
-proc SembaCall(uri: cstring, request: cstring): cstring {.exportc.} =
+proc SembaCall(uri: cstring, request: cstring): cstring {.exportc, dynlib.} =
   try:
     let res = sembaCallUnsafe($uri, $request, gvStable)
     result = if res != "": dupString(res) else: nil
