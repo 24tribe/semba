@@ -82,9 +82,9 @@ test_wrapper = executable('test_wrapper', 'test_wrapper.c')
 
 test('test semba', test_wrapper, args: test_semba)
 
+endif
+
 semba_dep = declare_dependency(
     link_with : [libsemba, semba_extra],
     include_directories : include_directories('.')
 )
-
-executable('semba', 'semba.c', dependencies : [semba_dep])
