@@ -50,7 +50,8 @@ libsemba = custom_target(
     command : [
         nim, 'c', '-d:staticSqlite', '--app:staticlib', '--noMain:on', nim_release_args,
         '-o:@OUTPUT@', '@INPUT@'
-    ]
+    ],
+    build_by_default : true
 )
 
 if get_option('build_semba_server')
