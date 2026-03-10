@@ -1,4 +1,4 @@
-project('semba', 'c', default_options : 'warning_level=3')
+project('semba', 'c', default_options : 'warning_level=3', meson_version : '>=1.4.0')
 
 fs = import('fs')
 
