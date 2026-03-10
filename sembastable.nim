@@ -4380,7 +4380,7 @@ proc getJsonResultStable*(
   db: DbConn, lastBattleInfo: var Option[BattleInfo]
 ): JsonNode =
   if uri == "/auth/steam_user":
-    result = %*{"userId": "696969696969"}
+    result = %*{"userId": 696969696969}
   elif uri == "/auth/nonce":
     result = %*{"nonce": "6969696969696969"}
   elif uri == "/auth/sign_in":
