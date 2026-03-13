@@ -21,13 +21,17 @@ semba_core_files = [
     'sembasave.nim',
 ]
 
-nim_release_args = ['--passL:-static']
+nim_release_args = []
+
+if get_option('default_library') == 'static'
+    nim_release_args += ['--passL:-static']
+endif
 
 if get_option('buildtype') == 'release'
     nim_release_args += ['-d:release']
 endif
 
-if build_machine.system() != 'windows'
+if build_machine.system() != 'windows' and host_machine.system() == 'windows'
     nim_release_args += ['-d:mingw']
 endif
 
