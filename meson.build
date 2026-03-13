@@ -23,7 +23,8 @@ semba_core_files = [
 
 nim_release_args = []
 
-if get_option('default_library') == 'static'
+# always static link libc with windows (to avoid shipping mingw dlls)
+if host_machine.system() == 'windows'
     nim_release_args += ['--passL:-static']
 endif
 
@@ -50,7 +51,11 @@ if get_option('default_library') == 'static'
     semba_output = 'libsemba.a'
     app_arg = '--app:staticlib'
 else
-    semba_output = 'libsemba.dll'
+    if host_machine.system() == 'windows'
+        semba_output = 'libsemba.dll'
+    else
+        semba_output = 'libsemba.so'
+    endif
     app_arg = '--app:lib'
 endif
 
