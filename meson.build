@@ -5,7 +5,10 @@ fs = import('fs')
 nim = find_program('nim', required : true)
 sqlite3_c = fs.copyfile('sqlite3.c')
 
-sqlite3 = executable('sqlite3', 'shell.c', 'sqlite3.c')
+cc = meson.get_compiler('c')
+m_dep = cc.find_library('m', required : false)
+
+sqlite3 = executable('sqlite3', 'shell.c', 'sqlite3.c', dependencies : m_dep)
 
 semba_core_files = [
     'sembacore.nim',
