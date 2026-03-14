@@ -1,0 +1,1 @@
+type SembaError* = object of CatchableError

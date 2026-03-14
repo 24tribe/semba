@@ -5,6 +5,7 @@ import system/ansi_c
 import db_connector/db_sqlite
 
 import sembacore
+import model_stable/battle
 
 {.compile("NimInit.c", "-O3").}
 

@@ -1,0 +1,27 @@
+import std/json
+import std/strutils
+
+import ../db_connector/db_sqlite
+
+
+proc addCity*(db: DbConn, city: JsonNode) =
+  let cityId = city["cityId"].getInt()
+  let isGearShopReleased = city.getOrDefault("isGearShopReleased").getBool()
+  let releasedAt = city["releasedAt"].getStr()
+  db.exec(sql"""
+    INSERT INTO cities (cityId, isGearShopReleased, releasedAt)
+    VALUES (?, ?, ?)
+    ON CONFLICT (cityId) DO UPDATE SET isGearShopReleased = excluded.isGearShopReleased
+  """, cityId, isGearShopReleased, releasedAt)
+
+
+proc getCities*(db: DbConn): seq[JsonNode] =
+  for row in db.getAllRows(sql"SELECT cityId, isGearShopReleased, releasedAt FROM cities"):
+    let cityId = parseInt(row[0])
+    let isGearShopReleased = row[1] == "true"
+    let releasedAt = row[2]
+    result.add(%*{
+      "cityId": cityId,
+      "isGearShopReleased": isGearShopReleased,
+      "releasedAt": releasedAt
+    })

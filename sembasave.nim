@@ -27,7 +27,29 @@ import std/paths
 
 import db_connector/db_sqlite
 
-import sembastable
+import model_stable/adventure_variable
+import model_stable/area
+import model_stable/area_change_lock
+import model_stable/area_group
+import model_stable/area_object
+import model_stable/challenge
+import model_stable/challenge_progress
+import model_stable/challenge_task
+import model_stable/character
+import model_stable/city
+import model_stable/dungeon
+import model_stable/formation
+import model_stable/item
+import model_stable/lux_phantasma
+import model_stable/magic_orb
+import model_stable/nine_sequence
+import model_stable/tension_card
+import model_stable/tip
+import model_stable/total_task
+import model_stable/tutorial_state
+import model_stable/user
+import model_stable/warp_point
+
 
 proc resetAreaObjects*(db: DbConn) =
   db.exec(sql"DELETE FROM areaObjects")

@@ -7,6 +7,8 @@ import db_connector/db_sqlite
 import sembastable
 import sembademo
 import sembaprivate
+import model_stable/timestamp
+import model_stable/battle
 
 export sembastable
 

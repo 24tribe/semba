@@ -4,7 +4,10 @@ FIXME: most functions in this file shouldn't depend on the stable version ones
 
 import std/json
 
-import sembastable
+import model_stable/character
+import model_stable/user
+import api_stable/user
+import api_stable/tip
 
 import db_connector/db_sqlite
 

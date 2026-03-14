@@ -6,6 +6,13 @@ import std/json
 import db_connector/db_sqlite
 import sembacore
 import sembaprivate
+import model_stable/adventure_variable
+import model_stable/area_object
+import model_stable/battle
+import model_stable/challenge_progress
+import model_stable/challenge_task
+import model_stable/nine_sequence
+import model_stable/timestamp
 
 
 type SembaCtx = object

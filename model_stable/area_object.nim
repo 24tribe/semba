@@ -1,0 +1,232 @@
+import std/json
+import std/strutils
+import std/options
+
+import ../db_connector/db_sqlite
+
+import ../util
+
+
+type AreaObjectBehaviorConditionType* = enum
+  areaObjectConditionTypeStartedChallengeProgress = 1
+  areaObjectConditionTypeClearedChallengeProgress = 2
+  areaObjectConditionTypeClearedChallengeTask = 3
+
+type AreaObjectAction* = object
+  `type`*: int
+  id*: int
+  label*: Option[string]
+  areaItemId*: Option[int]
+  areaEnemyId*: Option[int]
+  battleEntryId*: Option[int]
+  sequenceId*: Option[int]
+  graffitiArtId*: Option[int]
+  warpPointId*: Option[int]
+  fieldBossId*: Option[int]
+  dungeonId*: Option[int]
+  eventLiftId*: Option[int]
+
+type AreaObject* = object
+  areaObjectId*: Option[int]
+  areaPointId*: int
+  areaObjectBehaviorId*: Option[int]
+  areaEnemyRateSetId*: Option[int]
+  action*: Option[AreaObjectAction]
+
+
+proc getAreaObjects*(db: DbConn): seq[JsonNode] =
+  let rows = db.getAllRows(sql"""
+    SELECT areaId, areaObjectId, areaPointId, areaObjectBehaviorId, action
+    FROM areaObjects
+  """)
+
+  for row in rows:
+    let areaId = parseInt(row[0])
+    let areaObjectId = parseInt(row[1])
+    let areaPointId = parseInt(row[2])
+    let areaObjectBehaviorId = parseInt(row[3])
+    var action: JsonNode = nil
+
+    if row[4] != "":
+      action = parseJson(row[4])
+
+    let areaObject = %*{
+      "areaId": areaId,
+      "areaObjectId": areaObjectId,
+      "areaPointId": areaPointId,
+      "areaObjectBehaviorId": areaObjectBehaviorId,
+    }
+
+    if action != nil:
+      areaObject["action"] = action
+
+    result.add(areaObject)
+
+
+proc addAreaObject*(db: DbConn, areaObject: JsonNode) =
+  let areaId = areaObject["areaId"].getInt()
+  let areaObjectId = areaObject["areaObjectId"].getInt()
+  let areaPointId = areaObject["areaPointId"].getInt()
+  let areaObjectBehaviorId = areaObject["areaObjectBehaviorId"].getInt()
+  let action = areaObject.getOrDefault("action")
+  let actionStr = if action != nil: $action else: ""
+
+  db.exec(sql"""
+    INSERT INTO areaObjects (areaId, areaObjectId, areaPointId, areaObjectBehaviorId, action)
+    VALUES (?, ?, ?, ?, ?)
+  """, areaId, areaObjectId, areaPointId, areaObjectBehaviorId, actionStr)
+
+
+proc addAreaEnemy*(db: DbConn, areaEnemy: JsonNode) =
+  let areaId = areaEnemy["areaId"].getInt()
+  let areaPointId = areaEnemy["areaPointId"].getInt()
+  let areaEnemyRateSetId = areaEnemy["areaEnemyRateSetId"].getInt()
+  let action = $(areaEnemy["action"])
+
+  db.exec(sql"""
+    INSERT INTO areaEnemies (areaId, areaPointId, areaEnemyRateSetId, action)
+    VALUES (?, ?, ?, ?)
+  """, areaId, areaPointId, areaEnemyRateSetId, action)
+
+
+proc getAreaEnemies*(db: DbConn): seq[JsonNode] =
+  let rows = db.getAllRows(sql"""
+    SELECT areaId, areaPointId, areaEnemyRateSetId, action
+    FROM areaEnemies
+  """)
+
+  for row in rows:
+    let areaId = parseInt(row[0])
+    let areaPointId = parseInt(row[1])
+    let areaEnemyRateSetId = parseInt(row[2])
+    let action = parseJson(row[3])
+
+    let areaEnemy = %*{
+      "areaId": areaId,
+      "areaPointId": areaPointId,
+      "areaEnemyRateSetId": areaEnemyRateSetId,
+      "action": action 
+    }
+
+    result.add(areaEnemy)
+
+
+# FIXME: this should not be called directly by adventure_AreaObject
+proc parseAreaObjectRow*(row: Row): JsonNode =
+  var areaObjectId = parseInt(row[0])
+  var areaPointId = parseInt(row[1])
+  var areaObjectBehaviorId = parseInt(row[2])
+  let actionStr = row[3]
+  let action = if actionStr != "": parseJson(actionStr) else: nil
+
+  result = %*{
+    "areaObjectId": areaObjectId,
+    "areaPointId": areaPointId,
+    "areaObjectBehaviorId": areaObjectBehaviorId,
+  }
+
+  if action != nil:
+    result["action"] = action
+
+
+# FIXME: this should not be called directly by adventure_AreaObject
+proc parseAreaEnemyRow*(row: Row): JsonNode =
+  let areaPointId = parseInt(row[0])
+  let areaEnemyRateSetId = parseInt(row[1])
+  let action = parseJson(row[2])
+
+  result = %*{
+    "areaPointId": areaPointId,
+    "areaEnemyRateSetId": areaEnemyRateSetId,
+    "action": action 
+  }
+
+
+proc getAreaObjectAction*(db: DbConn, areaObjectBehaviorId: int): Option[AreaObjectAction] =
+  let row = db.getRow(sql"""
+    SELECT areaObjectBehaviorId, areaEnemyId, areaItemId, battleEntryId,
+           dungeonId, eventLiftId, fieldBossId, graffitiArtId, id, label_en,
+           sequenceId, type, warpPointId
+    FROM mdAreaObjectBehaviorAction
+    WHERE areaObjectBehaviorId = ?
+  """, areaObjectBehaviorId)
+
+  if row[0] != "":
+    result = some(AreaObjectAction(
+      areaEnemyId: tryParseInt(row[1]),
+      areaItemId: tryParseInt(row[2]),
+      battleEntryId: tryParseInt(row[3]),
+      dungeonId: tryParseInt(row[4]),
+      eventLiftId: tryParseInt(row[5]),
+      fieldBossId: tryParseInt(row[6]),
+      graffitiArtId: tryParseInt(row[7]),
+      id: parseInt(row[8]),
+      label: if row[9] != "": some(row[9]) else: none(string),
+      sequenceId: tryParseInt(row[10]),
+      `type`: parseInt(row[11]),
+      warpPointId: tryParseInt(row[12]),
+    ))
+
+
+proc getAreaObjectsWithCondition*(
+  db: DbConn, conditionType: AreaObjectBehaviorConditionType, id: int
+): seq[AreaObject] =
+  let rows = db.getAllRows(sql"""
+    SELECT mdAreaObjectBehavior.id, mdAreaObjectBehavior.areaObjectId, mdAreaObjectBehavior.areaPointId
+    FROM mdAreaObjectBehavior
+    INNER JOIN mdAreaObjectBehaviorCondition
+    ON mdAreaObjectBehavior.id = mdAreaObjectBehaviorCondition.areaObjectBehaviorId
+    WHERE mdAreaObjectBehaviorCondition.type = ? AND mdAreaObjectBehaviorCondition.id = ?
+  """, conditionType.int, id)
+
+  for row in rows:
+    let areaObjectBehaviorId = parseInt(row[0])
+    result.add(AreaObject(
+      areaObjectId: tryParseInt(row[1]),
+      areaPointId: parseInt(row[2]),
+      areaObjectBehaviorId: some(areaObjectBehaviorId),
+      action: getAreaObjectAction(db, areaObjectBehaviorId)
+    ))
+
+
+proc updateAreaObjects*(db: DbConn, areaObjects: JsonNode) =
+  for areaObject in areaObjects:
+    let areaPointId = areaObject["areaPointId"].getInt()
+    let areaId = areaPointId div 1000
+    let areaEnemyRateSetId = areaObject.getOrDefault("areaEnemyRateSetId")
+    let action = $(areaObject["action"])
+
+    if areaEnemyRateSetId == nil or areaEnemyRateSetId.kind == JNull:
+      let areaObjectId = areaObject["areaObjectId"].getInt()
+      let areaObjectBehaviorId = areaObject["areaObjectBehaviorId"].getInt()
+
+      db.exec(sql"""
+        INSERT INTO areaObjects (areaId, areaObjectId, areaPointId, areaObjectBehaviorId, action)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT (areaId, areaObjectId) DO
+        UPDATE SET areaPointId = excluded.areaPointId,
+                  areaObjectBehaviorId = excluded.areaObjectBehaviorId,
+                  action = excluded.action
+      """, areaId, areaObjectId, areaPointId, areaObjectBehaviorId, action)
+    else:
+      db.exec(sql"""
+        INSERT INTO areaEnemies (areaId, areaPointId, areaEnemyRateSetId, action)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT (areaPointId) DO
+        UPDATE SET areaEnemyRateSetId = excluded.areaEnemyRateSetId,
+                   action = excluded.action
+      """, areaId, areaPointId, areaEnemyRateSetId, action)
+
+
+proc removeAreaObject*(db: DbConn, areaKeyId: int, triggerId: int) =
+  db.exec(sql"DELETE FROM areaObjects WHERE areaId=? AND areaObjectBehaviorId=?", areaKeyId, triggerId);
+
+proc removeAreaEnemy*(db: DbConn, areaKeyId: int, triggerId: int) =
+  db.exec(sql"DELETE FROM areaEnemies WHERE areaId=? AND areaPointId=?", areaKeyId, triggerId);
+
+proc getBattleFinishAreaObjects*(db: DbConn, battleEntryId: int): JsonNode =
+  let row = db.getRow(
+    sql"SELECT areaObjects FROM battleFinishAreaObjects WHERE battleEntryId = ?", battleEntryId
+  )
+
+  return if row[0] != "": parseJson(row[0]) else: nil
