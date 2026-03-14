@@ -72,8 +72,6 @@ libsemba = custom_target(
     build_by_default : true
 )
 
-if get_option('build_tests')
-
 test_semba = custom_target(
     depends : [sqlite3_c, semba_db],
     depend_files : semba_core_files,
@@ -83,14 +81,12 @@ test_semba = custom_target(
         nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
         '-o:@OUTPUT@', '@INPUT@'
     ],
-    build_by_default : true
+    build_by_default : get_option('build_tests')
 )
 
 test_wrapper = executable('test_wrapper', 'test_wrapper.c')
 
 test('test semba', test_wrapper, args: test_semba)
-
-endif
 
 semba_dep = declare_dependency(
     link_with : libsemba,
