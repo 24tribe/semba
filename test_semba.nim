@@ -13,6 +13,7 @@ import model_stable/challenge_progress
 import model_stable/challenge_task
 import model_stable/nine_sequence
 import model_stable/timestamp
+import model_stable/reward
 
 
 type SembaCtx = object
@@ -447,12 +448,19 @@ proc test_update_hair_color() =
       doAssert(hairColor.b == 0.8)
 
 
+proc test_reward_field_name() =
+  let reward = Reward()
+  let rewardJson = %*reward
+  doAssert rewardJson.hasKey("type")
+
+
 test_null()
 let retval = test_reset_db()
 test_talk_hoimi_read_sequence()
 test_talk_to_branch_manager_after_hoimi_read_sequence()
 test_update_hair_color()
 test_endrone_battle_start()
+test_reward_field_name()
 
 test_talk_with_enoki_first()
 test_talk_to_miu_after_enonki_read_sequence()
