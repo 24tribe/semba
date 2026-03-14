@@ -72,23 +72,6 @@ libsemba = custom_target(
     build_by_default : true
 )
 
-if get_option('build_semba_server')
-
-sembaserver = custom_target(
-    'sembaserver',
-    depends : [sqlite3_c, semba_db],
-    depend_files : semba_core_files,
-    input : ['sembaserver.nim'],
-    output : 'sembaserver.exe',
-    command : [
-        nim, 'c', '-d:staticSqlite', '--app:console', '--threadAnalysis:off', nim_release_args,
-        '-o:@OUTPUT@', '@INPUT@'
-    ],
-    build_by_default : true
-)
-
-endif
-
 if get_option('build_tests')
 
 test_semba = custom_target(
