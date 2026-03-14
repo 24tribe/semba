@@ -13,27 +13,12 @@ type RewardType* = enum
   rewardTensionCard = 9
 
 type Reward* = object
-  rewardType*: int
+  `type`*: int
   id*: int
   quantity*: int
 
 
 let enigmaticRemnentId* = 105
-
-
-# FIXME: not needed?
-proc `%`(reward: Reward): JsonNode =
-  result = %*{"type": reward.rewardType, "id": reward.id, "quantity": reward.quantity}
-
-
-# FIXME: not needed?
-proc `%`(rewards: seq[Reward]): JsonNode =
-  var res = newSeq[JsonNode]()
-
-  for reward in rewards:
-    res.add(%reward)
-
-  result = %*res
 
 
 proc getRewardGroupIdFromEnemyGroupId*(db: DbConn, enemyGroupId: int): Option[int] =
@@ -55,7 +40,7 @@ proc getRandomRewards*(db: DbConn, itemsIds: seq[int]): seq[Reward] =
     let quantity = rand(min .. max)
 
     if quantity > 0:
-      result.add(Reward(rewardType: rewardItem.int, id: itemId, quantity: quantity))
+      result.add(Reward(`type`: rewardItem.int, id: itemId, quantity: quantity))
 
     if min > 0:
       min -= 1
