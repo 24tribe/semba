@@ -110,6 +110,12 @@ else
     app_arg = '--app:lib'
 endif
 
+if host_machine.system() == 'windows'
+    test_semba_output = 'test_semba.exe'
+else
+    test_semba_output = 'test_semba'
+endif
+
 libsemba = custom_target(
     'libsemba',
     depends : [sqlite3_c],
@@ -127,7 +133,7 @@ test_semba = custom_target(
     depends : [sqlite3_c, semba_db],
     depend_files : semba_core_files,
     input : ['test_semba.nim'],
-    output : 'test_semba.exe',
+    output : test_semba_output,
     command : [
         nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
         '-o:@OUTPUT@', '@INPUT@'
@@ -135,9 +141,7 @@ test_semba = custom_target(
     build_by_default : get_option('build_tests')
 )
 
-test_wrapper = executable('test_wrapper', 'test_wrapper.c')
-
-test('test semba', test_wrapper, args: test_semba)
+test('test semba', test_semba)
 
 semba_dep = declare_dependency(
     link_with : libsemba,
