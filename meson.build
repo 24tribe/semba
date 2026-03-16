@@ -20,6 +20,7 @@ semba_core_files = [
     'extsqlite.nim',
     'sembasave.nim',
     'semba_error.nim',
+    'sembaex.nim',
     'util.nim',
     'api_stable/adventure.nim',
     'api_stable/battle.nim',

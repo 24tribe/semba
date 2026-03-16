@@ -22,6 +22,7 @@ type SembaExStatus* = enum
     statusVersionUnknown = 2
     statusDbError = 3
     statusAllocError = 4
+    statusInvalidContext = 5
 
 type SembaExContext* = object
   db*: DbConn
@@ -87,6 +88,11 @@ proc sembaExInit(
 proc sembaExCall(
     ctx: ptr SembaExContext, path: cstring, req: cstring, status: ptr int32
 ): cstring {.exportc: "SembaExCall", dynlib.} =
+    if ctx == nil:
+      if status != nil:
+        status[] = statusInvalidContext.int32
+      return nil
+
     try:
         let res = sembaExCallImpl(ctx[], $path, $req)
         result = if res != "": dupString(res) else: nil
@@ -104,5 +110,6 @@ proc sembaExFreeResponse(response: cstring) {.exportc: "SembaExFreeResponse", dy
 
 
 proc sembaExDeinit(ctx: ptr SembaExContext) {.exportc: "SembaExDeinit", dynlib.} =
-    close(ctx.db)
+    if ctx != nil:
+        close(ctx.db)
     c_free(ctx)
