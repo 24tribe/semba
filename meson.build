@@ -141,7 +141,12 @@ test_semba = custom_target(
     build_by_default : get_option('build_tests')
 )
 
-test('test semba', test_semba)
+if build_machine.system() == 'windows'
+    test_wrapper = executable('test_wrapper', 'test_wrapper.c')
+    test('test semba', test_wrapper, args : test_semba)
+else
+    test('test semba', test_semba)
+endif
 
 semba_dep = declare_dependency(
     link_with : libsemba,
