@@ -1,9 +1,9 @@
 import std/httpclient
 import std/options
-import system/ansi_c
 
 import db_connector/db_sqlite
 
+import sembaex
 import sembacore
 import model_stable/battle
 
@@ -15,11 +15,6 @@ type SembaContext = object
   lastBattleInfo: Option[BattleInfo]
 
 var ctx = SembaContext(db: nil, remoteUrl: "", lastBattleInfo: none(BattleInfo))
-
-proc dupString(str: string): cstring =
-  let s = str.cstring
-  result = cast[cstring](c_malloc((s.len + 1).csize_t))
-  copyMem(result, s, s.len + 1)
 
 proc SembaInitOfflineDb*(path: cstring) {.exportc, dynlib.} = 
   ctx.db = open($path, "", "", "")
