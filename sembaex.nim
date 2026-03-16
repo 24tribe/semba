@@ -1,6 +1,7 @@
 import std/options
 import std/json
 import std/strutils
+import system/ansi_c
 
 import db_connector/db_sqlite
 
@@ -73,7 +74,7 @@ proc sembaExInit(
             status[] = statusDbError.int32
         return nil
 
-    result = cast[ptr SembaExContext](alloc(sizeof(SembaExContext)))
+    result = cast[ptr SembaExContext](c_malloc(sizeof(SembaExContext).csize_t))
 
     if result == nil:
         if status != nil:
@@ -99,9 +100,9 @@ proc sembaExCall(
 
 
 proc sembaExFreeResponse(response: cstring) {.exportc: "SembaExFreeResponse", dynlib.} =
-    dealloc(response)
+    c_free(response)
 
 
 proc sembaExDeinit(ctx: ptr SembaExContext) {.exportc: "SembaExDeinit", dynlib.} =
     close(ctx.db)
-    dealloc(ctx)
+    c_free(ctx)
