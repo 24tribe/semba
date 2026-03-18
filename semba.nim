@@ -85,6 +85,9 @@ proc sembaExInit(
 
     result[] = SembaExContext(db: db, gameVersion: version.get(), lastBattleInfo: none(BattleInfo))
 
+    if status != nil:
+        status[] = statusOk.int32
+
 
 proc sembaExCall(
     ctx: ptr SembaExContext, path: cstring, req: cstring, status: ptr int32
