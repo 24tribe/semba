@@ -8,6 +8,12 @@ import extsqlite
 
 const sembaSql = slurp("semba.sql")
 
+type SembaNewGameRequest = object
+  skipTutorial: bool
+
+type SembaSetSkipTutorialRequest = object
+  skipTutorial: bool
+
 type HairColor* = object
   charId*: int
   r*: float
@@ -127,6 +133,15 @@ proc semba_GetHairColors(db: DbConn): seq[HairColor] =
     ))
 
 
+proc semba_SetSkipTutorial(db: DbConn, req: SembaSetSkipTutorialRequest) =
+  db.exec(sql"UPDATE userData SET val = ? WHERE keyName = 'skipTutorial'", $req.skipTutorial)
+
+
+proc semba_NewGame(db: DbConn, req: SembaNewGameRequest) =
+  semba_ResetDb(db)
+  semba_SetSkipTutorial(db, SembaSetSkipTutorialRequest(skipTutorial: req.skipTutorial))
+
+
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =
   if uri == "/semba/echo":
     let dataUpper = jsonReq["data"].getStr().toUpperAscii()
@@ -147,3 +162,7 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
     result = semba_UpdateHairColor(db, jsonReq)
   elif uri == "/semba/get_hair_colors":
     result = %*semba_GetHairColors(db)
+  elif uri == "/semba/new_game":
+    semba_NewGame(db, to(jsonReq, SembaNewGameRequest))
+  elif uri == "/semba/set_skip_tutorial":
+    semba_SetSkipTutorial(db, to(jsonReq, SembaSetSkipTutorialRequest))
