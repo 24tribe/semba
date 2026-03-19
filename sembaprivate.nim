@@ -5,6 +5,7 @@ import db_connector/db_sqlite
 
 import sembasave
 import extsqlite
+import semba_error
 
 const sembaSql = slurp("semba.sql")
 
@@ -12,6 +13,9 @@ type SembaNewGameRequest = object
   skipTutorial: bool
 
 type SembaSetSkipTutorialRequest = object
+  skipTutorial: bool
+
+type SembaGetSkipTutorialResponse = object
   skipTutorial: bool
 
 type HairColor* = object
@@ -142,6 +146,14 @@ proc semba_NewGame(db: DbConn, req: SembaNewGameRequest) =
   semba_SetSkipTutorial(db, SembaSetSkipTutorialRequest(skipTutorial: req.skipTutorial))
 
 
+proc semba_GetSkipTutorial(db: DbConn): SembaGetSkipTutorialResponse = 
+  let row = db.getRow(sql"SELECT val FROM userData WHERE keyName = 'skipTutorial'")
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't find skipTutorial value on db")
+
+  result.skipTutorial = row[0] == "true"
+
+
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =
   if uri == "/semba/echo":
     let dataUpper = jsonReq["data"].getStr().toUpperAscii()
@@ -166,3 +178,5 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
     semba_NewGame(db, to(jsonReq, SembaNewGameRequest))
   elif uri == "/semba/set_skip_tutorial":
     semba_SetSkipTutorial(db, to(jsonReq, SembaSetSkipTutorialRequest))
+  elif uri == "/semba/get_skip_tutorial":
+    result = %*semba_GetSkipTutorial(db)
