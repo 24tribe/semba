@@ -7,6 +7,7 @@ import db_connector/db_sqlite
 import sembasave
 import extsqlite
 import semba_error
+import model_stable/tutorial
 
 const sembaSql = slurp("semba.sql")
 
@@ -158,11 +159,7 @@ proc semba_NewGame(db: DbConn, req: SembaNewGameRequest) =
 
 
 proc semba_GetSkipTutorial(db: DbConn): SembaGetSkipTutorialResponse = 
-  let row = db.getRow(sql"SELECT val FROM userData WHERE keyName = 'skipTutorial'")
-  if row[0] == "":
-    raise newException(SembaError, "Couldn't find skipTutorial value on db")
-
-  result.skipTutorial = row[0] == "true"
+  result.skipTutorial = getSkipTutorial(db)
 
 
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =

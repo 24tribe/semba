@@ -24,6 +24,7 @@ import ../model_stable/timestamp
 import ../model_stable/tip
 import ../model_stable/total_task
 import ../model_stable/tutorial_state
+import ../model_stable/tutorial
 import ../model_stable/user
 import ../model_stable/wallet
 import ../model_stable/warp_point
@@ -53,6 +54,11 @@ proc user_Notification*(db: DbConn): JsonNode =
 
 
 proc user_LogIn*(db: DbConn): JsonNode =
+  if isFirstLogin(db):
+    setFirstLogin(db, false)
+    if getSkipTutorial(db):
+      resetToTutorial(db)
+
   let formations = getFormations(db)
   let adventureVariables = getAdventureVariables(db)
   let challengeTasks = getChallengeTasks(db)
