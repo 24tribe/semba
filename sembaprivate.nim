@@ -80,7 +80,7 @@ proc semba_DeleteSaveFile(jsonReq: JsonNode) =
 proc semba_ListSaveFiles(req: SembaListSaveFilesRequest): SembaListSaveFilesResponse =
   for k in walkDir(req.savesDir, relative = true):
     if k.kind == pcFile and k.path.endswith(".save"):
-      result.names.add(k.path)
+      result.names.add(k.path.changeFileExt(""))
 
 
 proc semba_GetStdGachaRates(db: DbConn): JsonNode =
