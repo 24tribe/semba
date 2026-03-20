@@ -116,7 +116,9 @@ proc semba_SetStdGachaRates(db: DbConn, jsonReq: JsonNode) =
 
 
 proc semba_ResetDb(db: DbConn) =
-  loadSql(db, sembaSql)
+  let lines = sembaSql.split('\n')
+  let withoutBeginCommit = lines.toOpenArray(1, lines.len - 2).join("\n")
+  loadSql(db, withoutBeginCommit)
 
 
 proc semba_UpdateHairColor(db: DbConn, jsonReq: JsonNode): JsonNode =
