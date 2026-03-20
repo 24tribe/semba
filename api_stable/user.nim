@@ -58,6 +58,8 @@ proc user_LogIn*(db: DbConn): JsonNode =
     setFirstLogin(db, false)
     if getSkipTutorial(db):
       resetToTutorial(db)
+      db.exec(sql"COMMIT")
+      db.exec(sql"BEGIN")
 
   let formations = getFormations(db)
   let adventureVariables = getAdventureVariables(db)
