@@ -118,7 +118,7 @@ endif
 
 libsemba = custom_target(
     'libsemba',
-    depends : [sqlite3_c],
+    depends : [sqlite3_c, semba_db],
     depend_files : semba_core_files,
     input : ['semba.nim'],
     output : semba_output,
