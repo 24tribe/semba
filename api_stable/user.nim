@@ -55,13 +55,9 @@ proc user_Notification*(db: DbConn): JsonNode =
 
 proc user_LogIn*(db: DbConn): JsonNode =
   if isFirstLogin(db):
-    echo("is first login")
     setFirstLogin(db, false)
-    if getSkipTutorial(db):
-      echo("reset to tutorial!")
+    if not getSkipTutorial(db):
       resetToTutorial(db)
-  else:
-    echo("is not first login")
 
   let formations = getFormations(db)
   let adventureVariables = getAdventureVariables(db)
