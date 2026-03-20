@@ -1,5 +1,6 @@
 import std/strutils
 import std/json
+import std/os
 
 import db_connector/db_sqlite
 
@@ -17,6 +18,12 @@ type SembaSetSkipTutorialRequest = object
 
 type SembaGetSkipTutorialResponse = object
   skipTutorial: bool
+
+type SembaListSaveFilesRequest = object
+  savesDir: string
+
+type SembaListSaveFilesResponse = object
+  names: seq[string]
 
 type HairColor* = object
   charId*: int
@@ -68,6 +75,12 @@ proc semba_DeleteSaveFile(jsonReq: JsonNode) =
   let name = jsonReq["name"].getStr()
 
   deleteSaveFile(saves_dir, name)
+
+
+proc semba_ListSaveFiles(req: SembaListSaveFilesRequest): SembaListSaveFilesResponse =
+  for k in walkDir(req.savesDir, relative = true):
+    if k.kind == pcFile and k.path.endswith(".save"):
+      result.names.add(k.path)
 
 
 proc semba_GetStdGachaRates(db: DbConn): JsonNode =
@@ -164,6 +177,8 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
     result = semba_CreateSaveFile(jsonReq, db)
   elif uri == "/semba/delete_save_file":
     semba_DeleteSaveFile(jsonReq)
+  elif uri == "/semba/list_save_files":
+    result = %*semba_ListSaveFiles(to(jsonReq, SembaListSaveFilesRequest))
   elif uri == "/semba/get_std_gacha_rates":
     result = semba_GetStdGachaRates(db)
   elif uri == "/semba/set_std_gacha_rates":
