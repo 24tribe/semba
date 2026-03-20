@@ -265,8 +265,6 @@ proc sanityChecks(db: DbConn) =
 
 
 proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
-  db.exec(sql"BEGIN")
-
   const baseError = "Couldn't load save file"
 
   if db == nil:
@@ -349,11 +347,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
 
   db.exec(sql"UPDATE userData SET val = 'false' WHERE keyName = 'firstLogin'")
 
-  db.exec(sql"COMMIT")
-
-  db.exec(sql"BEGIN")
   sanityChecks(db)
-  db.exec(sql"COMMIT")
 
 
 proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =

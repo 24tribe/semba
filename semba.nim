@@ -37,14 +37,25 @@ proc sembaExCallImpl*(
   let jsonReq = if request != "": parseJson(request) else: nil
   var jsonRes: JsonNode
 
-  if path.startsWith("/semba/"):
-    jsonRes = getJsonResultPrivateApi(path, jsonReq, ctx.db)
-  else:
-    case ctx.gameVersion
-    of gameVersion_0_2_1_20:
-        jsonRes = getJsonResultDemo(path, jsonReq, ctx.db)
-    of gameVersion_1_1_3_35:
-        jsonRes = getJsonResultStable(path, jsonReq, ctx.db, ctx.lastBattleInfo)
+  ctx.db.exec(sql"BEGIN")
+
+  var committed = false
+
+  try:
+    if path.startsWith("/semba/"):
+      jsonRes = getJsonResultPrivateApi(path, jsonReq, ctx.db)
+    else:
+      case ctx.gameVersion
+      of gameVersion_0_2_1_20:
+          jsonRes = getJsonResultDemo(path, jsonReq, ctx.db)
+      of gameVersion_1_1_3_35:
+          jsonRes = getJsonResultStable(path, jsonReq, ctx.db, ctx.lastBattleInfo)
+
+    ctx.db.exec(sql"COMMIT")
+    committed = true
+  finally:
+    if not committed:
+      ctx.db.exec(sql"ROLLBACK")
 
   result = if jsonRes != nil: $jsonRes else: ""
 

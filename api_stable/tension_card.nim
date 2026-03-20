@@ -14,11 +14,9 @@ proc tensionCard_LimitBreakEnhance*(db: DbConn, jsonReq: JsonNode): JsonNode =
   tensionCard["limitBreak"] = %*limitBreak
   updateTensionCardLimitBreak(db, entityId, limitBreak)
 
-  db.exec(sql"BEGIN")
   for consumedEntityId in consumedEntityIds:
     db.exec(sql"DELETE FROM tensionCards WHERE entityId = ?", consumedEntityId.getInt())
     db.exec(sql"DELETE FROM tensionCardLimitBreaks WHERE entityId = ?", consumedEntityId.getInt())
-  db.exec(sql"COMMIT")
 
   result = %*{
     "changedResources": {

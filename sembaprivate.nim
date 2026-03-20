@@ -100,15 +100,12 @@ proc semba_GetStdGachaRates(db: DbConn): JsonNode =
 
   result = %*{}
 
-  db.exec(sql"BEGIN")
   for rateId in rateIds:
     let row = db.getRow(sql"SELECT percentRate FROM gachaRates WHERE gachaRateId = ?", rateId.int)
     result[$rateId] = %*parseFloat(row[0])
-  db.exec(sql"COMMIT")
 
 
 proc semba_SetStdGachaRates(db: DbConn, jsonReq: JsonNode) =
-  db.exec(sql"BEGIN")
   for key, val in jsonReq.pairs():
     let rateId = parseEnum[GachaRateId](key)
     let percentRate = val.getFloat()
@@ -116,7 +113,6 @@ proc semba_SetStdGachaRates(db: DbConn, jsonReq: JsonNode) =
       sql"UPDATE gachaRates SET percentRate = ? WHERE gachaRateId = ?",
       $percentRate, rateId.int
     )
-  db.exec(sql"COMMIT")
 
 
 proc semba_ResetDb(db: DbConn) =
