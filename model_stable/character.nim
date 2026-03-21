@@ -111,6 +111,11 @@ proc addCharacter*(db: DbConn, character: JsonNode) =
   addCharacterLimitBreak(db, characterId, limitBreak)
 
 
+proc updateCharacters*(db: DbConn, characters: seq[JsonNode]) =
+  for character in characters:
+    addCharacter(db, character)
+
+
 proc parseCharacterRow*(characterRow: Row): JsonNode =
   let characterId = parseInt(characterRow[0])
   let exp = parseInt(characterRow[1])

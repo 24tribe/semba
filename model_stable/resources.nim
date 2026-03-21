@@ -17,6 +17,7 @@ import magic_orb
 import item
 import area_change_lock
 import formation
+import character
 
 
 proc updateResources*(db: DbConn, changedResources: var JsonNode) =
@@ -119,6 +120,12 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
   if formations.len > 0:
     updateFormations(db, formations)
     handledKeys.incl("formations")
+
+  let characters = changedResources.getOrDefault("characters").getElems()
+
+  if characters.len > 0:
+    updateCharacters(db, characters)
+    handledKeys.incl("characters")
 
   for key, _ in changedResources.pairs():
     if not (key in handledKeys):
