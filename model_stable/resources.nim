@@ -24,9 +24,20 @@ import character
 proc updateResources*(db: DbConn, changedResources: var JsonNode) =
   var handledKeys = initHashSet[string]()
 
+  let formations = changedResources.getOrDefault("formations").getElems()
+
+  if formations.len > 0:
+    updateFormations(db, formations)
+    handledKeys.incl("formations")
+
   if changedResources.getOrDefault("status") != nil:
     handledKeys.incl("status")
     var status = getUserStatus(db)
+
+    if formations.len > 0:
+      let formationNumber = changedResources["status"].getOrDefault("formationNumber").getInt()
+      status["formationNumber"] = %*formationNumber
+
     updateStatusFromStatusLocation(status, changedResources["status"])
     changedResources["status"] = status
     setUserStatus(db, status);
@@ -115,12 +126,6 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
     # Don't return (zero sensei) missions from online logs
     changedResources.delete("missions")
     handledKeys.incl("missions")
-
-  let formations = changedResources.getOrDefault("formations").getElems()
-
-  if formations.len > 0:
-    updateFormations(db, formations)
-    handledKeys.incl("formations")
 
   let characters = changedResources.getOrDefault("characters").getElems()
 
