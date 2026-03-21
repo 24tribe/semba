@@ -15,6 +15,11 @@ type CharacterUpdate* = object
   hp*: int
 
 
+type CharacterOwnershipType* = enum
+  charOwnershipOwned = 1
+  charOwnershipGuest = 2
+
+
 const dbCharacterFields* = """
   characters.characterId, exp, hp, attack, defense, maxHp, receivedAt, characterOwnershipType,
   criticalRate, criticalDamageRate, movementSpeed, damageInflictedRate, tensionIncreaseRate,
