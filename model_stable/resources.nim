@@ -1,5 +1,6 @@
 import std/json
 import std/sets
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -126,6 +127,12 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
   if characters.len > 0:
     updateCharacters(db, characters)
     handledKeys.incl("characters")
+
+  let characterCostumes = to(changedResources.getOrDefault("characterCostumes"), Option[seq[CharacterCostume]])
+
+  if characterCostumes.isSome and characterCostumes.get().len > 0:
+    updateCharacterCostumes(db, characterCostumes.get())
+    handledKeys.incl("characterCostumes")
 
   for key, _ in changedResources.pairs():
     if not (key in handledKeys):
