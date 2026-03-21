@@ -159,7 +159,7 @@ CREATE TABLE tips (
 
 DROP TABLE IF EXISTS characterCostumes;
 CREATE TABLE characterCostumes (
-    characterCostumeId INTEGER,
+    characterCostumeId INTEGER PRIMARY KEY,
     receivedAt STRING
 );
 
