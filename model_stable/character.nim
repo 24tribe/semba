@@ -62,7 +62,7 @@ proc addCharacterLimitBreak*(db: DbConn, characterId: int, limitBreak: int) =
 
 proc addCharacter*(db: DbConn, character: JsonNode) =
   let characterId = character["characterId"].getInt()
-  let exp = character["exp"].getInt()
+  let exp = character.getOrDefault("exp").getInt()
   let hp = character["hp"].getInt()
   let attack = character["attack"].getInt()
   let defense = character["defense"].getInt()
