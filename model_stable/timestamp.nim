@@ -8,3 +8,4 @@ proc getTimestampNow*(): Timestamp = getDateNow().Timestamp
 
 proc `%`*(timestamp: Timestamp): JsonNode {.borrow.}
 proc `==`*(a, b: Timestamp): bool {.borrow.}
+proc `$`*(a: Timestamp): string {.borrow.}
