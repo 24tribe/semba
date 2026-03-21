@@ -16,6 +16,7 @@ import city
 import magic_orb
 import item
 import area_change_lock
+import formation
 
 
 proc updateResources*(db: DbConn, changedResources: var JsonNode) =
@@ -112,6 +113,12 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
     # Don't return (zero sensei) missions from online logs
     changedResources.delete("missions")
     handledKeys.incl("missions")
+
+  let formations = changedResources.getOrDefault("formations").getElems()
+
+  if formations.len > 0:
+    updateFormations(db, formations)
+    handledKeys.incl("formations")
 
   for key, _ in changedResources.pairs():
     if not (key in handledKeys):

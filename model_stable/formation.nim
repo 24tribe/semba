@@ -34,3 +34,8 @@ proc updateFormation*(db: DbConn, formation: JsonNode) =
   db.exec(sql"""
     UPDATE formations SET members = ?, cards = ? WHERE number = ?
   """, members, cards, number)
+
+
+proc updateFormations*(db: DbConn, formations: seq[JsonNode]) =
+  for formation in formations:
+    updateFormation(db, formation)
