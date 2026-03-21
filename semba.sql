@@ -101,7 +101,7 @@ CREATE TABLE gates (
 
 DROP TABLE IF EXISTS characters;
 CREATE TABLE characters (
-    characterId INTEGER,
+    characterId INTEGER PRIMARY KEY,
     exp INTEGER,
     hp INTEGER,
     attack INTEGER,
