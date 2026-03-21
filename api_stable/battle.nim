@@ -154,4 +154,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   if areaObjects != nil:
     result["areaObjects"] = areaObjects
-    updateAreaObjects(db, areaObjects)
+    if battleEntryIds == @[1000002]:
+      updateAreaObjectsEx(db, to(areaObjects, seq[AreaObject]))
+    else:
+      updateAreaObjects(db, areaObjects)

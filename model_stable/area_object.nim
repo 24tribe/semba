@@ -189,10 +189,28 @@ proc getAreaObjectsWithCondition*(
     ))
 
 
+proc areaPointIdToAreaId(areaPointId: int): int = areaPointId div 1000
+
+
+proc updateAreaObjectsEx*(db: DbConn, areaObjects: seq[AreaObject]) =
+  for areaObject in areaObjects:
+    # FIXME: handle area enemies
+    if areaObject.areaObjectId.isSome():
+      let areaObjectId = areaObject.areaObjectId.get()
+      let areaObjectBehaviorId = areaObject.areaObjectBehaviorId.get()
+      let areaId = areaPointIdToAreaId(areaObject.areaPointId)
+      let action = $(%*areaObject.action.get())
+      db.exec(sql"DELETE FROM areaObjects WHERE areaObjectId = ?", areaObjectId)
+      db.exec(sql"""
+        INSERT INTO areaObjects (areaId, areaObjectId, areaPointId, areaObjectBehaviorId, action)
+        VALUES (?, ?, ?, ?, ?)
+      """, areaId, areaObjectId, areaObject.areaPointId, areaObjectBehaviorId, action)
+
+
 proc updateAreaObjects*(db: DbConn, areaObjects: JsonNode) =
   for areaObject in areaObjects:
     let areaPointId = areaObject["areaPointId"].getInt()
-    let areaId = areaPointId div 1000
+    let areaId = areaPointIdToAreaId(areaPointId)
     let areaEnemyRateSetId = areaObject.getOrDefault("areaEnemyRateSetId")
     let action = $(areaObject["action"])
 
