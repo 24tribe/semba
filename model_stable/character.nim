@@ -90,6 +90,17 @@ proc addCharacter*(db: DbConn, character: JsonNode) =
      actionPointConsumption, damageTakenRate)
     VALUES
     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT (characterId) DO UPDATE SET
+      exp = excluded.exp, hp = excluded.hp, attack = excluded.attack, defense = excluded.defense,
+      maxHp = excluded.maxHp, receivedAt = excluded.receivedAt, characterOwnershipType = excluded.characterOwnershipType,
+      criticalRate = excluded.criticalRate, criticalDamageRate = excluded.criticalDamageRate,
+      movementSpeed = excluded.movementSpeed, damageInflictedRate = excluded.damageInflictedRate,
+      tensionIncreaseRate = excluded.tensionIncreaseRate, cpRecastRate = excluded.cpRecastRate,
+      spGaugeIncreaseRate = excluded.spGaugeIncreaseRate, attackSpeed = excluded.attackSpeed,
+      characterCostumeId = excluded.characterCostumeId, abnormalityParamSet = excluded.abnormalityParamSet,
+      trainingScoreLevelScore = excluded.trainingScoreLevelScore, trainingScoreRankScore = excluded.trainingScoreRankScore,
+      actionPointMax = excluded.actionPointMax, actionPointRate = excluded.actionPointRate,
+      actionPointConsumption = excluded.actionPointConsumption, damageTakenRate = excluded.damageTakenRate
   """, characterId, exp, hp, attack, defense, maxHp, receivedAt, characterOwnershipType,
      criticalRate, criticalDamageRate, movementSpeed, damageInflictedRate, tensionIncreaseRate,
      cpRecastRate, spGaugeIncreaseRate, attackSpeed, characterCostumeId, abnormalityParamSet,
