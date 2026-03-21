@@ -8,6 +8,12 @@ import ../semba_error
 import user
 import mission
 import battle
+import timestamp
+
+
+type CharacterCostume* = object
+  characterCostumeId: int
+  receivedAt: Timestamp
 
 
 type CharacterUpdate* = object
@@ -320,3 +326,16 @@ proc healCharacters*(db: DbConn): seq[JsonNode] =
       setCharacterHp(db, characterId, maxHp)
       character["hp"] = %*maxHp
       result.add(character)
+
+
+proc addCharacterCostume*(db: DbConn, characterCostume: CharacterCostume) =
+  db.exec(sql"""
+    INSERT INTO characterCostumes (characterCostumeId, receivedAt) VALUES (?, ?)
+    ON CONFLICT (characterCostumeId) DO
+    UPDATE SET receivedAt = excluded.receivedAt
+  """, characterCostume.characterCostumeId, characterCostume.receivedAt)
+
+
+proc updateCharacterCostumes*(db: DbConn, characterCostumes: seq[CharacterCostume]) =
+  for characterCostume in characterCostumes:
+    addCharacterCostume(db, characterCostume)
