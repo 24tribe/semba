@@ -30,7 +30,6 @@ proc gacha_Execute*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   let gachaId = jsonReq["gachaId"].getInt()
   let gachaButtonId = jsonReq["gachaButtonId"].getInt()
-  let clientTimestamp = jsonReq["clientTimestamp"].getStr()
 
   let gacha = getGacha(db, gachaId)
   let gachaCategoryState = gacha["gachaCategoryState"]
