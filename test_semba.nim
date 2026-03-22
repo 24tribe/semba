@@ -449,6 +449,64 @@ proc test_reward_field_name() =
   doAssert rewardJson.hasKey("type")
 
 
+proc test_battle_finish_challenge_data(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  loadSaveFile(ctx, saves_dir, "before first tutorial battle")
+
+  discard sembaCall(ctx, "/battle/start", %*{
+    "battleEntryIds": [ 1000001 ],
+    "lineCharacterIds": [ 100101 ],
+    "battleTriggers": [ { "triggerType": "action_sequence" } ],
+    "currentLocation": {
+      "areaType": 1, "direction": 5,
+      "positionCoordinates": { "x": -7.554892, "y": 25.024178, "z": -19.684603 },
+      "areaKeyId": 300203
+    },
+    "bloodStainLocation": {
+      "areaKeyId": 300203, "areaType": 1,
+      "positionCoordinates": { "x": -6.513234, "y": 25.024178, "z": -25.30114 }
+    }
+  })
+
+  let res = sembaCall(ctx, "/battle/finish", %*{
+    "characterUpdates": [ { "characterId": 100101, "hp": 424 } ],
+    "battleTaskTopics": [ { "type": "qte", "count": 1 } ],
+    "encounteredEnemyIds": [ 250108, 224105 ],
+    "battleTimeSecond": 45,
+    "taskConditionResult": {
+      "usedSkills": [ { "characterSkillId": 1001016, "count": 1 } ],
+      "enemyStabilityBreaks": [ { "enemyId": 224105, "count": 1 } ]
+    }
+  })
+
+  doAssert(res != nil)
+
+  let changedResources = res["changedResources"]
+
+  let challengeTasks = to(changedResources["challengeTasks"], seq[ChallengeTask])
+
+  doAssert(challengeTasks.len == 1)
+  doAssert(challengeTasks[0].challengeTaskId == 10001011)
+  doAssert(challengeTasks[0].clearedAt.isSome())
+  doAssert(challengeTasks[0].count == 1)
+
+  var challengeProgresses = to(changedResources["challengeProgresses"], seq[ChallengeProgress])
+
+  doAssert(challengeProgresses.len == 2)
+  challengeProgresses.sort(
+    proc (chPr1, chPr2: ChallengeProgress): int = cmp(chPr1.challengeProgressId, chPr2.challengeProgressId)
+  )
+
+  doAssert(challengeProgresses[0].challengeProgressId == 1000101)
+  doAssert(challengeProgresses[0].clearedAt.isSome())
+  doAssert(challengeProgresses[0].state == 3)
+
+  doAssert(challengeProgresses[1].challengeProgressId == 1000111)
+  doAssert(challengeProgresses[1].clearedAt.isNone())
+  doAssert(challengeProgresses[1].state == 2)
+
+
 let saves_dir = paramStr(1)
 
 test_null()
@@ -461,6 +519,7 @@ test_reward_field_name()
 
 test_talk_with_enoki_first(saves_dir)
 test_talk_to_miu_after_enonki_read_sequence(saves_dir)
+test_battle_finish_challenge_data(saves_dir)
 
 echo("End of test_semba.nim")
 
