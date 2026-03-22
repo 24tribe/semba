@@ -25,6 +25,7 @@ import item
 import magic_orb
 import nine_sequence
 import tutorial_state
+import tension_card
 import user
 import lux_phantasma
 import timestamp
@@ -200,6 +201,12 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
   if characterCostumes.isSome and characterCostumes.get().len > 0:
     updateCharacterCostumes(db, characterCostumes.get())
     handledKeys.incl("characterCostumes")
+
+  let tensionCards = changedResources.getOrDefault("tensionCards").getElems()
+
+  if tensionCards.len > 0:
+    updateTensionCards(db, tensionCards)
+    handledKeys.incl("tensionCards")
 
   for key, _ in changedResources.pairs():
     if not (key in handledKeys):

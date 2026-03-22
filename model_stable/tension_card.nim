@@ -79,12 +79,28 @@ proc addTensionCard*(db: DbConn, tensionCard: JsonNode) =
   let limitBreak = tensionCard.getOrDefault("limitBreak").getInt()
 
   db.exec(
-    sql("INSERT INTO tensionCards (" & dbTensionCardsFields & ") VALUES (?, ?, ?, ?, ?, ?, ?)"),
+    sql("INSERT INTO tensionCards (" & dbTensionCardsFields & """)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT (entityId) DO
+    UPDATE SET
+      tensionCardId = excluded.tensionCardId,
+      receivedAt = excluded.receivedAt,
+      maxLevel = excluded.maxLevel,
+      abilityEfficacies = excluded.abilityEfficacies,
+      trainingScoreLevelScore = excluded.trainingScoreLevelScore,
+      isLocked = excluded.isLocked
+    """),
     tensionCardId, receivedAt, maxLevel, abilityEfficacies,
     trainingScoreLevelScore, entityId, isLocked
   )
 
   updateTensionCardLimitBreak(db, entityId, limitBreak)
+
+
+proc updateTensionCards*(db: DbConn, tensionCards: seq[JsonNode]) =
+  for tc in tensionCards:
+    addTensionCard(db, tc)
+
 
 proc getFormationCards(db: DbConn, formationNumber: int): JsonNode =
   let row = db.getRow(sql"SELECT cards FROM formations WHERE number = ?", formationNumber)
