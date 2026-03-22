@@ -26,6 +26,9 @@ type GachaRateSetId* = enum
   promisedGachaRateSetId = 102,
   guaranteedGachaRateSetId = 103
 
+type GachaId* = enum
+  gachaIdTutorial = 101
+
 
 proc getGachaNotification*(db: DbConn): JsonNode =
   let rows = db.getAllRows(sql"SELECT gachaId FROM gachas")
@@ -339,3 +342,17 @@ proc updateDbFromDrawnCards*(
     "characterPieces": characterPieces,
     "tensionCards": tensionCards,
   }
+
+
+proc getDrawnCards*(db: DbConn, gacha: JsonNode, gachaButtonId: int): seq[JsonNode] =
+  let gachaCategoryState = gacha["gachaCategoryState"]
+  let pulls = gachaButtonToPulls(gachaButtonId)
+  let isPromised = gachaButtonId == gachaButtonTen.int
+
+  let gachaRateSets = getGachaRateSets(db)
+
+  for pullIdx in 0 ..< pulls:
+    let gachaRateSet = getGachaRateSetForPull(gachaCategoryState, pullIdx, pulls, isPromised, gachaRateSets)
+
+    let card = pickCard(gachaRateSet)
+    result.add(card)

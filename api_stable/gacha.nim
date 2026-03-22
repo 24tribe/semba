@@ -32,21 +32,10 @@ proc gacha_Execute*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let gachaButtonId = jsonReq["gachaButtonId"].getInt()
 
   let gacha = getGacha(db, gachaId)
-  let gachaCategoryState = gacha["gachaCategoryState"]
-  let pulls = gachaButtonToPulls(gachaButtonId)
-  let isPromised = gachaButtonId == gachaButtonTen.int
 
-  let gachaRateSets = getGachaRateSets(db)
+  let drawnCards = getDrawnCards(db, gacha, gachaButtonId)
 
-  var drawnCards = newSeq[JsonNode]()
   var drawnRewards = newSeq[JsonNode]()
-
-  for pullIdx in 0 ..< pulls:
-    let gachaRateSet = getGachaRateSetForPull(gachaCategoryState, pullIdx, pulls, isPromised, gachaRateSets)
-
-    let card = pickCard(gachaRateSet)
-    drawnCards.add(card)
-
   let changedResources = updateDbFromDrawnCards(db, drawnCards, drawnRewards)
 
   return %*{
