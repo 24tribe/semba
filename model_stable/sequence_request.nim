@@ -24,31 +24,6 @@ proc parseReadSequenceRow*(row: Row): JsonNode =
     result["changedResources"] = parseJson(row[1])
 
 
-proc getMdChallengeTaskForSequenceRequestId(db: DbConn, seqReqId: int): Option[MdChallengeTask] =
-  # Note: taskConditionTypeSequenceRequest == 1
-  let row = db.getRow(sql"""
-    SELECT challengeProgressId, count, id, summaryChallengeId, targetAreaObjectBehaviorId,
-           targetAreaPointId, targetNineSequenceId, targetRadius, totalTaskConditionId
-    FROM mdChallengeTask
-    WHERE taskConditionType = 1 AND taskConditionKeyId = ?
-  """, seqReqId)
-
-  if row[0] != "":
-    result = some(MdChallengeTask(
-      challengeProgressId: parseInt(row[0]),
-      count: tryParseInt(row[1]),
-      id: parseInt(row[2]),
-      summaryChallengeId: tryParseInt(row[3]),
-      targetAreaObjectBehaviorId: tryParseInt(row[4]),
-      targetAreaPointId: tryParseInt(row[5]),
-      targetNineSequenceId: tryParseInt(row[6]),
-      targetRadius: tryParseInt(row[7]),
-      totalTaskConditionId: tryParseInt(row[8]),
-      taskConditionType: some(taskConditionTypeSequenceRequest.int),
-      taskConditionKeyId: some(seqReqId),
-    ))
-
-
 #[
 Swap the changed areaObjects, challengeTasks and challengeProgresses taken from
 the online logs with the ones from the master data

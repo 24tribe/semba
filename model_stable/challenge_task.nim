@@ -9,6 +9,7 @@ import ../util
 
 type TaskConditionType* = enum
   taskConditionTypeSequenceRequest = 1
+  taskConditionTypeBattleFinish = 2
 
 type MdChallengeTask* = object
   challengeProgressId*: int
@@ -100,3 +101,33 @@ proc getChallengeTasks*(db: DbConn): seq[JsonNode] =
       challengeTask["count"] = %*count
 
     result.add(challengeTask)
+
+
+proc getMdChallengeTaskWithCondition*(
+  db: DbConn, conditionType: TaskConditionType, conditionKeyId: int
+): Option[MdChallengeTask] =
+  let row = db.getRow(sql"""
+    SELECT challengeProgressId, count, id, summaryChallengeId, targetAreaObjectBehaviorId,
+           targetAreaPointId, targetNineSequenceId, targetRadius, totalTaskConditionId
+    FROM mdChallengeTask
+    WHERE taskConditionType = ? AND taskConditionKeyId = ?
+  """, conditionType.int, conditionKeyId)
+
+  if row[0] != "":
+    result = some(MdChallengeTask(
+      challengeProgressId: parseInt(row[0]),
+      count: tryParseInt(row[1]),
+      id: parseInt(row[2]),
+      summaryChallengeId: tryParseInt(row[3]),
+      targetAreaObjectBehaviorId: tryParseInt(row[4]),
+      targetAreaPointId: tryParseInt(row[5]),
+      targetNineSequenceId: tryParseInt(row[6]),
+      targetRadius: tryParseInt(row[7]),
+      totalTaskConditionId: tryParseInt(row[8]),
+      taskConditionType: some(conditionType.int),
+      taskConditionKeyId: some(conditionKeyId),
+    ))
+
+
+proc getMdChallengeTaskForSequenceRequestId*(db: DbConn, seqReqId: int): Option[MdChallengeTask] =
+  result = getMdChallengeTaskWithCondition(db, taskConditionTypeSequenceRequest, seqReqId)
