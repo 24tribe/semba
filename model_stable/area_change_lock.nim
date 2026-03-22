@@ -4,6 +4,10 @@ import std/json
 import ../db_connector/db_sqlite
 
 
+type AreaChangeLock* = object
+  areaChangeLockId*: int
+
+
 proc addAreaChangeLock*(db: DbConn, areaChangeLockId: int) =
   db.exec(sql"""
     INSERT INTO areaChangeLocks (areaChangeLockId) VALUES (?)

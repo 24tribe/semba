@@ -1,10 +1,16 @@
 import std/json
 import std/strutils
 import std/math
+import std/options
 
 import ../db_connector/db_sqlite
 
 import ../semba_error
+
+
+type Area* = object
+  areaId: int
+  isDark: Option[bool]
 
 
 proc getAreaBgms*(db: DbConn): seq[JsonNode] =

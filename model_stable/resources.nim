@@ -4,21 +4,81 @@ import std/options
 
 import ../db_connector/db_sqlite
 
-import area_object
-import user
-import nine_sequence
 import adventure_variable
+import area
+import area_change_lock
+import area_group
+import area_object
+import area_object_lock
+import challenge
 import challenge_progress
 import challenge_task
-import challenge
-import tutorial_state
-import area_group
-import city
-import magic_orb
-import item
-import area_change_lock
-import formation
 import character
+import character_likability
+import character_mounting_power
+import character_piece
+import city
+import dungeon
+import formation
+import item
+import magic_orb
+import nine_sequence
+import tutorial_state
+import user
+import lux_phantasma
+
+
+type Resources = object
+  adventureVariables: Option[seq[AdventureVariable]]
+  areas: Option[seq[Area]]
+  areaChangeLocks: Option[seq[AreaChangeLock]]
+  areaGroups: Option[seq[AreaGroup]]
+  areaObjectLocks: Option[seq[AreaObjectLock]]
+  challenges: Option[seq[Challenge]]
+  challengeProgresses: Option[seq[ChallengeProgress]]
+  challengeTasks: Option[seq[ChallengeTask]]
+  characters: Option[seq[JsonNode]] # FIXME: add Character type
+  characterCostumes: Option[seq[CharacterCostume]]
+  characterLikabilities: Option[seq[CharacterLikability]]
+  characterMountingPowers: Option[seq[CharacterMountingPower]]
+  characterMountingPowerCommon: Option[CharacterMountingPowerCommon]
+  characterPieces: Option[seq[CharacterPiece]]
+  cities: Option[seq[City]]
+  cycleUpdateShopStates: Option[seq[JsonNode]] # FIXME: CycleUpdateShopState
+  dailyPassStates: Option[seq[JsonNode]] # FIXME: DailyPassState
+  dungeons: Option[seq[Dungeon]]
+  eventFloorNodes: Option[seq[EventFloorNode]]
+  eventLifts: Option[seq[EventLift]]
+  follows: Option[seq[JsonNode]] # FIXME: Follow
+  formations: Option[seq[JsonNode]] # FIXME: Formation
+  fractalVises: Option[seq[JsonNode]] # FIXME: FractalVise
+  gears: Option[seq[JsonNode]] # FIXME: Gear
+  graffitiArts: Option[seq[JsonNode]] # FIXME: GraffitiArt
+  guestCharacters: Option[seq[JsonNode]] # FIXME: GuestCharacter
+  items: Option[seq[JsonNode]] # FIXME: Item
+  loginBonuses: Option[seq[JsonNode]] # FIXME: LoginBonus
+  magicOrbs: Option[seq[JsonNode]] # FIXME: MagicOrb
+  missions: Option[seq[JsonNode]] # FIXME: Mission
+  missionCountRewardStates: Option[seq[JsonNode]] # FIXME: MissionCountRewardState
+  nineSequences: Option[seq[NineSequence]]
+  notifications: Option[JsonNode] # FIXME: Notifications
+  profile: Option[JsonNode] # FIXME: Profile
+  profileBadges: Option[seq[JsonNode]] # FIXME: ProfileBadge
+  profileBanners: Option[seq[JsonNode]] # FIXME: ProfileBanner
+  questStates: Option[seq[JsonNode]] # FIXME: QuestState
+  seasonPasses: Option[seq[JsonNode]] # FIXME: SeasonPass
+  seasonPassTierStates: Option[seq[JsonNode]] # FIXME: SeasonPassTierState
+  shopProductStates: Option[seq[JsonNode]] # FIXME: ShopProductState
+  status: Option[JsonNode] # FIXME: Status
+  synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
+  tensionCards: Option[seq[JsonNode]] # FIXME: TensionCard
+  tips: Option[seq[JsonNode]] # FIXME: Tip
+  totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
+  trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
+  tutorialStates: Option[seq[JsonNode]] # FIXME: TutorialState
+  wallet: Option[JsonNode] # FIXME: Wallet
+  warpPoints: Option[seq[JsonNode]] # FIXME: WarpPoint
+  xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
 
 
 proc updateResources*(db: DbConn, changedResources: var JsonNode) =

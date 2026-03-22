@@ -1,7 +1,16 @@
 import std/json
 import std/strutils
+import std/options
 
 import ../db_connector/db_sqlite
+
+import timestamp
+
+
+type City* = object
+  cityId: int
+  isGearShopReleased: Option[bool]
+  releasedAt: Option[Timestamp]
 
 
 proc addCity*(db: DbConn, city: JsonNode) =

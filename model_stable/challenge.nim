@@ -1,7 +1,17 @@
 import std/json
 import std/strutils
+import std/options
 
 import ../db_connector/db_sqlite
+
+import timestamp
+
+
+type Challenge* = object
+  challengeId: int
+  state: int
+  clearedAt: Option[Timestamp]
+  expiresAt: Option[Timestamp]
 
 
 proc updateChallenges*(db: DbConn, challenges: seq[JsonNode]) =

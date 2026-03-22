@@ -10,6 +10,10 @@ import ../semba_error
 import timestamp
 
 
+type Dungeon* = object
+  dungeonId*: int
+  isFinished*: Option[bool]
+
 type DungeonDifficultyPiece = DungeonPiece
 
 type DungeonState* = object

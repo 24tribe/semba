@@ -1,8 +1,21 @@
 import std/strutils
 import std/json
 import std/sequtils
+import std/options
 
 import ../db_connector/db_sqlite
+
+import timestamp
+
+
+type EventFloorNode* = object
+  eventFloorNodeId: int
+  clearedAchievementIds: Option[seq[int]]
+  allAchievementClearedAt: Option[Timestamp]
+  unlockedAt: Option[Timestamp]
+
+type EventLift* = object
+  eventLiftId: int
 
 
 const minEventFloorNodeId = 113101
