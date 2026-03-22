@@ -134,7 +134,7 @@ CREATE TABLE tensionCards (
     maxLevel INTEGER,
     abilityEfficacies STRING,
     trainingScoreLevelScore INTEGER,
-    entityId INTEGER,
+    entityId INTEGER PRIMARY KEY,
     isLocked BOOLEAN
 );
 
@@ -41081,6 +41081,7 @@ INSERT INTO readSequenceAreaAction (sequenceRequestId, areaId, actionSequenceId)
 , (80000811, 300203, 0)
 , (80001111, 300202, 0)
 , (80001121, 300202, 0)
+, (80001411, 300202, 8000152)
 , (80001521, 300202, 8000153)
 , (80001611, 300402, 0)
 , (80001621, 300401, 0)
