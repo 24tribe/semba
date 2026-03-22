@@ -131,3 +131,7 @@ proc getMdChallengeTaskWithCondition*(
 
 proc getMdChallengeTaskForSequenceRequestId*(db: DbConn, seqReqId: int): Option[MdChallengeTask] =
   result = getMdChallengeTaskWithCondition(db, taskConditionTypeSequenceRequest, seqReqId)
+
+
+proc getMdChallengeTaskForBattleEntryId*(db: DbConn, battleEntryId: int): Option[MdChallengeTask] =
+  result = getMdChallengeTaskWithCondition(db, taskConditionTypeBattleFinish, battleEntryId)

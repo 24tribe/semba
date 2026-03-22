@@ -30,15 +30,15 @@ import lux_phantasma
 import timestamp
 
 
-type Resources = object
+type Resources* = object
   adventureVariables: Option[seq[AdventureVariable]]
   areas: Option[seq[Area]]
   areaChangeLocks: Option[seq[AreaChangeLock]]
   areaGroups: Option[seq[AreaGroup]]
   areaObjectLocks: Option[seq[AreaObjectLock]]
   challenges: Option[seq[Challenge]]
-  challengeProgresses: Option[seq[ChallengeProgress]]
-  challengeTasks: Option[seq[ChallengeTask]]
+  challengeProgresses*: Option[seq[ChallengeProgress]]
+  challengeTasks*: Option[seq[ChallengeTask]]
   characters: Option[seq[JsonNode]] # FIXME: add Character type
   characterCostumes: Option[seq[CharacterCostume]]
   characterLikabilities: Option[seq[CharacterLikability]]
