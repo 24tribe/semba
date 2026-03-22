@@ -141,11 +141,13 @@ test_semba = custom_target(
     build_by_default : get_option('build_tests')
 )
 
+test_saves_path = meson.current_source_dir() + '/test_saves'
+
 if build_machine.system() == 'windows'
     test_wrapper = executable('test_wrapper', 'test_wrapper.c')
-    test('test semba', test_wrapper, args : test_semba)
+    test('test semba', test_wrapper, args : [test_semba, test_saves_path])
 else
-    test('test semba', test_semba)
+    test('test semba', test_semba, args : test_saves_path)
 endif
 
 semba_dep = declare_dependency(

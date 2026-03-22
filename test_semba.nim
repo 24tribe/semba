@@ -2,6 +2,7 @@ import std/algorithm
 import std/assertions
 import std/options
 import std/json
+import std/cmdline
 
 import db_connector/db_sqlite
 import sembacore
@@ -42,9 +43,9 @@ proc getInMemorySembaCtx(): SembaCtx =
   discard sembaCall(result, "/semba/reset_db", nil)
 
 
-proc loadSaveFile(ctx: var SembaCtx, name: string) =
+proc loadSaveFile(ctx: var SembaCtx, saves_dir: string, name: string) =
   discard sembaCall(ctx, "/semba/load_save_file", %*{
-    "saves_dir": "../test_saves",
+    "saves_dir": saves_dir,
     "name": name,
   })
 
@@ -70,10 +71,10 @@ proc test_null() =
 
 proc sortByAreaPointId(a, b: AreaObject): int = cmp(a.areaPointId, b.areaPointId)
 
-proc test_talk_to_branch_manager_after_hoimi_read_sequence() =
+proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
   var ctx = getInMemorySembaCtx()
 
-  loadSaveFile(ctx, "after hoimi before branch manager")
+  loadSaveFile(ctx, saves_dir, "after hoimi before branch manager")
 
   let res = sembaCall(ctx, "/adventure/read_sequence", %*{
     "sequenceRequestIds": [ 80100421, 80100423, 8011592 ],
@@ -170,10 +171,10 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence() =
   doAssert(adventureVariables[0].value.get(0) == 2)
 
 
-proc test_talk_hoimi_read_sequence() =
+proc test_talk_hoimi_read_sequence(saves_dir: string) =
   var ctx = getInMemorySembaCtx()
 
-  loadSaveFile(ctx, "before talk hoimi first")
+  loadSaveFile(ctx, saves_dir, "before talk hoimi first")
 
   let res = sembaCall(ctx, "/adventure/read_sequence", %*{
     "sequenceRequestIds": [80100422, 8011592],
@@ -217,10 +218,10 @@ proc test_talk_hoimi_read_sequence() =
   doAssert(adventureVariables[0].value.get(0) == 1)
 
 
-proc test_endrone_battle_start() =
+proc test_endrone_battle_start(saves_dir: string) =
   var ctx = getInMemorySembaCtx()
 
-  loadSaveFile(ctx, "before endrone fight bug")
+  loadSaveFile(ctx, saves_dir, "before endrone fight bug")
 
   let res = sembaCall(ctx, "/battle/start", %*{
     "battleEntryIds": [ 1000004 ],
@@ -242,10 +243,10 @@ proc test_endrone_battle_start() =
   doAssert(res != nil)
 
 
-proc test_talk_with_enoki_first() =
+proc test_talk_with_enoki_first(saves_dir: string) =
   var ctx = getInMemorySembaCtx()
 
-  loadSaveFile(ctx, "before talking enoki first")
+  loadSaveFile(ctx, saves_dir, "before talking enoki first")
 
   let res = sembaCall(ctx, "/adventure/read_sequence", %*{
     "sequenceRequestIds": [ 80100431, 8011622 ],
@@ -317,10 +318,10 @@ proc test_talk_with_enoki_first() =
   doAssert(adventureVariables[0].value.get(0) == 1)
 
 
-proc test_talk_to_miu_after_enonki_read_sequence() =
+proc test_talk_to_miu_after_enonki_read_sequence(saves_dir: string) =
   var ctx = getInMemorySembaCtx()
 
-  loadSaveFile(ctx, "before talking miu after talking enoki")
+  loadSaveFile(ctx, saves_dir, "before talking miu after talking enoki")
 
   let res = sembaCall(ctx, "/adventure/read_sequence", %*{
     "sequenceRequestIds": [ 80100432, 8011622 ],
@@ -454,16 +455,18 @@ proc test_reward_field_name() =
   doAssert rewardJson.hasKey("type")
 
 
+let saves_dir = paramStr(1)
+
 test_null()
 let retval = test_reset_db()
-test_talk_hoimi_read_sequence()
-test_talk_to_branch_manager_after_hoimi_read_sequence()
+test_talk_hoimi_read_sequence(saves_dir)
+test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir)
 test_update_hair_color()
-test_endrone_battle_start()
+test_endrone_battle_start(saves_dir)
 test_reward_field_name()
 
-test_talk_with_enoki_first()
-test_talk_to_miu_after_enonki_read_sequence()
+test_talk_with_enoki_first(saves_dir)
+test_talk_to_miu_after_enonki_read_sequence(saves_dir)
 
 echo("End of test_semba.nim")
 
