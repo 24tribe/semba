@@ -14,6 +14,7 @@ import ../model_stable/reward
 import ../model_stable/enemy
 import ../model_stable/item
 import ../model_stable/challenge_task
+import ../model_stable/challenge_progress
 import ../model_stable/resources
 import ../semba_error
 
@@ -158,8 +159,12 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   if challengeTask.isSome():
     let (_, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
+
     result["changedResources"]["challengeTasks"] = %*resources.challengeTasks.get()
+    updateChallengeTasks(db, result["changedResources"]["challengeTasks"])
+
     result["changedResources"]["challengeProgresses"] = %*resources.challengeProgresses.get()
+    updateChallengeProgresses(db, result["changedResources"]["challengeProgresses"])
 
   if areaObjects != nil:
     result["areaObjects"] = areaObjects
