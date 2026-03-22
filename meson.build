@@ -11,7 +11,6 @@ m_dep = cc.find_library('m', required : false)
 sqlite3 = executable('sqlite3', 'shell.c', 'sqlite3.c', dependencies : m_dep)
 
 semba_core_files = [
-    'sembacore.nim',
     'sembademo.nim',
     'sembastable.nim',
     'protojson.nim',

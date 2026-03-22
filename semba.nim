@@ -7,9 +7,9 @@ import db_connector/db_sqlite
 
 import sembastable
 import sembademo
-import sembacore
 import sembaprivate
 import model_stable/battle
+import model_stable/timestamp
 
 {.compile("NimInit.c", "-O3").}
 
@@ -27,8 +27,21 @@ type SembaExStatus* = enum
 
 type SembaExContext* = object
   db*: DbConn
-  gameVersion: SembaExGameVersion
+  gameVersion*: SembaExGameVersion
   lastBattleInfo*: Option[BattleInfo]
+
+
+proc logFlowOffline*(db: DbConn, uri: string, req: string, res: string) =
+  db.exec(
+    sql"INSERT INTO debugLogsOffline (receivedAt, uri, req, res) VALUES (?, ?, ?, ?)",
+    getDateNow(), uri, req, res
+  )
+
+
+proc dupString*(str: string): cstring =
+  let s = str.cstring
+  result = cast[cstring](c_malloc((s.len + 1).csize_t))
+  copyMem(result, s, s.len + 1)
 
 
 proc sembaExCallImpl*(

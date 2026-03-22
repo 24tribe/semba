@@ -5,7 +5,7 @@ import std/json
 import std/cmdline
 
 import db_connector/db_sqlite
-import sembacore
+import semba
 import sembaprivate
 import model_stable/adventure_variable
 import model_stable/area_object
@@ -17,18 +17,12 @@ import model_stable/timestamp
 import model_stable/reward
 
 
-type SembaCtx = object
-  version: GameVersion
-  db: DbConn
-  lastBattleInfo: Option[BattleInfo]
-
-
 proc initMemoryDb(): DbConn = open(":memory:", "", "", "")
 
 
-proc sembaCall(ctx: var SembaCtx, path: string, body: JsonNode): JsonNode =
+proc sembaCall(ctx: var SembaExContext, path: string, body: JsonNode): JsonNode =
   let bodyStr = if body != nil: $body else: ""
-  let resultStr = sembaCallImpl(path, bodyStr, ctx.version, ctx.db, ctx.lastBattleInfo)
+  let resultStr = sembaExCallImpl(ctx, path, bodyStr)
 
   if resultStr != "":
     result = parseJson(resultStr)
@@ -38,12 +32,12 @@ proc itemsTableExists(db: DbConn): bool =
   result = db.getRow(sql"SELECT name FROM sqlite_schema WHERE name = 'items'")[0] == "items"
 
 
-proc getInMemorySembaCtx(): SembaCtx =
-  result = SembaCtx(version: gvStable, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
+proc getInMemorySembaCtx(): SembaExContext =
+  result = SembaExContext(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
   discard sembaCall(result, "/semba/reset_db", nil)
 
 
-proc loadSaveFile(ctx: var SembaCtx, saves_dir: string, name: string) =
+proc loadSaveFile(ctx: var SembaExContext, saves_dir: string, name: string) =
   discard sembaCall(ctx, "/semba/load_save_file", %*{
     "saves_dir": saves_dir,
     "name": name,
@@ -51,7 +45,7 @@ proc loadSaveFile(ctx: var SembaCtx, saves_dir: string, name: string) =
 
 
 proc test_reset_db(): int =
-  var ctx = SembaCtx(version: gvStable, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
+  var ctx = SembaExContext(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
 
   doAssert(not itemsTableExists(ctx.db))
 
