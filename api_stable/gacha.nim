@@ -33,7 +33,11 @@ proc gacha_Execute*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   let gacha = getGacha(db, gachaId)
 
-  let drawnCards = getDrawnCards(db, gacha, gachaButtonId)
+  let drawnCards =
+    if gachaId == gachaIdTutorial.int:
+      @[%*{"cardType": 4, "cardId": 100501, "gachaCardId": 101001}]
+    else:
+      getDrawnCards(db, gacha, gachaButtonId)
 
   var drawnRewards = newSeq[JsonNode]()
   let changedResources = updateDbFromDrawnCards(db, drawnCards, drawnRewards)
