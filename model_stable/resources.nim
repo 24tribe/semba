@@ -1,6 +1,7 @@
 import std/json
 import std/sets
 import std/options
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -26,6 +27,7 @@ import nine_sequence
 import tutorial_state
 import user
 import lux_phantasma
+import timestamp
 
 
 type Resources = object
@@ -208,3 +210,77 @@ proc updateFromReadSequenceResponse*(db: DbConn, response: JsonNode) =
   updateAreaObjects(db, response["areaObjects"])
   var changedResources = response["changedResources"]
   updateResources(db, changedResources) 
+
+
+proc getChangedResourcesForCompletedChallengeTask*(
+  db: DbConn, challengeTask: MdChallengeTask
+): (seq[AreaObject], Resources) =
+  var areaObjects = newSeq[AreaObject]()
+  var challengeTasks = newSeq[ChallengeTask]()
+  var challengeProgresses = newSeq[ChallengeProgress]()
+
+  challengeTasks.add(ChallengeTask(
+    challengeTaskId: challengeTask.id, count: 1, clearedAt: some(getDateNow())
+  ))
+
+  areaObjects = getAreaObjectsWithCondition(
+    db, areaObjectConditionTypeClearedChallengeTask, challengeTask.id
+  )
+
+  let otherChallengeTasks = getOtherChallengeTasks(db, challengeTask)
+
+  if all(otherChallengeTasks, proc (x: MdChallengeTask): bool = isChallengeTaskComplete(db, x.id)):
+    challengeProgresses.add(ChallengeProgress(
+      challengeProgressId: challengeTask.challengeProgressId,
+      state: challengeProgressStateCleared.int,
+      clearedAt: some(getTimestampNow()),
+    ))
+
+    areaObjects.insert(getAreaObjectsWithCondition(
+      db, areaObjectConditionTypeClearedChallengeProgress, challengeTask.challengeProgressId
+    ), areaObjects.len)
+
+    let nextChallengeProgressId = getNextChallengeProgress(db, challengeTask.challengeProgressId)
+
+    if nextChallengeProgressId.isSome():
+      challengeProgresses.add(ChallengeProgress(
+        challengeProgressId: nextChallengeProgressId.get(),
+        state: challengeProgressStateStarted.int,
+      ))
+
+      areaObjects.insert(getAreaObjectsWithCondition(
+        db, areaObjectConditionTypeStartedChallengeProgress, nextChallengeProgressId.get()
+      ), areaObjects.len)
+  else:
+    challengeProgresses.add(ChallengeProgress(
+      challengeProgressId: challengeTask.challengeProgressId,
+      state: challengeProgressStateStarted.int,
+    ))
+
+  let resources = Resources(
+    challengeTasks: some(challengeTasks),
+    challengeProgresses: some(challengeProgresses)
+  )
+
+  result = (areaObjects, resources)
+
+
+#[
+Swap the changed areaObjects, challengeTasks and challengeProgresses taken from
+the online logs with the ones from the master data
+]# 
+proc changeReadSequenceResponse*(db: DbConn, seqReqId: int, response: JsonNode) =
+  response["areaObjects"] = %*[]
+
+  let changedResources = response["changedResources"]
+  changedResources["challengeTasks"] = %*[]
+  changedResources["challengeProgresses"] = %*[]
+
+  let challengeTask = getMdChallengeTaskForSequenceRequestId(db, seqReqId)
+
+  if challengeTask.isSome():
+    let (areaObjects, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
+
+    changedResources["challengeTasks"] = %*resources.challengeTasks.get()
+    changedResources["challengeProgresses"] = %*resources.challengeProgresses.get()
+    response["areaObjects"] = %*areaObjects
