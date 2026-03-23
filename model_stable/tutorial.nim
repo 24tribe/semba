@@ -60,8 +60,6 @@ proc resetToTutorial*(db: DbConn) =
   db.exec(sql"DELETE FROM tips")
   db.exec(sql"DELETE FROM tutorialStates")
 
-  db.exec(sql"DELETE FROM characters WHERE characterId != 100101")
-
   db.exec(sql"UPDATE formations SET cards = '{}'")
 
   db.exec(sql"DELETE FROM totalTasks")
