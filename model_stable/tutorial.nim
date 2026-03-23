@@ -33,15 +33,6 @@ proc getSkipTutorial*(db: DbConn): bool =
   return row[0] == "true"
 
 
-proc getTutorialTotalTasks(db: DbConn): seq[JsonNode] =
-  let rows = db.getAllRows(sql"SELECT id FROM tutorialTotalTaskConditionIds")
-
-  for row in rows:
-    result.add(%*{
-      "conditionId": parseInt(row[0]),
-    })
-
-
 proc resetToTutorial*(db: DbConn) =
   db.exec(sql"DELETE FROM areas")
   
@@ -62,9 +53,6 @@ proc resetToTutorial*(db: DbConn) =
   db.exec(sql"DELETE FROM tutorialStates")
 
   db.exec(sql"UPDATE formations SET cards = '{}'")
-
-  db.exec(sql"DELETE FROM totalTasks")
-  db.exec(sql"INSERT INTO totalTasks (conditionId) SELECT id FROM tutorialTotalTaskConditionIds")
 
   setTutorialGacha(db)
 
