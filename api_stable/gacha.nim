@@ -5,6 +5,7 @@ import ../db_connector/db_sqlite
 
 import ../model_stable/gacha
 import ../model_stable/user
+import ../model_stable/area
 
 
 proc gacha_List*(db: DbConn): JsonNode =
@@ -51,3 +52,4 @@ proc gacha_Execute*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   if gachaId == gachaIdTutorial.int:
     setAfterTutorialGacha(db)
+    addAreaActionSequenceId(db, %*{"areaId": 300202, "actionSequenceId": 8000161})
