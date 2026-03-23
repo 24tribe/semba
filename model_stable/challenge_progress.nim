@@ -18,6 +18,7 @@ type ChallengeProgress* = object
 
 
 const clearHealthyOutlawsChallengeProgressId* = 1010173
+const lastTutorialChallengeProgressId* = 1000161
 
 
 proc isChallengeProgressComplete*(challengeProgress: JsonNode): bool =

@@ -39,6 +39,7 @@ import model_stable/character
 import model_stable/city
 import model_stable/dungeon
 import model_stable/formation
+import model_stable/gacha
 import model_stable/item
 import model_stable/lux_phantasma
 import model_stable/magic_orb
@@ -348,6 +349,11 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   db.exec(sql"UPDATE userData SET val = 'false' WHERE keyName = 'firstLogin'")
 
   sanityChecks(db)
+
+  if isChallengeProgressComplete(getChallengeProgress(db, lastTutorialChallengeProgressId)):
+    setAfterTutorialGacha(db)
+  else:
+    setTutorialGacha(db)
 
 
 proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
