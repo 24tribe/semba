@@ -11,6 +11,7 @@ import reward
 import entity
 import tension_card
 import ../semba_error
+import ../extsqlite
 
 
 type GachaButton* = enum
@@ -28,6 +29,10 @@ type GachaRateSetId* = enum
 
 type GachaId* = enum
   gachaIdTutorial = 101
+
+
+const tutorialGachaSql = slurp("../tutorialGacha.sql")
+const tutorialSkipGachaSql = slurp("../tutorialSkipGacha.sql")
 
 
 proc getGachaNotification*(db: DbConn): JsonNode =
@@ -356,3 +361,11 @@ proc getDrawnCards*(db: DbConn, gacha: JsonNode, gachaButtonId: int): seq[JsonNo
 
     let card = pickCard(gachaRateSet)
     result.add(card)
+
+
+proc setTutorialGacha*(db: DbConn) =
+  loadSql(db, tutorialGachaSql)
+
+
+proc setAfterTutorialGacha*(db: DbConn) =
+  loadSql(db, tutorialSkipGachaSql)

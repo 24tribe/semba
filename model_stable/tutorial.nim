@@ -8,6 +8,7 @@ import timestamp
 import challenge_progress
 import challenge
 import user
+import gacha
 
 
 proc isFirstLogin*(db: DbConn): bool =
@@ -64,6 +65,8 @@ proc resetToTutorial*(db: DbConn) =
 
   db.exec(sql"DELETE FROM totalTasks")
   db.exec(sql"INSERT INTO totalTasks (conditionId) SELECT id FROM tutorialTotalTaskConditionIds")
+
+  setTutorialGacha(db)
 
   setUserStatus(db, %*{
     "rank": 1,
