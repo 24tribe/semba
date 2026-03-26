@@ -36,7 +36,7 @@ const dbCharacterFields* = """
 
 const selectCharacterSql = """
   SELECT """ & dbCharacterFields & """
-  FROM characters FULL JOIN characterLimitBreaks
+  FROM characters LEFT JOIN characterLimitBreaks
   ON characters.characterId = characterLimitBreaks.characterId
 """
 
