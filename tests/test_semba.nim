@@ -507,20 +507,21 @@ proc test_battle_finish_challenge_data(saves_dir: string) =
   doAssert(challengeProgresses[1].state == 2)
 
 
-let saves_dir = paramStr(1)
+when isMainModule:
+  let saves_dir = paramStr(1)
 
-test_null()
-let retval = test_reset_db()
-test_talk_hoimi_read_sequence(saves_dir)
-test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir)
-test_update_hair_color()
-test_endrone_battle_start(saves_dir)
-test_reward_field_name()
+  test_null()
+  let retval = test_reset_db()
+  test_talk_hoimi_read_sequence(saves_dir)
+  test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir)
+  test_update_hair_color()
+  test_endrone_battle_start(saves_dir)
+  test_reward_field_name()
 
-test_talk_with_enoki_first(saves_dir)
-test_talk_to_miu_after_enonki_read_sequence(saves_dir)
-test_battle_finish_challenge_data(saves_dir)
+  test_talk_with_enoki_first(saves_dir)
+  test_talk_to_miu_after_enonki_read_sequence(saves_dir)
+  test_battle_finish_challenge_data(saves_dir)
 
-echo("End of test_semba.nim")
+  echo("End of test_semba.nim")
 
-quit(retval)
+  quit(retval)
