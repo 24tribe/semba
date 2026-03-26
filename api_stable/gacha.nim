@@ -4,7 +4,6 @@ import std/random
 import ../db_connector/db_sqlite
 
 import ../model_stable/gacha
-import ../model_stable/user
 import ../model_stable/area
 
 
