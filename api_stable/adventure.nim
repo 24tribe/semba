@@ -164,6 +164,11 @@ proc adventure_ReadSequence*(db: DbConn, jsonReq: JsonNode): JsonNode =
     # FIXME: this should be in a separate function
     result = parseReadSequenceRow(row)
 
+    if seqReqId == 80001521:
+      let deletedCharacterIds = [100201, 101701]
+      result["deletedCharacterIds"] = %*deletedCharacterIds
+      deleteGuestCharacters(db, deletedCharacterIds)
+
     const talkWithEnokiSeqReqId = 80100431
     const talkWithMiuSeqReqId = 80100432
 

@@ -339,3 +339,10 @@ proc addCharacterCostume*(db: DbConn, characterCostume: CharacterCostume) =
 proc updateCharacterCostumes*(db: DbConn, characterCostumes: seq[CharacterCostume]) =
   for characterCostume in characterCostumes:
     addCharacterCostume(db, characterCostume)
+
+
+proc deleteGuestCharacters*(db: DbConn, characterIds: openArray[int]) =
+  for characterId in characterIds:
+    db.exec(sql"""
+      DELETE FROM characters WHERE characterId = ? AND characterOwnershipType = ?
+    """, characterId, charOwnershipGuest.int)
