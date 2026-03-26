@@ -115,8 +115,10 @@ endif
 
 if host_machine.system() == 'windows'
     test_semba_output = 'test_semba.exe'
+    test_tip_output = 'test_tip.exe'
 else
     test_semba_output = 'test_semba'
+    test_tip_output = 'test_tip'
 endif
 
 libsemba = custom_target(
@@ -144,13 +146,27 @@ test_semba = custom_target(
     build_by_default : get_option('build_tests')
 )
 
+test_tip = custom_target(
+    depends : [sqlite3_c, semba_db],
+    depend_files : semba_core_files,
+    input : ['tests/test_tip.nim'],
+    output : test_tip_output,
+    command : [
+        nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
+        '-o:@OUTPUT@', '@INPUT@'
+    ],
+    build_by_default : get_option('build_tests')
+)
+
 test_saves_path = meson.current_source_dir() + '/test_saves'
 
 if build_machine.system() == 'windows'
     test_wrapper = executable('test_wrapper', 'test_wrapper.c')
     test('test semba', test_wrapper, args : [test_semba, test_saves_path])
+    test('test tip', test_wrapper, args : [test_tip, test_saves_path])
 else
     test('test semba', test_semba, args : test_saves_path)
+    test('test tip', test_tip)
 endif
 
 semba_dep = declare_dependency(

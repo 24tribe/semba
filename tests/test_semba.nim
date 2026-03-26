@@ -20,7 +20,7 @@ import ../model_stable/reward
 proc initMemoryDb(): DbConn = open(":memory:", "", "", "")
 
 
-proc sembaCall(ctx: var SembaExContext, path: string, body: JsonNode): JsonNode =
+proc sembaCall*(ctx: var SembaExContext, path: string, body: JsonNode): JsonNode =
   let bodyStr = if body != nil: $body else: ""
   let resultStr = sembaExCallImpl(ctx, path, bodyStr)
 
@@ -32,7 +32,7 @@ proc itemsTableExists(db: DbConn): bool =
   result = db.getRow(sql"SELECT name FROM sqlite_schema WHERE name = 'items'")[0] == "items"
 
 
-proc getInMemorySembaCtx(): SembaExContext =
+proc getInMemorySembaCtx*(): SembaExContext =
   result = SembaExContext(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
   discard sembaCall(result, "/semba/reset_db", nil)
 
