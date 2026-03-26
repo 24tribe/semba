@@ -6,7 +6,6 @@ import db_connector/db_sqlite
 
 import sembasave
 import extsqlite
-import semba_error
 import model_stable/tutorial
 
 const sembaSql = slurp("semba.sql")
