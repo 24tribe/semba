@@ -135,7 +135,7 @@ libsemba = custom_target(
 test_semba = custom_target(
     depends : [sqlite3_c, semba_db],
     depend_files : semba_core_files,
-    input : ['test_semba.nim'],
+    input : ['tests/test_semba.nim'],
     output : test_semba_output,
     command : [
         nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
