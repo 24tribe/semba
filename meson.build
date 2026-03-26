@@ -69,6 +69,7 @@ semba_core_files = [
     'model_stable/tip.nim',
     'model_stable/total_task.nim',
     'model_stable/tutorial_state.nim',
+    'model_stable/tutorial.nim',
     'model_stable/user.nim',
     'model_stable/wallet.nim',
     'model_stable/warp_point.nim',
