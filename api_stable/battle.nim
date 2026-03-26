@@ -24,6 +24,24 @@ type BattleFinishRequest = object
   characterUpdates: seq[CharacterUpdate]
   encounteredEnemyIds: seq[int]
 
+type BattleRestartRequest* = object
+  lineCharacterIds: seq[int]
+  encounteredEnemyIds: seq[int]
+  isDifficultyDecrease: Option[bool]
+
+type BattleRestartResponse = object
+  characters: seq[JsonNode] # FIXME: use Character
+  tensionCards: seq[JsonNode] # FIXME: use TensionCard
+  battleParameters: seq[BattleParameter]
+  battleTriggers: seq[BattleTrigger]
+  advantageType: Option[string]
+  characterDishes: seq[JsonNode] # FIXME: use CharacterDish
+  wonResultType: Option[string]
+  abilityEnigmaId: Option[int]
+  changedResources: Resources
+  guestCharacters: seq[JsonNode] # FIXME: use Character
+  difficultyDecreaseCount: Option[int]
+
 
 proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): JsonNode =
   let lineCharacterIds = to(jsonReq["lineCharacterIds"], seq[int])
@@ -58,11 +76,28 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
     battleEntryIds: to(jsonReq["battleEntryIds"], seq[int]),
     lineCharacterIds: lineCharacterIds,
     currentLocation: currentLocation,
-    battleTriggers: to(jsonReq["battleTriggers"], seq[BattleTrigger])
+    battleTriggers: to(jsonReq["battleTriggers"], seq[BattleTrigger]),
+    advantageType: to(advantageType, Option[string]),
   ))
 
   if advantageType != nil:
     result["advantageType"] = advantageType
+
+
+proc battle_Restart*(
+  db: DbConn, lastBattleInfo: var Option[BattleInfo], req: BattleRestartRequest
+): BattleRestartResponse =
+  if lastBattleInfo.isNone():
+    raise newException(SembaError, "lastBattleInfo.isNone()")
+
+  lastBattleInfo.get().lineCharacterIds = req.lineCharacterIds
+
+  result.characters = getCharactersWithId(db, req.lineCharacterIds)
+  result.tensionCards = getEquippedTensionCards(db)
+  result.changedResources.status = some(getUserStatus(db))
+  result.battleParameters = getBattleParametersFromBattleEntryIds(db, lastBattleInfo.get().battleEntryIds)
+  result.battleTriggers = lastBattleInfo.get().battleTriggers
+  result.advantageType = lastBattleInfo.get().advantageType
 
 
 proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): JsonNode =

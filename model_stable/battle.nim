@@ -19,6 +19,7 @@ type BattleInfo* = object
   currentLocation*: JsonNode
   battleTriggers*: seq[BattleTrigger]
   dungeonId*: Option[int]
+  advantageType*: Option[string]
 
 type MdBattleEntry = object
   id: int
@@ -34,9 +35,9 @@ type MdBattleWave = object
   id: int
   battleEnemyIds: seq[int]
 
-type BattleParameter = object
-  id: int
-  enemies: seq[Enemy]
+type BattleParameter* = object
+  id*: int
+  enemies*: seq[Enemy]
 
 
 proc getMdBattleEntry(db: DbConn, battleEntryId: int): MdBattleEntry =

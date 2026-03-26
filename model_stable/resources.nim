@@ -73,7 +73,7 @@ type Resources* = object
   seasonPasses: Option[seq[JsonNode]] # FIXME: SeasonPass
   seasonPassTierStates: Option[seq[JsonNode]] # FIXME: SeasonPassTierState
   shopProductStates: Option[seq[JsonNode]] # FIXME: ShopProductState
-  status: Option[JsonNode] # FIXME: Status
+  status*: Option[JsonNode] # FIXME: Status
   synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
   tensionCards: Option[seq[JsonNode]] # FIXME: TensionCard
   tips*: Option[seq[Tip]]

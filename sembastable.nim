@@ -53,6 +53,8 @@ proc getJsonResultStable*(
     result = battle_Start(db, lastBattleInfo, jsonReq)
   elif uri == "/battle/finish":
     result = battle_Finish(db, lastBattleInfo, jsonReq)
+  elif uri == "/battle/restart":
+    result = %*battle_Restart(db, lastBattleInfo, to(jsonReq, BattleRestartRequest))
 
   elif uri == "/character/costume_update":
     result = character_CostumeUpdate(db, jsonReq)
