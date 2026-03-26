@@ -1,6 +1,7 @@
 import std/json
 import std/strutils
 import std/math
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -18,7 +19,7 @@ type CharacterCostume* = object
 
 type CharacterUpdate* = object
   characterId*: int
-  hp*: int
+  hp*: Option[int]
 
 
 type CharacterOwnershipType* = enum

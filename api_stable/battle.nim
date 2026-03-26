@@ -20,6 +20,7 @@ import ../semba_error
 
 
 type BattleFinishRequest = object
+  battleResult: Option[string]
   characterUpdates: seq[CharacterUpdate]
   encounteredEnemyIds: seq[int]
 
@@ -78,8 +79,13 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   let req = to(jsonReq, BattleFinishRequest)
 
+  let status = getUserStatus(db)
+
+  if req.battleResult.get("") == "lost":
+    return %*{"changedResources": {"status": status}}
+
   for characterUpdate in req.characterUpdates:
-    setCharacterHp(db, characterUpdate.characterId, characterUpdate.hp)
+    setCharacterHp(db, characterUpdate.characterId, characterUpdate.hp.get(0))
 
   for battleTrigger in battleTriggers:
     var isAreaObject = battleTrigger.triggerType.get("") == "area_object"
@@ -98,8 +104,6 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
             removeAreaEnemy(db, areaKeyId, triggerId)
 
   let areaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
-
-  let status = getUserStatus(db)
 
   var allRewards = newSeq[Reward]()
 
