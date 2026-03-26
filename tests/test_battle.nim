@@ -94,7 +94,36 @@ proc test_battle_finish_challenge_data(saves_dir: string) =
 
 
 proc testLostBattleFinish() =
-    doAssert(false)
+  var ctx = getInMemorySembaCtx()
+
+  discard sembaCall(ctx, "/battle/start", %*{
+    "battleEntryIds": [ 2000042 ],
+    "lineCharacterIds": [ 100101 ],
+    "battleTriggers": [ { "triggerType": "area_object", "triggerIds": [ 30701301 ] } ],
+    "advantageType": "disadvantage",
+    "currentLocation": {
+      "areaType": 1, "direction": 4,
+      "positionCoordinates": { "x": 18.253134, "y": 42.189922, "z": -21.34115 },
+      "areaKeyId": 300401
+    },
+    "bloodStainLocation": {
+      "areaKeyId": 300401, "areaType": 1,
+      "positionCoordinates": { "x": 18.666283, "y": 41.85231, "z": -21.550146 }
+    }
+  })
+
+  let res = sembaCall(ctx, "/battle/finish", %*{
+    "battleResult": "lost",
+    "characterUpdates": [ { "characterId": 100101 } ],
+    "encounteredEnemyIds": [ 224303 ], "battleTimeSecond": 24, "taskConditionResult": { }
+  })
+
+  doAssert(res != nil)
+
+  for key in res["changedResources"].keys():
+    if key != "status":
+      let resource = res["changedResources"][key]
+      doAssert(resource.kind == JNull)
 
 
 when isMainModule:
