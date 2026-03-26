@@ -1,10 +1,8 @@
 import std/json
-import std/strutils
 
 import ../db_connector/db_sqlite
 
 import ../semba_error
-import timestamp
 import challenge_progress
 import challenge
 import user
