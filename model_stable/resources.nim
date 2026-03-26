@@ -25,6 +25,7 @@ import item
 import magic_orb
 import nine_sequence
 import tutorial_state
+import tip
 import tension_card
 import user
 import lux_phantasma
@@ -75,13 +76,16 @@ type Resources* = object
   status: Option[JsonNode] # FIXME: Status
   synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
   tensionCards: Option[seq[JsonNode]] # FIXME: TensionCard
-  tips: Option[seq[JsonNode]] # FIXME: Tip
+  tips*: Option[seq[Tip]]
   totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
   tutorialStates: Option[seq[JsonNode]] # FIXME: TutorialState
   wallet: Option[JsonNode] # FIXME: Wallet
   warpPoints: Option[seq[JsonNode]] # FIXME: WarpPoint
   xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
+
+type ChangedResourcesResponse* = object
+  changedResources*: Resources
 
 
 proc updateResources*(db: DbConn, changedResources: var JsonNode) =

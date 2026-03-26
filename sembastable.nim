@@ -100,6 +100,8 @@ proc getJsonResultStable*(
 
   elif uri == "/tip/release":
     result = tip_Release(db, jsonReq)
+  elif uri == "/tip/release_by_battle":
+    result = %*tip_ReleaseByBattle(db, to(jsonReq, TipReleaseByBattleRequest))
 
   elif uri == "/user/cross_date":
     result = user_CrossDate(db, jsonReq)

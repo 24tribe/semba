@@ -1,7 +1,15 @@
 import std/json
 import std/strutils
+import std/options
 
 import ../db_connector/db_sqlite
+
+import timestamp
+
+
+type Tip* = object
+  tipId*: int
+  releasedAt*: Timestamp
 
 
 proc addTip*(db: DbConn, tip: JsonNode) =
@@ -30,3 +38,9 @@ proc getTips*(db: DbConn): seq[JsonNode] =
       "tipId": tipId,
       "releasedAt": releasedAt
     })
+
+proc getFirstTipIdNotInDb*(db: DbConn, tipIds: openArray[int]): Option[int] = 
+  for tipId in tipIds:
+    let row = db.getRow(sql"SELECT tipId FROM tips WHERE tipId = ?", tipId)
+    if row[0] == "":
+      return some(tipId)
