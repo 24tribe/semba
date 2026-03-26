@@ -115,11 +115,9 @@ else
 endif
 
 if host_machine.system() == 'windows'
-    test_semba_output = 'test_semba.exe'
-    test_tip_output = 'test_tip.exe'
+    exe_suffix = '.exe'
 else
-    test_semba_output = 'test_semba'
-    test_tip_output = 'test_tip'
+    exe_suffix = ''
 endif
 
 libsemba = custom_target(
@@ -139,7 +137,7 @@ test_semba = custom_target(
     depends : [sqlite3_c, semba_db],
     depend_files : semba_core_files,
     input : ['tests/test_semba.nim'],
-    output : test_semba_output,
+    output : 'test_semba' + exe_suffix,
     command : [
         nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
         '-o:@OUTPUT@', '@INPUT@'
@@ -151,7 +149,19 @@ test_tip = custom_target(
     depends : [sqlite3_c, semba_db],
     depend_files : semba_core_files,
     input : ['tests/test_tip.nim'],
-    output : test_tip_output,
+    output : 'test_tip' + exe_suffix,
+    command : [
+        nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
+        '-o:@OUTPUT@', '@INPUT@'
+    ],
+    build_by_default : get_option('build_tests')
+)
+
+test_battle = custom_target(
+    depends : [sqlite3_c, semba_db],
+    depend_files : semba_core_files,
+    input : ['tests/test_battle.nim'],
+    output : 'test_battle' + exe_suffix,
     command : [
         nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
         '-o:@OUTPUT@', '@INPUT@'
@@ -161,13 +171,16 @@ test_tip = custom_target(
 
 test_saves_path = meson.current_source_dir() + '/test_saves'
 
+# FIXME: find a way to not repeat everything two times?
 if build_machine.system() == 'windows'
     test_wrapper = executable('test_wrapper', 'test_wrapper.c')
     test('test semba', test_wrapper, args : [test_semba, test_saves_path])
     test('test tip', test_wrapper, args : [test_tip, test_saves_path])
+    test('test battle', test_wrapper, args : [test_battle, test_saves_path])
 else
     test('test semba', test_semba, args : test_saves_path)
     test('test tip', test_tip)
+    test('test battle', test_battle, args : test_saves_path)
 endif
 
 semba_dep = declare_dependency(
