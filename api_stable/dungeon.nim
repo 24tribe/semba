@@ -19,7 +19,7 @@ type DungeonBattleStartRequest = object
   dungeonDifficultyId: int
   entityIds: seq[int]
   lineCharacterIds: seq[int]
-  advantageType: string
+  advantageType: Option[string]
   isAttackHit: bool
 
 type DungeonResumeRequest = object
