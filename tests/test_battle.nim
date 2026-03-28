@@ -6,6 +6,7 @@ import std/cmdline
 
 import test_semba
 
+import ../model_stable/battle
 import ../model_stable/challenge_task
 import ../model_stable/challenge_progress
 
@@ -33,6 +34,21 @@ proc test_endrone_battle_start(saves_dir: string) =
   })
 
   doAssert(res != nil)
+
+  let battleParameters = to(res["battleParameters"], seq[BattleParameter])
+
+  doAssert(battleParameters == to(%*[{
+    "id": 1000004,
+    "enemies": [
+      {
+        "id": 257101,
+        "attack": 210,
+        "defense": 100,
+        "hp": 85536,
+        "hpStackCount": 3
+      }
+    ]
+  }], seq[BattleParameter]))
 
 
 proc test_battle_finish_challenge_data(saves_dir: string) =
