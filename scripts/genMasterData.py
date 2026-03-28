@@ -415,20 +415,23 @@ def gen_md_character_level(md_character_level, f):
 def gen_md_battle_enemy(md_battle_enemy_json, f):
     xprint = lambda *args: print(*args, file=f)
 
-    xprint("INSERT INTO mdBattleEnemy (id, enemyId) VALUES")
+    xprint("INSERT INTO mdBattleEnemy (id, enemyId, hpStackCountOverride, hpStatusFactor, atkStatusFactor) VALUES")
 
     first = True
 
     for battle_enemy in md_battle_enemy_json:
         battle_enemy_id = battle_enemy["id"]
         enemy_id = battle_enemy["enemy_id"]
+        hp_stack_count_override = convert_to_sql(battle_enemy["hp_stack_count_override"])
+        hp_status_factor = battle_enemy["hp_status_factor"]
+        atk_status_factor = battle_enemy["atk_status_factor"]
 
         if first:
             first = False
         else:
             f.write(",")
 
-        xprint(f"({battle_enemy_id}, {enemy_id})")
+        xprint(f"({battle_enemy_id}, {enemy_id}, {hp_stack_count_override}, {hp_status_factor}, {atk_status_factor})")
 
     xprint(";")
 
