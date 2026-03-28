@@ -58,7 +58,9 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
 
   setUserStatus(db, status)
 
-  let battleParameters = getBattleParameters(db, jsonReq["battleEntryIds"])
+  let battleEntryIds = to(jsonReq["battleEntryIds"], seq[int])
+
+  let battleParameters = getBattleParametersFromBattleEntryIds(db, battleEntryIds)
 
   let advantageType = jsonReq.getOrDefault("advantageType")
 
@@ -73,7 +75,7 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
   }
 
   lastBattleInfo = some(BattleInfo(
-    battleEntryIds: to(jsonReq["battleEntryIds"], seq[int]),
+    battleEntryIds: battleEntryIds,
     lineCharacterIds: lineCharacterIds,
     currentLocation: currentLocation,
     battleTriggers: to(jsonReq["battleTriggers"], seq[BattleTrigger]),
