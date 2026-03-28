@@ -18,7 +18,7 @@ type Enemy* = object
   attack*: int
   defense*: int
   hp*: int
-  isSkipEncounterAnimation*: bool
+  isSkipEncounterAnimation*: Option[bool]
   hpStackCount*: Option[int]
 
 type MdEnemyLevel* = object
