@@ -133,18 +133,6 @@ libsemba = custom_target(
     build_by_default : true
 )
 
-test_semba = custom_target(
-    depends : [sqlite3_c, semba_db],
-    depend_files : semba_core_files,
-    input : ['tests/test_semba.nim'],
-    output : 'test_semba' + exe_suffix,
-    command : [
-        nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
-        '-o:@OUTPUT@', '@INPUT@'
-    ],
-    build_by_default : get_option('build_tests')
-)
-
 test_tip = custom_target(
     depends : [sqlite3_c, semba_db],
     depend_files : semba_core_files,
@@ -181,20 +169,60 @@ test_adventure = custom_target(
     build_by_default : get_option('build_tests')
 )
 
+test_reward = custom_target(
+    depends : [sqlite3_c, semba_db],
+    depend_files : semba_core_files,
+    input : ['tests/test_reward.nim'],
+    output : 'test_reward' + exe_suffix,
+    command : [
+        nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
+        '-o:@OUTPUT@', '@INPUT@'
+    ],
+    build_by_default : get_option('build_tests')
+)
+
+test_extra = custom_target(
+    depends : [sqlite3_c, semba_db],
+    depend_files : semba_core_files,
+    input : ['tests/test_extra.nim'],
+    output : 'test_extra' + exe_suffix,
+    command : [
+        nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
+        '-o:@OUTPUT@', '@INPUT@'
+    ],
+    build_by_default : get_option('build_tests')
+)
+
+test_semba_private = custom_target(
+    depends : [sqlite3_c, semba_db],
+    depend_files : semba_core_files,
+    input : ['tests/test_semba_private.nim'],
+    output : 'test_semba_private' + exe_suffix,
+    command : [
+        nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
+        '-o:@OUTPUT@', '@INPUT@'
+    ],
+    build_by_default : get_option('build_tests')
+)
+
 test_saves_path = meson.current_source_dir() + '/test_saves'
 
 # FIXME: find a way to not repeat everything two times?
 if build_machine.system() == 'windows'
     test_wrapper = executable('test_wrapper', 'test_wrapper.c')
-    test('test semba', test_wrapper, args : [test_semba, test_saves_path])
     test('test tip', test_wrapper, args : [test_tip, test_saves_path])
     test('test battle', test_wrapper, args : [test_battle, test_saves_path])
     test('test adventure', test_wrapper, args : [test_adventure, test_saves_path])
+    test('test reward', test_wrapper, args : [test_reward, test_saves_path])
+    test('test extra', test_wrapper, args : [test_extra, test_saves_path])
+    test('test sembaprivate', test_wrapper, args : [test_semba_private, test_saves_path])
 else
-    test('test semba', test_semba, args : test_saves_path)
     test('test tip', test_tip)
     test('test battle', test_battle, args : test_saves_path)
     test('test adventure', test_adventure, args : test_saves_path)
+    test('test reward', test_reward, args : test_saves_path)
+    test('test extra', test_extra, args : test_saves_path)
+    test('test sembaprivate', test_semba_private, args : test_saves_path)
 endif
 
 semba_dep = declare_dependency(

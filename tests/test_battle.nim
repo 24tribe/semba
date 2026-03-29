@@ -4,8 +4,7 @@ import std/options
 import std/algorithm
 import std/cmdline
 
-import test_semba
-
+import utils
 import ../model_stable/battle
 import ../model_stable/challenge_task
 import ../model_stable/challenge_progress

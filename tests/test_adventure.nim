@@ -4,8 +4,7 @@ import std/cmdline
 import std/json
 import std/options
 
-import test_semba
-
+import utils
 import ../model_stable/adventure_variable
 import ../model_stable/area_object
 import ../model_stable/challenge_progress
