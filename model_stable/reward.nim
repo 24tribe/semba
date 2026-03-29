@@ -28,7 +28,7 @@ type Reward* = object
 
 type Rewards* = object
   `type`*: Option[int]
-  contents: seq[Reward]
+  contents*: seq[Reward]
 
 
 let enigmaticRemnentId* = 105
