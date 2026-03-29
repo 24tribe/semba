@@ -12,6 +12,11 @@ type City* = object
   isGearShopReleased: Option[bool]
   releasedAt: Option[Timestamp]
 
+type CityId* = enum
+  cityIdShinagawa = 10
+  cityIdMinato = 13
+  cityIdChiyoda = 14
+
 
 proc addCity*(db: DbConn, city: JsonNode) =
   let cityId = city["cityId"].getInt()

@@ -8,6 +8,7 @@ import ../db_connector/db_sqlite
 import ../dungeongen
 import ../semba_error
 import timestamp
+import city
 
 
 type Dungeon* = object
@@ -183,7 +184,7 @@ proc getMdDungeonEnemyRates*(db: DbConn, dungeonEnemyRateSetId: int): seq[MdDung
 
 
 proc getNotGoalEnemyRateSetId*(cityId: int, dungeonId: int): int =
-  if cityId == 10 or cityId == 13:
+  if cityId == cityIdShinagawa.int or cityId == cityIdMinato.int:
     # in shinagawa and minato every dungeon has a enemyRateSetId
     result = dungeonId*100 + 1
   else:
