@@ -202,22 +202,11 @@ proc adventure_ReadSequence*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let areaItemId = jsonReq["areaItemId"].getInt()
 
-  let rewards = getAreaItemRewards(db, areaItemId)
+  let rewards = %*getAreaItemRewards(db, areaItemId)
 
   let changedResources = %*{}
 
-  for reward in rewards:
-    doAssert reward["type"].getInt() == 5
-    for content in reward["contents"]:
-      if content["type"].getInt() == kaneContentType.int:
-        # TODO: add kane to kane counter and update changedResources
-        doAssert content["id"].getInt() == 1
-      elif content["type"].getInt() == charExpContentType.int:
-        # TODO: add exp to characters and update changedResources
-        doAssert content["id"].getInt() == 1
-      else:
-        # TODO: add item to inventory and update changedResources
-        doAssert content["type"].getInt() == itemContentType.int
+  # FIXME: update kane, char exp and items
 
   return %*{
     "areaItem": {
