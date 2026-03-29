@@ -345,6 +345,8 @@ proc testAcquireAreaItemInLogs() =
   var r3Found = false
 
   for reward in contents:
+    doAssert(reward.quantity != 0)
+
     if sameReward(reward, reward1):
       r1Found = true
 
