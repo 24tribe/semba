@@ -1,6 +1,7 @@
 import std/options
 import std/json
 import std/strutils
+import std/math
 
 import ../db_connector/db_sqlite
 
@@ -38,6 +39,13 @@ type MdBattleWave = object
 type BattleParameter* = object
   id*: int
   enemies*: seq[Enemy]
+
+type MdBattleEnemy = object
+  id: int
+  enemyId: int
+  hpStackCountOverride: Option[int]
+  hpStatusFactor: float
+  atkStatusFactor: float
 
 
 proc getMdBattleEntry(db: DbConn, battleEntryId: int): MdBattleEntry =
@@ -152,19 +160,35 @@ proc getBattleExp*(db: DbConn, battleEntryIds: seq[int]): float =
     result += dropExp
 
 
-proc getMdEnemyFromBattleEnemyId(db: DbConn, battleEnemyId: int): MdEnemy =
+proc getMdBattleEnemy(db: DbConn, battleEnemyId: int): MdBattleEnemy =
   let row = db.getRow(sql"""
-    SELECT mdEnemy.id, attack, defense, hp, dropExp
-    FROM mdEnemy INNER JOIN mdBattleEnemy ON mdEnemy.id = mdBattleEnemy.enemyId
-    WHERE mdBattleEnemy.id = ?
+    SELECT enemyId, hpStackCountOverride, hpStatusFactor, atkStatusFactor FROM mdBattleEnemy
+    WHERE id = ?
   """, battleEnemyId)
 
+  if row[0] != "":
+    result = MdBattleEnemy(
+      id: battleEnemyId,
+      enemyId: parseInt(row[0]),
+      hpStackCountOverride: if row[1] != "": some(parseInt(row[1])) else: none(int),
+      hpStatusFactor: parseFloat(row[2]),
+      atkStatusFactor: parseFloat(row[3]),
+    )
+
+
+proc getMdEnemy(db: DbConn, enemyId: int): MdEnemy =
+  let row = db.getRow(sql"SELECT attack, defense, hp, dropExp, hpStackCount FROM mdEnemy WHERE id = ?", enemyId)
+
+  if row[0] == "":
+    raise newException(SembaError, "enemyId=" & $enemyId & " not found in db")
+
   result = MdEnemy(
-    id: parseInt(row[0]),
-    attack: parseInt(row[1]),
-    defense: parseInt(row[2]),
-    hp: parseInt(row[3]),
-    dropExp: parseInt(row[4])
+    id: enemyId,
+    attack: parseInt(row[0]),
+    defense: parseInt(row[1]),
+    hp: parseInt(row[2]),
+    dropExp: parseInt(row[3]),
+    hpStackCount: parseInt(row[4]),
   )
 
 proc getBattleEntryIdsFromDungeonEntityIds*(db: DbConn, dungeonId: int, entityIds: seq[int]): seq[int] =
@@ -186,12 +210,16 @@ proc getBattleParametersFromBattleEntryIds*(db: DbConn, battleEntryIds: seq[int]
       let battleWave = getMdBattleWave(db, battleWaveId)
 
       for battleEnemyId in battleWave.battleEnemyIds:
-        let enemy = getMdEnemyFromBattleEnemyId(db, battleEnemyId)
+        let battleEnemy = getMdBattleEnemy(db, battleEnemyId)
+        let enemy = getMdEnemy(db, battleEnemy.enemyId)
+        let hpStackCount = battleEnemy.hpStackCountOverride.get(enemy.hpStackCount)
         enemies.add(Enemy(
           id: enemy.id,
-          attack: (enemy.attack.float*enemyLevel.atkStatusFactor).int,
+          attack: round(enemy.attack.float*enemyLevel.atkStatusFactor*battleEnemy.atkStatusFactor).int,
           defense: (enemy.defense.float*enemyLevel.defStatusFactor).int,
-          hp: (enemy.hp.float*enemyLevel.hpStatusFactor).int,
+          hp: round(enemy.hp.float*enemyLevel.hpStatusFactor*battleEnemy.hpStatusFactor).int,
+          hpStackCount: some(hpStackCount),
+          # FIXME: isSkipEncounterAnimation?
         ))
 
     result.add(BattleParameter(

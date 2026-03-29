@@ -12,6 +12,7 @@ type MdEnemy* = object
   attack*: int
   defense*: int
   hp*: int
+  hpStackCount*: int
 
 type Enemy* = object
   id*: int
