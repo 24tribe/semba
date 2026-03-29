@@ -1,6 +1,7 @@
 import std/options
 import std/strutils
 import std/random
+import std/json
 
 import ../db_connector/db_sqlite
 
@@ -15,6 +16,19 @@ type Reward* = object
   `type`*: int
   id*: int
   quantity*: int
+  entityId*: Option[int]
+  resourceParams*: Option[JsonNode] # FIXME: ResourceParams
+  isNew*: Option[bool]
+  isBonus*: Option[bool]
+  overflowed*: Option[bool]
+  discardedQuantity*: Option[int]
+  sentAsMail*: Option[bool]
+  oldValue*: Option[int]
+  otherRewards*: Option[seq[Reward]]
+
+type Rewards* = object
+  `type`*: Option[int]
+  contents: seq[Reward]
 
 
 let enigmaticRemnentId* = 105
