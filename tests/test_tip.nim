@@ -1,7 +1,7 @@
 import std/assertions
 import std/json
 
-import test_semba
+import utils
 
 
 proc testTipReleaseByBattle() =
