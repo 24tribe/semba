@@ -386,8 +386,6 @@ proc testDummyAreaObjects() =
     }
   }, AreaObject)
 
-  echo(res["areaObjects"])
-
   let areaObjects = to(res["areaObjects"], seq[AreaObject])
 
   doAssert(areaObjects.any(proc (x: AreaObject): bool = x == dummyAreaObject))
