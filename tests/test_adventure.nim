@@ -3,6 +3,7 @@ import std/assertions
 import std/cmdline
 import std/json
 import std/options
+import std/sequtils
 
 import utils
 import ../model_stable/adventure_variable
@@ -368,6 +369,30 @@ proc testAcquireAreaItemNotInLogs() =
   doAssert(res != nil)
 
 
+proc testDummyAreaObjects() =
+  var ctx = getInMemorySembaCtx()
+
+  let res = ctx.sembaCall("/adventure/area_object", %*{ "areaId": 300401 })
+
+  doAssert(res != nil)
+
+  let dummyAreaObject = to(%*{
+    "areaPointId": 300401601,
+    "areaObjectBehaviorId": 30600501,
+    "action": {
+      "type": 4,
+      "areaItemId": 30600501,
+      "id": 1
+    }
+  }, AreaObject)
+
+  echo(res["areaObjects"])
+
+  let areaObjects = to(res["areaObjects"], seq[AreaObject])
+
+  doAssert(areaObjects.any(proc (x: AreaObject): bool = x == dummyAreaObject))
+
+
 when isMainModule:
   let saves_dir = paramStr(1)
 
@@ -378,3 +403,4 @@ when isMainModule:
 
   testAcquireAreaItemInLogs()
   testAcquireAreaItemNotInLogs()
+  testDummyAreaObjects()
