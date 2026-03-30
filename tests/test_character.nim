@@ -20,7 +20,20 @@ proc testCharacterEquip() =
     let characters = to(%*(crRes.changedResources.characters.get()), seq[Character])
 
     doAssert(characters.len == 1)
+    doAssert(characters[0].gearSlot1.isNone())
+    doAssert(characters[0].gearSlot2.isNone())
     doAssert(characters[0].gearSlot3.get() == gearId)
+
+    let res2 = ctx.sembaCall("/character/equip", %*{ "characterId": 101101 })
+
+    let crRes2 = to(res2, ChangedResourcesResponse)
+
+    let characters2 = to(%*(crRes2.changedResources.characters.get()), seq[Character])
+
+    doAssert(characters2.len == 1)
+    doAssert(characters2[0].gearSlot1.isNone())
+    doAssert(characters2[0].gearSlot2.isNone())
+    doAssert(characters2[0].gearSlot3.isNone())
 
     # TODO: should check status updates?
 
