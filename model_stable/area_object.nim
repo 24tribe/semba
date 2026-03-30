@@ -14,7 +14,7 @@ type AreaObjectBehaviorConditionType* = enum
 
 type AreaObjectAction* = object
   `type`*: int
-  id*: int
+  id*: Option[int]
   label*: Option[string]
   areaItemId*: Option[int]
   areaEnemyId*: Option[int]
@@ -160,7 +160,7 @@ proc getAreaObjectAction*(db: DbConn, areaObjectBehaviorId: int): Option[AreaObj
       eventLiftId: tryParseInt(row[5]),
       fieldBossId: tryParseInt(row[6]),
       graffitiArtId: tryParseInt(row[7]),
-      id: parseInt(row[8]),
+      id: tryParseInt(row[8]),
       label: if row[9] != "": some(row[9]) else: none(string),
       sequenceId: tryParseInt(row[10]),
       `type`: parseInt(row[11]),
