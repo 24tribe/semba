@@ -7,10 +7,31 @@ import ../db_connector/db_sqlite
 
 
 type RewardType* = enum
-  rewardCharacter = 4,
-  rewardCharacterPiece = 5,
-  rewardItem = 7,
+  rewardInvalid = 0
+  rewardFreeGem = 1
+  rewardPaidGem = 2
+  rewardGold = 3
+  rewardCharacter = 4
+  rewardCharacterPiece = 5
+  rewardGear = 6
+  rewardItem = 7
+  rewardStamina = 8
   rewardTensionCard = 9
+  rewardUserRankExp = 10
+  rewardCharacterCostume = 11
+  rewardSeasonPassExp = 12
+  rewardCharacterExp = 13
+  rewardFlowerMark = 15
+  rewardProfileBadge = 16
+  rewardProfileBanner = 17
+  rewardMountingPower = 19
+  rewardSynthesisRecipe = 20
+  rewardMysteryBox = 21
+  rewardCostumeToken = 22
+  rewardGearDrop = 23
+  rewardGemCost = 24
+  rewardMagicOrb = 25
+  rewardCharacterSpecificDrop = 26
 
 type Reward* = object
   `type`*: int
