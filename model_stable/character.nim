@@ -77,7 +77,7 @@ const dbCharacterFields* = """
   criticalRate, criticalDamageRate, movementSpeed, damageInflictedRate, tensionIncreaseRate,
   cpRecastRate, spGaugeIncreaseRate, attackSpeed, characterCostumeId, abnormalityParamSet,
   trainingScoreLevelScore, trainingScoreRankScore, actionPointMax,
-  actionPointRate, actionPointConsumption, damageTakenRate, limitBreak
+  actionPointRate, actionPointConsumption, damageTakenRate, limitBreak, gearSlot1, gearSlot2, gearSlot3
 """
 
 const selectCharacterSql = """
@@ -133,15 +133,19 @@ proc addCharacter*(db: DbConn, character: JsonNode) =
   let damageTakenRate = character["damageTakenRate"].getInt()
   let limitBreak = character.getOrDefault("limitBreak").getInt()
 
+  let gearSlot1 = to(character.getOrDefault("gearSlot1"), Option[int])
+  let gearSlot2 = to(character.getOrDefault("gearSlot2"), Option[int])
+  let gearSlot3 = to(character.getOrDefault("gearSlot3"), Option[int])
+
   db.exec(sql"""
     INSERT INTO characters
     (characterId, exp, hp, attack, defense, maxHp, receivedAt, characterOwnershipType,
      criticalRate, criticalDamageRate, movementSpeed, damageInflictedRate, tensionIncreaseRate,
      cpRecastRate, spGaugeIncreaseRate, attackSpeed, characterCostumeId, abnormalityParamSet,
      trainingScoreLevelScore, trainingScoreRankScore, actionPointMax, actionPointRate,
-     actionPointConsumption, damageTakenRate)
+     actionPointConsumption, damageTakenRate, gearSlot1, gearSlot2, gearSlot3)
     VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (characterId) DO UPDATE SET
       exp = excluded.exp, hp = excluded.hp, attack = excluded.attack, defense = excluded.defense,
       maxHp = excluded.maxHp, receivedAt = excluded.receivedAt, characterOwnershipType = excluded.characterOwnershipType,
@@ -152,12 +156,14 @@ proc addCharacter*(db: DbConn, character: JsonNode) =
       characterCostumeId = excluded.characterCostumeId, abnormalityParamSet = excluded.abnormalityParamSet,
       trainingScoreLevelScore = excluded.trainingScoreLevelScore, trainingScoreRankScore = excluded.trainingScoreRankScore,
       actionPointMax = excluded.actionPointMax, actionPointRate = excluded.actionPointRate,
-      actionPointConsumption = excluded.actionPointConsumption, damageTakenRate = excluded.damageTakenRate
+      actionPointConsumption = excluded.actionPointConsumption, damageTakenRate = excluded.damageTakenRate,
+      gearSlot1 = excluded.gearSlot1, gearSlot2 = excluded.gearSlot2, gearSlot3 = excluded.gearSlot3
   """, characterId, exp, hp, attack, defense, maxHp, receivedAt, characterOwnershipType,
      criticalRate, criticalDamageRate, movementSpeed, damageInflictedRate, tensionIncreaseRate,
      cpRecastRate, spGaugeIncreaseRate, attackSpeed, characterCostumeId, abnormalityParamSet,
      trainingScoreLevelScore, trainingScoreRankScore, actionPointMax, actionPointRate,
-     actionPointConsumption, damageTakenRate
+     actionPointConsumption, damageTakenRate,
+     optionToSqlArg(gearSlot1), optionToSqlArg(gearSlot2), optionToSqlArg(gearSlot3)
   )
 
   addCharacterLimitBreak(db, characterId, limitBreak)
@@ -194,6 +200,9 @@ proc parseCharacterRow*(characterRow: Row): JsonNode =
   let actionPointConsumption = parseInt(characterRow[22])
   let damageTakenRate = parseInt(characterRow[23])
   let limitBreak = if characterRow[24] == "": 0 else: parseInt(characterRow[24])
+  let gearSlot1 = if characterRow[25] == "": none(int) else: some(parseInt(characterRow[25]))
+  let gearSlot2 = if characterRow[26] == "": none(int) else: some(parseInt(characterRow[26]))
+  let gearSlot3 = if characterRow[27] == "": none(int) else: some(parseInt(characterRow[27]))
 
   return %*{
     "characterId": characterId,
@@ -221,6 +230,9 @@ proc parseCharacterRow*(characterRow: Row): JsonNode =
     "actionPointConsumption": actionPointConsumption,
     "damageTakenRate": damageTakenRate,
     "limitBreak": limitBreak,
+    "gearSlot1": gearSlot1,
+    "gearSlot2": gearSlot2,
+    "gearSlot3": gearSlot3,
   }
 
 
