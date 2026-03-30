@@ -16,6 +16,7 @@ import ../model_stable/resources
 import ../model_stable/area_item
 import ../model_stable/tutorial_state
 import ../model_stable/warp_point
+import ../model_stable/reward
 
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -202,9 +203,24 @@ proc adventure_ReadSequence*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let areaItemId = jsonReq["areaItemId"].getInt()
 
-  let rewards = %*getAreaItemRewards(db, areaItemId)
+  let rewards = getAreaItemRewards(db, areaItemId)
 
-  let changedResources = %*{}
+  var gears = newSeq[JsonNode]()
+
+  for reward in rewards[0].contents:
+    if reward.`type` == rewardGear.int:
+      gears.add(%*{
+        "entityId": reward.entityId.get(),
+        "gearId": reward.id,
+        "receivedAt": "2025-10-13T22:05:18Z",
+        "subStatus1Id": reward.resourceParams.get()["gearRewardStatus"]["subStatusIds"][0].getInt(),
+        "subStatus2Id": reward.resourceParams.get()["gearRewardStatus"]["subStatusIds"][1].getInt(),
+        "subStatus3Id": reward.resourceParams.get()["gearRewardStatus"]["subStatusIds"][2].getInt(),
+        "trainingScoreLevelScore": 1,
+        "rarity": reward.resourceParams.get()["gearRewardStatus"]["gearRarity"],
+      })
+
+  let changedResources = %*{"gears": gears}
 
   # FIXME: update kane, char exp and items
 
