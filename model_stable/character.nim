@@ -6,6 +6,7 @@ import std/options
 import ../db_connector/db_sqlite
 
 import ../semba_error
+import ../extsqlite
 import user
 import mission
 import battle
@@ -396,11 +397,6 @@ proc deleteGuestCharacters*(db: DbConn, characterIds: openArray[int]) =
 proc updateCharacterGear*(
   db: DbConn, charId: int, gearSlot1: Option[int], gearSlot2: Option[int], gearSlot3: Option[int]
 ) =
-  if gearSlot1.isSome():
-    db.exec(sql"UPDATE characters SET gearSlot1 = ? WHERE characterId = ?", gearSlot1.get(), charId)
-
-  if gearSlot2.isSome():
-    db.exec(sql"UPDATE characters SET gearSlot2 = ? WHERE characterId = ?", gearSlot2.get(), charId)
-
-  if gearSlot3.isSome():
-    db.exec(sql"UPDATE characters SET gearSlot3 = ? WHERE characterId = ?", gearSlot3.get(), charId)
+  db.exec(sql"UPDATE characters SET gearSlot1 = ? WHERE characterId = ?", optionToSqlArg(gearSlot1), charId)
+  db.exec(sql"UPDATE characters SET gearSlot2 = ? WHERE characterId = ?", optionToSqlArg(gearSlot2), charId)
+  db.exec(sql"UPDATE characters SET gearSlot3 = ? WHERE characterId = ?", optionToSqlArg(gearSlot3), charId)
