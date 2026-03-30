@@ -248,3 +248,17 @@ proc getBattleFinishAreaObjects*(db: DbConn, battleEntryId: int): JsonNode =
   )
 
   return if row[0] != "": parseJson(row[0]) else: nil
+
+
+proc getDummyAreaObjects*(db: DbConn, areaId: int): seq[AreaObject] =
+  let rows = db.getAllRows(sql"""
+    SELECT areaPointId, areaObjectBehaviorId, action FROM dummyAreaObjects
+    WHERE areaId = ?
+  """, areaId)
+
+  for row in rows:
+    result.add(AreaObject(
+      areaPointId: parseInt(row[0]),
+      areaObjectBehaviorId: some(parseInt(row[1])),
+      action: some(to(parseJson(row[2]), AreaObjectAction))
+    ))
