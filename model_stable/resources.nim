@@ -41,7 +41,7 @@ type Resources* = object
   challenges: Option[seq[Challenge]]
   challengeProgresses*: Option[seq[ChallengeProgress]]
   challengeTasks*: Option[seq[ChallengeTask]]
-  characters: Option[seq[JsonNode]] # FIXME: add Character type
+  characters*: Option[seq[JsonNode]] # FIXME: add Character type
   characterCostumes: Option[seq[CharacterCostume]]
   characterLikabilities: Option[seq[CharacterLikability]]
   characterMountingPowers: Option[seq[CharacterMountingPower]]
