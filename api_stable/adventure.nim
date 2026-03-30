@@ -5,6 +5,7 @@ import std/sequtils
 
 import ../db_connector/db_sqlite
 
+import ../model_stable/timestamp
 import ../model_stable/user
 import ../model_stable/lux_phantasma
 import ../model_stable/area_object
@@ -18,6 +19,7 @@ import ../model_stable/area_item
 import ../model_stable/tutorial_state
 import ../model_stable/warp_point
 import ../model_stable/reward
+import ../model_stable/gear
 
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -210,20 +212,24 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   let rewards = getAreaItemRewards(db, areaItemId)
 
-  var gears = newSeq[JsonNode]()
+  var gears = newSeq[Gear]()
 
   for reward in rewards[0].contents:
     if reward.`type` == rewardGear.int:
-      gears.add(%*{
-        "entityId": reward.entityId.get(),
-        "gearId": reward.id,
-        "receivedAt": "2025-10-13T22:05:18Z",
-        "subStatus1Id": reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[0],
-        "subStatus2Id": reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[1],
-        "subStatus3Id": reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[2],
-        "trainingScoreLevelScore": 1,
-        "rarity": reward.resourceParams.get().gearRewardStatus.get().gearRarity,
-      })
+      let gear = Gear(
+        entityId: reward.entityId.get(),
+        gearId: reward.id,
+        receivedAt: getTimestampNow(),
+        subStatus1Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[0]),
+        subStatus2Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[1]),
+        subStatus3Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[2]),
+        trainingScoreLevelScore: some(1),
+        rarity: reward.resourceParams.get().gearRewardStatus.get().gearRarity
+      )
+
+      addGear(db, gear)
+
+      gears.add(gear)
 
   let changedResources = %*{"gears": gears}
 
