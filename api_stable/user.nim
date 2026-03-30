@@ -13,6 +13,7 @@ import ../model_stable/character
 import ../model_stable/city
 import ../model_stable/dungeon
 import ../model_stable/formation
+import ../model_stable/gear
 import ../model_stable/item
 import ../model_stable/lux_phantasma
 import ../model_stable/magic_orb
@@ -75,6 +76,7 @@ proc user_LogIn*(db: DbConn): JsonNode =
   let magicOrbs = getMagicOrbs(db)
   let areaChangeLocks = getAreaChangeLocks(db)
   let missions = getMissions(db)
+  let gears = getGears(db)
 
   return %*{
     "resources": {
@@ -92,6 +94,7 @@ proc user_LogIn*(db: DbConn): JsonNode =
       "cities": cities,
       "dungeons": dungeons,
       "formations": formations,
+      "gears": gears,
       "items": items,
       "magicOrbs": magicOrbs,
       "missions": missions,
