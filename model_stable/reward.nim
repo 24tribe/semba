@@ -33,12 +33,26 @@ type RewardType* = enum
   rewardMagicOrb = 25
   rewardCharacterSpecificDrop = 26
 
+type GearRewardStatus* = object
+  subStatusIds*: Option[seq[int]]
+  gearRarity*: int
+
+type GearSubStatus* = object
+  gearStatusRateSetIds*: Option[seq[int]]
+
+type ResourceParams* = object
+  oldLimitBreak*: Option[int]
+  newLimitBreak*: Option[int]
+  gearRewardStatus*: Option[GearRewardStatus]
+  gearSubStatusDraw*: Option[GearSubStatus]
+  mysteryBoxDrawResults*: Option[JsonNode] # FIXME: use MysteryBoxDrawResults
+
 type Reward* = object
   `type`*: int
   id*: int
   quantity*: int
   entityId*: Option[int]
-  resourceParams*: Option[JsonNode] # FIXME: ResourceParams
+  resourceParams*: Option[ResourceParams]
   isNew*: Option[bool]
   isBonus*: Option[bool]
   overflowed*: Option[bool]

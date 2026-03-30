@@ -55,7 +55,7 @@ proc getGearReward(db: DbConn): Reward =
     id: 30001201,
     quantity: 1,
     entityId: some(popEntityId(db)),
-    resourceParams: some(%*{
+    resourceParams: some(to(%*{
       "gearRewardStatus": {
         "subStatusIds": [
           11011006,
@@ -64,7 +64,7 @@ proc getGearReward(db: DbConn): Reward =
         ],
         "gearRarity": 4
       }
-    }),
+    }, ResourceParams)),
     isNew: some(true),
   )
 

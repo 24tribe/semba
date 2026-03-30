@@ -218,11 +218,11 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
         "entityId": reward.entityId.get(),
         "gearId": reward.id,
         "receivedAt": "2025-10-13T22:05:18Z",
-        "subStatus1Id": reward.resourceParams.get()["gearRewardStatus"]["subStatusIds"][0].getInt(),
-        "subStatus2Id": reward.resourceParams.get()["gearRewardStatus"]["subStatusIds"][1].getInt(),
-        "subStatus3Id": reward.resourceParams.get()["gearRewardStatus"]["subStatusIds"][2].getInt(),
+        "subStatus1Id": reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[0],
+        "subStatus2Id": reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[1],
+        "subStatus3Id": reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[2],
         "trainingScoreLevelScore": 1,
-        "rarity": reward.resourceParams.get()["gearRewardStatus"]["gearRarity"],
+        "rarity": reward.resourceParams.get().gearRewardStatus.get().gearRarity,
       })
 
   let changedResources = %*{"gears": gears}
