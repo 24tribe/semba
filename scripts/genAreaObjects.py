@@ -25,9 +25,14 @@ def main():
             area_ids.add(area_id)
 
     with open(args.output_sql, "w", encoding="utf-8") as f:
+        rows = []
         for flow in first_adventure_area_object_flows:
             if flow["res"] is not None: # why areaId=800010 res is empty?
-                write_sql(f, flow["res"], flow["req"]["areaId"])
+                areaId = flow["req"]["areaId"]
+                write_sql(f, flow["res"], areaId)
+                rows += prepare_dummy_area_objects(areaId, flow["res"]["areaObjects"])
+        
+        write_area_objects_without_id(f, rows)
 
 
 def write_sql(f, data, area_id):
@@ -100,6 +105,34 @@ def write_area_items(f, data, area_id):
 
         print(f"({area_id}, {obj["areaItemId"]})", file=f)
     print(";", file=f)
+
+
+def prepare_dummy_area_objects(area_id, area_objects):
+    targets = filter(lambda x: "areaObjectId" not in x and "areaEnemyRateSetId" not in x, area_objects)
+    targets = list(targets)
+
+    return [
+        (area_id, target["areaPointId"], target["areaObjectBehaviorId"], json.dumps(target["action"]))
+        for target in targets
+    ]
+
+
+def write_area_objects_without_id(f, rows):
+    xprint = lambda *args: print(*args, file=f)
+
+    xprint("INSERT INTO dummyAreaObjects (areaId, areaPointId, areaObjectBehaviorId, action) VALUES")
+
+    first = True
+
+    for areaId, areaPointId, areaObjectBehaviorId, action in rows:
+        if first:
+            first = False
+        else:
+            f.write(",")
+
+        xprint(f"({areaId}, {areaPointId}, {areaObjectBehaviorId}, '{action}')")
+
+    xprint(";")
 
 
 if __name__ == "__main__":
