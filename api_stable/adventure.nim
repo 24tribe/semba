@@ -1,6 +1,7 @@
 import std/json
 import std/strutils
 import std/options
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -70,6 +71,10 @@ proc adventure_AreaObject*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   for areaItem in areaItems:
     areaItemsRes.add(%*{"areaItemId": parseInt(areaItem[0])})
+
+  let dummyAreaObjects = getDummyAreaObjects(db, areaId)
+
+  areaObjects.insert((%*dummyAreaObjects).getElems(), areaObjects.len)
 
   return %*{"areaObjects": areaObjects, "areaItems": areaItemsRes}
 
