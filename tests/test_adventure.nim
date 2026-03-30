@@ -346,6 +346,7 @@ proc testAcquireAreaItemInLogs() =
 
   for reward in contents:
     doAssert(reward.quantity != 0)
+    doAssert(reward.`type` != rewardGearDrop.int)
 
     if sameReward(reward, reward1):
       r1Found = true
