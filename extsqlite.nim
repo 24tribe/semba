@@ -1,4 +1,5 @@
 import std/options
+import std/strutils
 
 import db_connector/sqlite3
 
@@ -18,3 +19,6 @@ proc loadSql*(db: PSqlite3, sql: string) =
 
 proc optionToSqlArg*[T](val: Option[T]): string =
     if val.isSome(): $val.get() else: ""
+
+
+proc tryParseInt*(s: string): Option[int] = (if s != "": some(parseInt(s)) else: none(int))

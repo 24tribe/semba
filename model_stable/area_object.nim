@@ -4,7 +4,7 @@ import std/options
 
 import ../db_connector/db_sqlite
 
-import ../util
+import ../extsqlite
 
 
 type AreaObjectBehaviorConditionType* = enum

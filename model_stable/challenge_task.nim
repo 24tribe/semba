@@ -4,7 +4,7 @@ import std/json
 
 import ../db_connector/db_sqlite
 
-import ../util
+import ../extsqlite
 
 
 type TaskConditionType* = enum
