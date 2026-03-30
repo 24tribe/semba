@@ -12,6 +12,50 @@ import battle
 import timestamp
 
 
+type Character* = object
+  characterId*: int
+  exp*: Option[int]
+  limitBreak*: Option[int]
+  hp*: Option[int]
+  attack*: Option[int]
+  defense*: Option[int]
+  maxHp*: Option[int]
+  gearSlot1*: Option[int]
+  gearSlot2*: Option[int]
+  gearSlot3*: Option[int]
+  receivedAt*: Timestamp
+  characterOwnershipType*: Option[int]
+  dishId*: Option[int]
+  dishEffectCount*: Option[int]
+  dishEffectExpiredAt*: Option[Timestamp]
+  rank*: Option[int]
+  criticalRate*: Option[float]
+  criticalDamageRate*: Option[float]
+  supportPowerRate*: Option[int]
+  movementSpeed*: Option[float]
+  powerRate*: Option[float]
+  dodgeSpeed*: Option[float]
+  damageInflictedRate*: Option[float]
+  tensionIncreaseRate*: Option[float]
+  cpRecastRate*: Option[float]
+  recoveryGivenRate*: Option[float]
+  spGaugeIncreaseRate*: Option[float]
+  attackSpeed*: Option[float]
+  characterCostumeId*: Option[int]
+  characterSkillPanel1Level*: Option[int]
+  characterSkillPanel2Level*: Option[int]
+  characterSkillPanel3Level*: Option[int]
+  characterSkillPanel4Level*: Option[int]
+  characterSkillPanel5Level*: Option[int]
+  abnormalityParamSet*: Option[JsonNode] # FIXME: use AbnormalityParamSet
+  trainingScore*: Option[int]
+  trainingScoreLevelScore*: Option[int]
+  trainingScoreRankScore*: Option[int]
+  actionPointMax*: Option[int]
+  actionPointRate*: Option[float]
+  actionPointConsumption*: Option[float]
+  damageTakenRate*: Option[float]
+
 type CharacterCostume* = object
   characterCostumeId: int
   receivedAt: Timestamp
@@ -347,3 +391,16 @@ proc deleteGuestCharacters*(db: DbConn, characterIds: openArray[int]) =
     db.exec(sql"""
       DELETE FROM characters WHERE characterId = ? AND characterOwnershipType = ?
     """, characterId, charOwnershipGuest.int)
+
+
+proc updateCharacterGear*(
+  db: DbConn, charId: int, gearSlot1: Option[int], gearSlot2: Option[int], gearSlot3: Option[int]
+) =
+  if gearSlot1.isSome():
+    db.exec(sql"UPDATE characters SET gearSlot1 = ? WHERE characterId = ?", gearSlot1.get(), charId)
+
+  if gearSlot2.isSome():
+    db.exec(sql"UPDATE characters SET gearSlot2 = ? WHERE characterId = ?", gearSlot2.get(), charId)
+
+  if gearSlot3.isSome():
+    db.exec(sql"UPDATE characters SET gearSlot3 = ? WHERE characterId = ?", gearSlot3.get(), charId)
