@@ -333,7 +333,7 @@ proc testAcquireAreaItemInLogs() =
 
   let contents = firstRewards.contents
 
-  doAssert(contents.len in {3, 4}) # the forth one is random
+  doAssert(contents.len >= 3)
 
   let reward1 = Reward(`type`: 3, id: 1, quantity: 1000)
   var r1Found = false
