@@ -16,15 +16,15 @@ type GearRarity* = enum
   gearRaritySsr = 4
 
 type Gear* = object
-  entityId: int
-  gearId: int
-  receivedAt: Timestamp
-  rarity: int
-  isLocked: Option[bool]
-  subStatus1Id: Option[int]
-  subStatus2Id: Option[int]
-  subStatus3Id: Option[int]
-  trainingScoreLevelScore: Option[int]
+  entityId*: int
+  gearId*: int
+  receivedAt*: Timestamp
+  rarity*: int
+  isLocked*: Option[bool]
+  subStatus1Id*: Option[int]
+  subStatus2Id*: Option[int]
+  subStatus3Id*: Option[int]
+  trainingScoreLevelScore*: Option[int]
 
 
 proc addGear*(db: DbConn, gear: Gear) =
