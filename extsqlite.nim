@@ -22,3 +22,5 @@ proc optionToSqlArg*[T](val: Option[T]): string =
 
 
 proc tryParseInt*(s: string): Option[int] = (if s != "": some(parseInt(s)) else: none(int))
+
+proc tryParseBool*(s: string): Option[bool] = (if s != "": some(parseBool(s)) else: none(bool))
