@@ -205,6 +205,18 @@ test_semba_private = custom_target(
     build_by_default : get_option('build_tests')
 )
 
+test_character = custom_target(
+    depends : [sqlite3_c, semba_db],
+    depend_files : semba_core_files,
+    input : ['tests/test_character.nim'],
+    output : 'test_character' + exe_suffix,
+    command : [
+        nim, 'c', '-d:staticSqlite', '--app:console', nim_release_args,
+        '-o:@OUTPUT@', '@INPUT@'
+    ],
+    build_by_default : get_option('build_tests')
+)
+
 test_saves_path = meson.current_source_dir() + '/test_saves'
 
 # FIXME: find a way to not repeat everything two times?
@@ -216,6 +228,7 @@ if build_machine.system() == 'windows'
     test('test reward', test_wrapper, args : [test_reward, test_saves_path])
     test('test extra', test_wrapper, args : [test_extra, test_saves_path])
     test('test sembaprivate', test_wrapper, args : [test_semba_private, test_saves_path])
+    test('test_character', test_wrapper, args : [test_character, test_saves_path])
 else
     test('test tip', test_tip)
     test('test battle', test_battle, args : test_saves_path)
@@ -223,6 +236,7 @@ else
     test('test reward', test_reward, args : test_saves_path)
     test('test extra', test_extra, args : test_saves_path)
     test('test sembaprivate', test_semba_private, args : test_saves_path)
+    test('test_character', test_wrapper, args : [test_character, test_saves_path])
 endif
 
 semba_dep = declare_dependency(
