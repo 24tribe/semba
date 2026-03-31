@@ -44,3 +44,6 @@ proc getCities*(db: DbConn): seq[JsonNode] =
       "isGearShopReleased": isGearShopReleased,
       "releasedAt": releasedAt
     })
+
+
+func areaIdToCityId*(areaId: int): int = areaId div 10000
