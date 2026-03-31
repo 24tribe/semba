@@ -216,7 +216,8 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   for reward in rewards[0].contents.mitems():
     if reward.`type` == rewardGearDrop.int:
-      let (gear, gearReward) = randomGear(db)
+       # FIXME: only golden chests should have a minRarity of gearRaritySsr
+      let (gear, gearReward) = randomGear(db, gearRaritySsr.int)
 
       reward = gearReward
       addGear(db, gear)
