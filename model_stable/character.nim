@@ -308,7 +308,7 @@ proc getCharacters*(db: DbConn): seq[JsonNode] =
     result.add(parseCharacterRow(characterRow))
 
 
-proc getCharacterMaxLevel(db: DbConn): int =
+proc getCharacterMaxLevel*(db: DbConn): int =
   let status = getUserStatus(db)
   let flowerMarks = status.getOrDefault("flowerMark").getInt()
 
