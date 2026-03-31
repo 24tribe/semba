@@ -16,6 +16,11 @@ type CityId* = enum
   cityIdShinagawa = 10
   cityIdMinato = 13
   cityIdChiyoda = 14
+  cityId24City = 30
+  cityIdRift = 80
+  cityIdFractalVise1 = 81
+  cityIdFractalVise2 = 82
+  cityIdFractalVise3 = 83
 
 
 proc addCity*(db: DbConn, city: JsonNode) =
