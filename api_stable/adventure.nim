@@ -210,25 +210,16 @@ proc adventure_ReadSequence*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let areaItemId = jsonReq["areaItemId"].getInt()
 
-  let rewards = getAreaItemRewards(db, areaItemId)
+  var rewards = getAreaItemRewards(db, areaItemId)
 
   var gears = newSeq[Gear]()
 
-  for reward in rewards[0].contents:
-    if reward.`type` == rewardGear.int:
-      let gear = Gear(
-        entityId: reward.entityId.get(),
-        gearId: reward.id,
-        receivedAt: getTimestampNow(),
-        subStatus1Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[0]),
-        subStatus2Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[1]),
-        subStatus3Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[2]),
-        trainingScoreLevelScore: some(1),
-        rarity: reward.resourceParams.get().gearRewardStatus.get().gearRarity
-      )
+  for reward in rewards[0].contents.mitems():
+    if reward.`type` == rewardGearDrop.int:
+      let (gear, gearReward) = randomGear(db)
 
+      reward = gearReward
       addGear(db, gear)
-
       gears.add(gear)
 
   let changedResources = %*{"gears": gears}
