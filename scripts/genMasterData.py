@@ -79,6 +79,9 @@ def main():
 
     with open(args.masterdata_dir/"area_item_reward.json", "r", encoding="utf-8") as f:
         md_area_item_reward_json = json.load(f)
+    
+    with open(args.masterdata_dir/"gear.json", "r", encoding="utf-8") as f:
+        md_gear_json = json.load(f)
 
     with open(args.out_sql, "w", encoding="utf-8") as f:
         gen_md_tension_card(md_tension_card_json, f)
@@ -103,6 +106,21 @@ def main():
         gen_md_sequence_request_json(md_sequence_request_json, f)
         gen_md_area_item(md_area_item_json, f)
         gen_md_area_item_reward(md_area_item_reward_json, f)
+        gen_md_gear(md_gear_json, f)
+
+
+def gen_md_gear(md_gear_json, f):
+    xprint = lambda *args: print(*args, file=f)
+
+    xprint("INSERT INTO mdGear (id, grade, gearTypeId, descr, compressItemRewards, compressItems) VALUES")
+
+    write_rows(xprint, f, [(
+        gear["id"], gear["grade"], gear["gear_type_id"],
+        gear["description"]["en"], gear["compress_item_rewards"],
+        gear["compress_items"]
+    ) for gear in md_gear_json])
+
+    xprint(";")
 
 
 def gen_md_area_item_reward(md_area_item_reward_json, f):
