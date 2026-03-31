@@ -83,6 +83,9 @@ def main():
     with open(args.masterdata_dir/"gear.json", "r", encoding="utf-8") as f:
         md_gear_json = json.load(f)
 
+    with open(args.masterdata_dir/"gear_status.json", "r", encoding="utf-8") as f:
+        md_gear_status_json = json.load(f)
+
     with open(args.out_sql, "w", encoding="utf-8") as f:
         gen_md_tension_card(md_tension_card_json, f)
         gen_md_ability_tension_card(md_ability_tension_card_json, f)
@@ -107,6 +110,22 @@ def main():
         gen_md_area_item(md_area_item_json, f)
         gen_md_area_item_reward(md_area_item_reward_json, f)
         gen_md_gear(md_gear_json, f)
+        gen_md_gear_status(md_gear_status_json, f)
+
+def dict_get_or_none(d, key):
+    return d[key] if d is not None else None
+
+def gen_md_gear_status(md_gear_status_json, f):
+    xprint = lambda *args: print(*args, file=f)
+
+    xprint("INSERT INTO mdGearStatus (id, rarity, statusEffectType, statusEffectValue, statusGroupId) VALUES")
+
+    write_rows(xprint, f, [(
+        status["id"], status["rarity"], dict_get_or_none(status["status_effect"], "type"),
+        dict_get_or_none(status["status_effect"], "value"), status["status_group_id"]
+    ) for status in md_gear_status_json])
+
+    xprint(";")
 
 
 def gen_md_gear(md_gear_json, f):
@@ -648,7 +667,7 @@ def gen_md_area_change_lock(md_area_change_lock_json, f):
 
 
 def convert_to_sql(val):
-    if isinstance(val, int):
+    if isinstance(val, (int, float)):
         return str(val)
     elif isinstance(val, str):
         val = val.replace("'", "''")
