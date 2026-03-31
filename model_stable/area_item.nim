@@ -6,7 +6,6 @@ import ../db_connector/db_sqlite
 
 import ../semba_error
 import ../model_stable/reward
-import ../model_stable/entity
 
 
 type AreaItemContentType* = enum
@@ -49,26 +48,6 @@ proc getMdAreaItemReward(db: DbConn, areaItemRewardId: int): MdAreaItemReward =
     result.quantityLotteryReward = some(to(parseJson(row[1]), MdQuantityLotteryReward))
 
 
-proc getGearReward(db: DbConn): Reward = 
-  result = Reward(
-    `type`: rewardGear.int,
-    id: 30001201,
-    quantity: 1,
-    entityId: some(popEntityId(db)),
-    resourceParams: some(to(%*{
-      "gearRewardStatus": {
-        "subStatusIds": [
-          11011006,
-          10099001,
-          10021002
-        ],
-        "gearRarity": 4
-      }
-    }, ResourceParams)),
-    isNew: some(true),
-  )
-
-
 proc getAreaItemRewards*(db: DbConn, areaItemId: int): seq[Rewards] =
   let areaItemRewardIds = getAreaItemRewardIds(db, areaItemId)
 
@@ -81,13 +60,10 @@ proc getAreaItemRewards*(db: DbConn, areaItemId: int): seq[Rewards] =
       let quantityLotteryReward = reward.quantityLotteryReward.get()
       let quantityLottery = sample(quantityLotteryReward.quantityLotteries)
       if quantityLottery.quantity != 0:
-        if quantityLotteryReward.rewardType == rewardGearDrop.int:
-          rewards.add(getGearReward(db))
-        else:
-          rewards.add(Reward(
-            `type`: quantityLotteryReward.rewardType,
-            id: quantityLotteryReward.rewardId,
-            quantity: quantityLottery.quantity,
-          ))
+        rewards.add(Reward(
+          `type`: quantityLotteryReward.rewardType,
+          id: quantityLotteryReward.rewardId,
+          quantity: quantityLottery.quantity,
+        ))
 
   result.add(Rewards(`type`: some(5), contents: rewards))

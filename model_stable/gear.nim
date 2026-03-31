@@ -1,11 +1,14 @@
 import std/options
 import std/strutils
+import std/json
 
 import ../db_connector/db_sqlite
 
 import ../extsqlite
 import ../semba_error
 import timestamp
+import reward
+import entity
 
 
 type GearRarity* = enum
@@ -68,3 +71,40 @@ proc getGears*(db: DbConn): seq[Gear] =
 
   for row in rows:
     result.add(getGear(db, parseInt(row[0])))
+
+
+proc getGearReward(db: DbConn): Reward = 
+  result = Reward(
+    `type`: rewardGear.int,
+    id: 30001201,
+    quantity: 1,
+    entityId: some(popEntityId(db)),
+    resourceParams: some(to(%*{
+      "gearRewardStatus": {
+        "subStatusIds": [
+          11011006,
+          10099001,
+          10021002
+        ],
+        "gearRarity": 4
+      }
+    }, ResourceParams)),
+    isNew: some(true),
+  )
+
+
+proc randomGear*(db: DbConn): (Gear, Reward) =
+  let reward = getGearReward(db)
+
+  let gear = Gear(
+    entityId: reward.entityId.get(),
+    gearId: reward.id,
+    receivedAt: getTimestampNow(),
+    subStatus1Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[0]),
+    subStatus2Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[1]),
+    subStatus3Id: some(reward.resourceParams.get().gearRewardStatus.get().subStatusIds.get()[2]),
+    trainingScoreLevelScore: some(1),
+    rarity: reward.resourceParams.get().gearRewardStatus.get().gearRarity
+  )
+
+  result = (gear, reward)
