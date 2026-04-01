@@ -412,3 +412,43 @@ proc updateCharacterGear*(
   db.exec(sql"UPDATE characters SET gearSlot1 = ? WHERE characterId = ?", optionToSqlArg(gearSlot1), charId)
   db.exec(sql"UPDATE characters SET gearSlot2 = ? WHERE characterId = ?", optionToSqlArg(gearSlot2), charId)
   db.exec(sql"UPDATE characters SET gearSlot3 = ? WHERE characterId = ?", optionToSqlArg(gearSlot3), charId)
+
+
+proc getAbnormalityParamSet*(): JsonNode =
+  result = %*{
+    "electric": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "oily": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "pressure": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "scared": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "unfortified": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    }
+  }
