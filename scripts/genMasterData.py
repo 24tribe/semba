@@ -86,6 +86,9 @@ def main():
     with open(args.masterdata_dir/"gear_status.json", "r", encoding="utf-8") as f:
         md_gear_status_json = json.load(f)
 
+    with open(args.masterdata_dir/"character.json", "r", encoding="utf-8") as f:
+        md_character_json = json.load(f)
+
     with open(args.out_sql, "w", encoding="utf-8") as f:
         gen_md_tension_card(md_tension_card_json, f)
         gen_md_ability_tension_card(md_ability_tension_card_json, f)
@@ -111,9 +114,30 @@ def main():
         gen_md_area_item_reward(md_area_item_reward_json, f)
         gen_md_gear(md_gear_json, f)
         gen_md_gear_status(md_gear_status_json, f)
+        gen_md_character(md_character_json, f)
+
+
+def gen_md_character(md_character_json, f):
+    xprint = lambda *args: print(*args, file=f)
+
+    xprint("""
+INSERT INTO mdCharacter (
+    id, baseAttack, baseDefense, baseHp, favoritePresentItemId, mountingPower, rarity, skillGemId
+) VALUES
+""")
+
+    write_rows(xprint, f, [(
+        character["id"], character["base_attack"], character["base_defense"],
+        character["base_hp"], character["favorite_present_item_id"],
+        character["mounting_power"], character["rarity"], character["skill_gem_id"]
+    ) for character in md_character_json])
+
+    xprint(";")
+
 
 def dict_get_or_none(d, key):
     return d[key] if d is not None else None
+
 
 def gen_md_gear_status(md_gear_status_json, f):
     xprint = lambda *args: print(*args, file=f)
