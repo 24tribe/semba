@@ -118,11 +118,16 @@ def dict_get_or_none(d, key):
 def gen_md_gear_status(md_gear_status_json, f):
     xprint = lambda *args: print(*args, file=f)
 
-    xprint("INSERT INTO mdGearStatus (id, rarity, statusEffectType, statusEffectValue, statusGroupId) VALUES")
+    xprint("""
+INSERT INTO mdGearStatus (
+    id, rarity, statusEffectType, statusEffectValue, statusGroupId, abilities, adventureAbilities, characterSkillPlus
+) VALUES
+""")
 
     write_rows(xprint, f, [(
         status["id"], status["rarity"], dict_get_or_none(status["status_effect"], "type"),
-        dict_get_or_none(status["status_effect"], "value"), status["status_group_id"]
+        dict_get_or_none(status["status_effect"], "value"), status["status_group_id"],
+        status["abilities"], status["adventure_abilities"], status["character_skill_plus"]
     ) for status in md_gear_status_json])
 
     xprint(";")
