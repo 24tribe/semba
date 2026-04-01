@@ -38,5 +38,5 @@ proc testCharacterEquip() =
     # TODO: should check status updates?
 
 
-when isMainModule:
+proc testSuiteCharacter*() =
     testCharacterEquip()

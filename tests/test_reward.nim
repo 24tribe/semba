@@ -10,5 +10,5 @@ proc test_reward_field_name() =
   doAssert rewardJson.hasKey("type")
 
 
-when isMainModule:
+proc testSuiteReward*() =
   test_reward_field_name()

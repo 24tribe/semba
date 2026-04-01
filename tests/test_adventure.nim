@@ -1,6 +1,5 @@
 import std/algorithm
 import std/assertions
-import std/cmdline
 import std/json
 import std/options
 import std/sequtils
@@ -391,9 +390,7 @@ proc testDummyAreaObjects() =
   doAssert(areaObjects.any(proc (x: AreaObject): bool = x == dummyAreaObject))
 
 
-when isMainModule:
-  let saves_dir = paramStr(1)
-
+proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
   test_talk_hoimi_read_sequence(saves_dir)

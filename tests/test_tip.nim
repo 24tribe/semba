@@ -21,5 +21,5 @@ proc testTipReleaseByBattle() =
         doAssert(tips[0]["tipId"].getInt().int16 in tipIds)
 
 
-when isMainModule:
+proc testSuiteTip*() =
     testTipReleaseByBattle()

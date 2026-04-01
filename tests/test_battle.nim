@@ -2,7 +2,6 @@ import std/assertions
 import std/json
 import std/options
 import std/algorithm
-import std/cmdline
 
 import utils
 import ../model_stable/battle
@@ -141,8 +140,7 @@ proc testLostBattleFinish() =
       doAssert(resource.kind == JNull)
 
 
-when isMainModule:
-    let saves_dir = paramStr(1)
+proc testSuiteBattle*(saves_dir: string) =
     test_endrone_battle_start(saves_dir)
     test_battle_finish_challenge_data(saves_dir)
     testLostBattleFinish()

@@ -81,7 +81,7 @@ proc test_update_hair_color() =
       doAssert(hairColor.b == 0.8)
 
 
-when isMainModule:
+proc testSuiteSembaPrivate*() =
   test_reset_db()
 
   test_update_hair_color()

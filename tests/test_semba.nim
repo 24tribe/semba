@@ -1,0 +1,19 @@
+import std/cmdline
+
+import test_adventure
+import test_battle
+import test_character
+import test_extra
+import test_reward
+import test_semba_private
+import test_tip
+
+
+let saves_dir = paramStr(1)
+testSuiteAdventure(saves_dir)
+testSuiteBattle(saves_dir)
+testSuiteCharacter()
+testSuiteExtra()
+testSuiteReward()
+testSuiteSembaPrivate()
+testSuiteTip()

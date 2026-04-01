@@ -22,6 +22,6 @@ proc test_bool_is_not_zero_or_one() =
   doAssert(row[0] == "true")
 
 
-when isMainModule:
+proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
