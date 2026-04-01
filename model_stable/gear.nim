@@ -41,6 +41,18 @@ type MdGear = object
   compressItemRewards: JsonNode # FIXME: proper type
   compressItems: JsonNode # FIXME: proper type
 
+type MdGearStatusAbility = object
+  ability_efficacy_id: int
+  exec_timing_type: int
+
+type MdGearStatusAdventureAbility = object
+  ability_type: int
+  value: int
+
+type MdGSCharacterSkillPlus = object
+  character_id: int
+  character_skill_types: seq[int]
+  value: int
 
 type MdGearStatus = object
   id: int
@@ -48,6 +60,9 @@ type MdGearStatus = object
   statusEffectType: Option[int]
   statusEffectValue: Option[float]
   statusGroupId: int
+  abilities: seq[MdGearStatusAbility]
+  adventureAbilities: seq[MdGearStatusAdventureAbility]
+  characterSkillPlus: Option[MdGSCharacterSkillPlus]
 
 
 proc addGear*(db: DbConn, gear: Gear) =
@@ -113,7 +128,7 @@ proc getMdGears(db: DbConn, descr: string): seq[MdGear] =
 proc getMdGearStatsWithRarity(db: DbConn, rarity: int): seq[MdGearStatus] =
   let rows = db.getAllRows(sql"""
     SELECT id, statusEffectType, statusEffectValue, statusGroupId FROM mdGearStatus
-    WHERE rarity = ?
+    WHERE rarity = ? AND characterSkillPlus IS null
   """, rarity)
 
   for row in rows:
@@ -129,7 +144,7 @@ proc getMdGearStatsWithRarity(db: DbConn, rarity: int): seq[MdGearStatus] =
 proc getMdGearStatsWithMaxRarity(db: DbConn, maxRarity: int): seq[MdGearStatus] =
   let rows = db.getAllRows(sql"""
     SELECT id, rarity, statusEffectType, statusEffectValue, statusGroupId FROM mdGearStatus
-    WHERE rarity <= ?
+    WHERE rarity <= ? AND characterSkillPlus IS null
   """, maxRarity)
 
   for row in rows:
