@@ -13,6 +13,10 @@ import battle
 import timestamp
 
 
+const charBaseMovementSpeed = 6
+const saizoBaseMovementSpeed = 8
+
+
 type Character* = object
   characterId*: int
   exp*: Option[int]
