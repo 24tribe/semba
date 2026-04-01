@@ -54,6 +54,18 @@ type MdGSCharacterSkillPlus = object
   character_skill_types: seq[int]
   value: int
 
+type MdStatusEffectType* = enum
+  statusEffectMaximumHP = 1
+  statusEffectAttack = 3
+  statusEffectDefense = 5
+  statusEffectCriticalRate = 7
+  statusEffectCriticalDMGMultiplier = 8
+  statusEffectSupport = 9
+  statusEffectMovingSpeed = 20
+  statusEffectGrantRecoveryEffect = 29
+  statusEffectMaximumStamina = 30
+  statusEffectDamageCutRate = 32
+
 type MdGearStatus = object
   id: int
   rarity: int
