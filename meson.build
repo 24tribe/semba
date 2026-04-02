@@ -146,7 +146,7 @@ test_semba_depend_files = [
 
 test_semba = custom_target(
     depends : [sqlite3_c, semba_db],
-    depend_files : semba_core_files,
+    depend_files : semba_core_files + test_semba_depend_files,
     input : ['tests/test_semba.nim'],
     output : 'test_semba' + exe_suffix,
     command : [
