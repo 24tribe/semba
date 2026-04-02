@@ -17,6 +17,11 @@ const charBaseMovementSpeed = 6
 const saizoBaseMovementSpeed = 8
 
 
+type MdCharacterLevel* = object
+  level*: int
+  exp*: int
+  statusFactor*: float
+
 type Character* = object
   characterId*: int
   exp*: Option[int]
@@ -325,14 +330,23 @@ proc getCharacterMaxLevel*(db: DbConn): int =
   raise newException(SembaError, "Got to unreachable part in getCharacterMaxLevel")
 
 
-proc getLevelExp(db: DbConn, level: int): int =
-  let row = db.getRow(sql"SELECT exp FROM mdCharacterLevel WHERE level = ?", level)
-  result = parseInt(row[0])
+proc getMdCharacterLevel(db: DbConn, level: int): MdCharacterLevel =
+  let row = db.getRow(sql"SELECT exp, statusFactor FROM mdCharacterLevel WHERE level = ?", level)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't get MdCharacterLevel for level=" & $level)
+
+  result = MdCharacterLevel(
+    level: level,
+    exp: parseInt(row[0]),
+    statusFactor: parseFloat(row[1]),
+  )
 
 
 proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: seq[JsonNode]) =
   let charMaxLevel = getCharacterMaxLevel(db)
-  let maxExp = getLevelExp(db, charMaxLevel)
+  let mdCharLevel = getMdCharacterLevel(db, charMaxLevel)
+  let maxExp = mdCharLevel.exp
 
   for character in characters:
     let characterId = character["characterId"].getInt()
