@@ -61,6 +61,7 @@ proc testCharacterEquip() =
 
   addGear(ctx.db, Gear(
     entityId: 10000,
+    gearId: 10001101,
     receivedAt: getTimestampNow(),
     rarity: gearRarityN.int,
     trainingScoreLevelScore: some(1),
