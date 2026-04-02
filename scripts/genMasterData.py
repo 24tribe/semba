@@ -160,12 +160,12 @@ INSERT INTO mdGearStatus (
 def gen_md_gear(md_gear_json, f):
     xprint = lambda *args: print(*args, file=f)
 
-    xprint("INSERT INTO mdGear (id, grade, gearTypeId, descr, compressItemRewards, compressItems) VALUES")
+    xprint("INSERT INTO mdGear (id, grade, gearTypeId, descr, compressItemRewards, compressItems, mainStatusId) VALUES")
 
     write_rows(xprint, f, [(
         gear["id"], gear["grade"], gear["gear_type_id"],
         gear["description"]["en"], gear["compress_item_rewards"],
-        gear["compress_items"]
+        gear["compress_items"], gear["main_status_id"]
     ) for gear in md_gear_json])
 
     xprint(";")
