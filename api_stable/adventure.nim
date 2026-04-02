@@ -134,7 +134,7 @@ proc adventure_MoveToArea*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
 
 proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  var changedCharacters = newSeq[JsonNode]()
+  var changedCharacters = newSeq[Character]()
 
   for characterUpdate in jsonReq["characterUpdates"]:
     let characterId = characterUpdate["characterId"].getInt()

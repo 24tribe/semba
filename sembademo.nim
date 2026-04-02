@@ -11,6 +11,8 @@ import api_stable/tip
 
 import db_connector/db_sqlite
 
+import semba_error
+
 proc statusToDemo(status: var JsonNode) =
   status["currentAreaId"] = %*300203
 
@@ -72,13 +74,15 @@ proc notificationsToDemo(notifications: var JsonNode) =
 proc demo_battle_Start(db: DbConn, jsonReq: JsonNode): JsonNode =
   var characterSeq = newSeq[JsonNode]()
 
+  raise newException(SembaError, "FIXME: demo shouldn't depend on stable endpoints")
+
   # FIXME: fix this n+1 problem
-  for lineCharacterId in jsonReq["lineCharacterIds"]:
+  #[ for lineCharacterId in jsonReq["lineCharacterIds"]:
     let characterRow = db.getRow(sql(
       "SELECT " & dbCharacterFields & " FROM characters WHERE characterId = ?"
     ), lineCharacterId.getInt())
 
-    characterSeq.add(parseCharacterRow(characterRow))
+    characterSeq.add(parseCharacterRow(characterRow)) ]#
 
   var characters = %*characterSeq
 
