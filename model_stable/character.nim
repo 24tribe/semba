@@ -107,6 +107,10 @@ proc setCharacterHp*(db: DbConn, characterId: int, hp: int) =
   db.exec(sql"UPDATE characters SET hp = ? WHERE characterId = ?", hp, characterId)
 
 
+proc setCharacterExp*(db: DbConn, characterId: int, exp: int) =
+  db.exec(sql"UPDATE characters SET exp = ? WHERE characterId = ?", exp, characterId)
+
+
 proc addCharacterLimitBreak*(db: DbConn, characterId: int, limitBreak: int) =
   db.exec(sql"""
     INSERT INTO characterLimitBreaks (characterId, limitBreak) VALUES (?, ?)
