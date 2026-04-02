@@ -5,6 +5,8 @@ import std/sequtils
 
 import ../model_stable/resources
 import ../model_stable/character
+import ../model_stable/gear
+import ../model_stable/timestamp
 import utils
 
 
@@ -55,6 +57,14 @@ proc testCharacterEquip() =
   var ctx = getInMemorySembaCtx()
 
   let gearId = 10000
+
+  addGear(ctx.db, Gear(
+    entityId: 10000,
+    receivedAt: getTimestampNow(),
+    rarity: gearRarityN.int,
+    trainingScoreLevelScore: some(1),
+  ))
+
   let res = ctx.sembaCall("/character/equip", %*{ "characterId": 101101, "gearSlot3": gearId })
 
   doAssert(res != nil)
