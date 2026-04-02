@@ -1,10 +1,54 @@
 import std/assertions
 import std/json
 import std/options
+import std/sequtils
 
 import ../model_stable/resources
 import ../model_stable/character
 import utils
+
+
+proc testCharacterStatsDependOnLevel() =
+  var ctx = getInMemorySembaCtx()
+
+  const yoCharId = 100101
+  const yoLevel2MaxHp = 511
+  const yoLevel2Attack = 106
+  const yoLevel2Defense = 105
+  const yoLevel2Exp = 240
+
+  proc checkYo(character: Character): bool =
+    result = character.characterId == yoCharId and
+      character.exp.get(0) == yoLevel2Exp and
+      character.maxHp.get(0) == yoLevel2MaxHp and
+      character.attack.get(0) == yoLevel2Attack and
+      character.defense.get(0) == yoLevel2Defense
+
+  const irohaCharId = 100201
+  const irohaLevel1MaxHp = 452
+  const irohaLevel1Attack = 109
+  const irohaLevel1Defense = 92
+  const irohaLevel1Exp = 0
+
+  proc checkIroha(character: Character): bool =
+    result = character.characterId == irohaCharId and
+      character.exp.get(0) == irohaLevel1Exp and
+      character.maxHp.get(0) == irohaLevel1MaxHp and
+      character.attack.get(0) == irohaLevel1Attack and
+      character.defense.get(0) == irohaLevel1Defense
+
+  setCharacterExp(ctx.db, irohaCharId, irohaLevel1Exp)
+  setCharacterExp(ctx.db, yoCharId, yoLevel2Exp)
+
+  let yoChar = to(getCharacter(ctx.db, yoCharId), Character)
+  doAssert(checkYo(yoChar))
+
+  let irohaChar = to(getCharacter(ctx.db, irohaCharId), Character)
+  doAssert(checkIroha(irohaChar))
+
+  let characters = to(%*getCharacters(ctx.db), seq[Character])
+  doAssert(characters.any(checkYo))
+  doAssert(characters.any(checkIroha))
 
 
 proc testCharacterEquip() =
@@ -39,4 +83,5 @@ proc testCharacterEquip() =
 
 
 proc testSuiteCharacter*() =
-    testCharacterEquip()
+  testCharacterEquip()
+  testCharacterStatsDependOnLevel()
