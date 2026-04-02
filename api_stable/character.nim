@@ -17,11 +17,11 @@ type CharacterEquipRequest* = object
 proc character_CostumeUpdate*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let costumeId = jsonReq["characterCostumeId"].getInt()
   let characterId = costumeIdToCharacterId(costumeId)
-  var characters = newSeq[JsonNode]()
 
-  let character = getCharacter(db, characterId)
-  character["characterCostumeId"] = %*costumeId
-  characters.add(character)
+  var character = getCharacter(db, characterId)
+  character.characterCostumeId = some(costumeId)
+
+  let characters = [character]
 
   db.exec(sql"UPDATE characters SET characterCostumeId = ? WHERE characterId = ?", costumeId, characterId)
 
@@ -36,10 +36,9 @@ proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let characterId = jsonReq["characterId"].getInt()
   let limitBreakCount = jsonReq["limitBreakCount"].getInt()
 
-  let character = getCharacter(db, characterId)
-  let limitBreak = character.getOrDefault("limitBreak").getInt() + limitBreakCount
-  character["limitBreak"] = %*limitBreak
-  addCharacterLimitBreak(db, characterId, limitBreak)
+  var character = getCharacter(db, characterId)
+  character.limitBreak = character.limitBreak.map(proc (x: int): int = x + limitBreakCount)
+  addCharacterLimitBreak(db, characterId, character.limitBreak.get(0))
 
   let characterPiece = getCharacterPiece(db, characterId)
   let quantity = max(0, characterPiece.getOrDefault("quantity").getInt() - 1)

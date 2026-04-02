@@ -40,10 +40,10 @@ proc testCharacterStatsDependOnLevel() =
   setCharacterExp(ctx.db, irohaCharId, irohaLevel1Exp)
   setCharacterExp(ctx.db, yoCharId, yoLevel2Exp)
 
-  let yoChar = to(getCharacter(ctx.db, yoCharId), Character)
+  let yoChar = getCharacter(ctx.db, yoCharId)
   doAssert(checkYo(yoChar))
 
-  let irohaChar = to(getCharacter(ctx.db, irohaCharId), Character)
+  let irohaChar = getCharacter(ctx.db, irohaCharId)
   doAssert(checkIroha(irohaChar))
 
   let characters = to(%*getCharacters(ctx.db), seq[Character])

@@ -30,7 +30,7 @@ type BattleRestartRequest* = object
   isDifficultyDecrease: Option[bool]
 
 type BattleRestartResponse = object
-  characters: seq[JsonNode] # FIXME: use Character
+  characters: seq[Character]
   tensionCards: seq[JsonNode] # FIXME: use TensionCard
   battleParameters: seq[BattleParameter]
   battleTriggers: seq[BattleTrigger]
@@ -178,7 +178,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
 
-  let characters = getCharactersWithId(db, characterIds)
+  var characters = getCharactersWithId(db, characterIds)
   updateCharacterExps(db, characterExps, characters)
 
   result = %*{

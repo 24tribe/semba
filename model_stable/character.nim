@@ -13,9 +13,32 @@ import battle
 import timestamp
 
 
-const charBaseMovementSpeed = 6
-const saizoBaseMovementSpeed = 8
+const charBaseMovementSpeed = 6.0
+const charBaseDamageTakenRate = 1.0
+const charBaseCriticalRate = 5.0
+const charBaseCriticalDamageRate = 50.0
+const charBaseDamageInflictedRate = 100.0
+const charBaseTensionIncreaseRate = 100.0
+const charBaseCpRecastRate = 100.0
+const charBaseSpGaugeIncreaseRate = 100.0
+const charBaseAttackSpeed = 100.0
+const charBaseActionPointMax = 1000
+const charBaseActionPointRate = 3000.0
+const charBaseActionPointConsumption = 160.0
 
+const saizoCharId = 102901
+const saizoBaseMovementSpeed = 8.0
+
+
+type MdCharacter* = object
+  id*: int
+  baseAttack*: int
+  baseDefense*: int
+  baseHp*: int
+  favoritePresentItemId*: int
+  mountingPower*: int
+  rarity*: int
+  skillGemId*: int
 
 type MdCharacterLevel* = object
   level*: int
@@ -57,7 +80,7 @@ type Character* = object
   characterSkillPanel3Level*: Option[int]
   characterSkillPanel4Level*: Option[int]
   characterSkillPanel5Level*: Option[int]
-  abnormalityParamSet*: Option[JsonNode] # FIXME: use AbnormalityParamSet
+  abnormalityParamSet*: JsonNode # FIXME: use AbnormalityParamSet
   trainingScore*: Option[int]
   trainingScoreLevelScore*: Option[int]
   trainingScoreRankScore*: Option[int]
@@ -79,21 +102,6 @@ type CharacterUpdate* = object
 type CharacterOwnershipType* = enum
   charOwnershipOwned = 1
   charOwnershipGuest = 2
-
-
-const dbCharacterFields* = """
-  characters.characterId, exp, hp, attack, defense, maxHp, receivedAt, characterOwnershipType,
-  criticalRate, criticalDamageRate, movementSpeed, damageInflictedRate, tensionIncreaseRate,
-  cpRecastRate, spGaugeIncreaseRate, attackSpeed, characterCostumeId, abnormalityParamSet,
-  trainingScoreLevelScore, trainingScoreRankScore, actionPointMax,
-  actionPointRate, actionPointConsumption, damageTakenRate, limitBreak, gearSlot1, gearSlot2, gearSlot3
-"""
-
-const selectCharacterSql = """
-  SELECT """ & dbCharacterFields & """
-  FROM characters LEFT JOIN characterLimitBreaks
-  ON characters.characterId = characterLimitBreaks.characterId
-"""
 
 
 proc costumeIdToCharacterId*(costumeId: int): int =
@@ -187,78 +195,141 @@ proc updateCharacters*(db: DbConn, characters: seq[JsonNode]) =
     addCharacter(db, character)
 
 
-proc parseCharacterRow*(characterRow: Row): JsonNode =
-  let characterId = parseInt(characterRow[0])
-  let exp = parseInt(characterRow[1])
-  let hp = parseInt(characterRow[2])
-  let attack = parseInt(characterRow[3])
-  let defense = parseInt(characterRow[4])
-  let maxHp = parseInt(characterRow[5])
-  let receivedAt = characterRow[6]
-  let characterOwnershipType = parseInt(characterRow[7])
-  let criticalRate = parseInt(characterRow[8])
-  let criticalDamageRate = parseInt(characterRow[9])
-  let movementSpeed = parseInt(characterRow[10])
-  let damageInflictedRate = parseInt(characterRow[11])
-  let tensionIncreaseRate = parseInt(characterRow[12])
-  let cpRecastRate = parseInt(characterRow[13])
-  let spGaugeIncreaseRate = parseInt(characterRow[14])
-  let attackSpeed = parseInt(characterRow[15])
-  let characterCostumeId = parseInt(characterRow[16])
-  let abnormalityParamSet = parseJson(characterRow[17])
-  let trainingScoreLevelScore = parseInt(characterRow[18])
-  let trainingScoreRankScore = parseInt(characterRow[19])
-  let actionPointMax = parseInt(characterRow[20])
-  let actionPointRate = parseInt(characterRow[21])
-  let actionPointConsumption = parseInt(characterRow[22])
-  let damageTakenRate = parseInt(characterRow[23])
-  let limitBreak = if characterRow[24] == "": 0 else: parseInt(characterRow[24])
-  let gearSlot1 = if characterRow[25] == "": none(int) else: some(parseInt(characterRow[25]))
-  let gearSlot2 = if characterRow[26] == "": none(int) else: some(parseInt(characterRow[26]))
-  let gearSlot3 = if characterRow[27] == "": none(int) else: some(parseInt(characterRow[27]))
+proc getMdCharacter*(db: DbConn, characterId: int): MdCharacter =
+  let row = db.getRow(sql"""
+    SELECT baseAttack, baseDefense, baseHp, favoritePresentItemId, mountingPower, rarity, skillGemId
+    FROM mdCharacter
+    WHERE id = ?
+  """, characterId)
 
-  return %*{
-    "characterId": characterId,
-    "exp": exp,
-    "hp": hp,
-    "attack": attack,
-    "defense": defense,
-    "maxHp": maxHp,
-    "receivedAt": receivedAt,
-    "characterOwnershipType": characterOwnershipType,
-    "criticalRate": criticalRate,
-    "criticalDamageRate": criticalDamageRate,
-    "movementSpeed": movementSpeed,
-    "damageInflictedRate": damageInflictedRate,
-    "tensionIncreaseRate": tensionIncreaseRate,
-    "cpRecastRate": cpRecastRate,
-    "spGaugeIncreaseRate": spGaugeIncreaseRate,
-    "attackSpeed": attackSpeed,
-    "characterCostumeId": characterCostumeId,
-    "abnormalityParamSet": abnormalityParamSet,
-    "trainingScoreLevelScore": trainingScoreLevelScore,
-    "trainingScoreRankScore": trainingScoreRankScore,
-    "actionPointMax": actionPointMax,
-    "actionPointRate": actionPointRate,
-    "actionPointConsumption": actionPointConsumption,
-    "damageTakenRate": damageTakenRate,
-    "limitBreak": limitBreak,
-    "gearSlot1": gearSlot1,
-    "gearSlot2": gearSlot2,
-    "gearSlot3": gearSlot3,
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't find MdCharacter for id=" & $characterId)
+
+  result = MdCharacter(
+    id: characterId,
+    baseAttack: parseInt(row[0]),
+    baseDefense: parseInt(row[1]),
+    baseHp: parseInt(row[2]),
+    favoritePresentItemId: parseInt(row[3]),
+    mountingPower: parseInt(row[4]),
+    rarity: parseInt(row[5]),
+    skillGemId: parseInt(row[6]),
+  )
+
+
+proc getAbnormalityParamSet*(): JsonNode =
+  result = %*{
+    "electric": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "oily": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "pressure": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "scared": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    },
+    "unfortified": {
+      "attack_rate": 0,
+      "burst_resistance": 100,
+      "burst_resistance_increase_value": 0,
+      "burst_resistance_limit": 100,
+      "defense_rate": 0
+    }
   }
 
 
-proc getCharacter*(db: DbConn, characterId: int): JsonNode =
-  let row = db.getRow(sql(selectCharacterSql & " WHERE characters.characterId = ?"), characterId)
+proc getMdCharacterLevelFromExp(db: DbConn, exp: int): MdCharacterLevel =
+  let row = db.getRow(sql"""
+    SELECT level, exp, statusFactor FROM mdCharacterLevel
+    WHERE ? >= exp 
+    ORDER BY level DESC
+  """, exp)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't get MdCharacterLevel for exp < " & $exp)
+
+  result = MdCharacterLevel(
+    level: parseInt(row[0]),
+    exp: parseInt(row[1]),
+    statusFactor: parseFloat(row[2]),
+  )
+
+
+proc getCharacter*(db: DbConn, characterId: int): Character =
+  let row = db.getRow(sql"""
+    SELECT characters.characterId, exp, hp, receivedAt, characterOwnershipType,
+           characterCostumeId, limitBreak, gearSlot1, gearSlot2, gearSlot3,
+           trainingScoreLevelScore, trainingScoreRankScore
+    FROM characters LEFT JOIN characterLimitBreaks
+    ON characters.characterId = characterLimitBreaks.characterId
+    WHERE characters.characterId = ?
+  """, characterId)
 
   if row[0] == "":
     raise newException(SembaError, "Couldn't find character for characterId=" & $characterId)
 
-  result = parseCharacterRow(row)
+  let exp = parseInt(row[1])
+
+  let mdChar = getMdCharacter(db, characterId)
+  
+  let mdCharacterLevel = getMdCharacterLevelFromExp(db, exp)
+
+  let attack = ceil(mdChar.baseAttack.float*mdCharacterLevel.statusFactor).int
+  let defense = ceil(mdChar.baseDefense.float*mdCharacterLevel.statusFactor).int
+  let maxHp = ceil(mdChar.baseHp.float*mdCharacterLevel.statusFactor).int
+
+  result = Character(
+    characterId: parseInt(row[0]),
+    exp: some(exp),
+    hp: some(parseInt(row[2])),
+    receivedAt: row[3].Timestamp,
+    characterOwnershipType: some(parseInt(row[4])),
+    characterCostumeId: some(parseInt(row[5])),
+    limitBreak: tryParseInt(row[6]),
+    gearSlot1: tryParseInt(row[7]),
+    gearSlot2: tryParseInt(row[8]),
+    gearSlot3: tryParseInt(row[9]),
+    trainingScoreLevelScore: tryParseInt(row[10]),
+    trainingScoreRankScore: tryParseInt(row[11]),
+    damageTakenRate: some(charBaseDamageTakenRate),
+    attack: some(attack),
+    defense: some(defense),
+    maxHp: some(maxHp),
+    criticalRate: some(charBaseCriticalRate),
+    criticalDamageRate: some(charBaseCriticalDamageRate),
+    movementSpeed: some(if characterId == saizoCharId: saizoBaseMovementSpeed else: charBaseMovementSpeed),
+    damageInflictedRate: some(charBaseDamageInflictedRate),
+    tensionIncreaseRate: some(charBaseTensionIncreaseRate),
+    cpRecastRate: some(charBaseCpRecastRate),
+    spGaugeIncreaseRate: some(charBaseSpGaugeIncreaseRate),
+    attackSpeed: some(charBaseAttackSpeed),
+    abnormalityParamSet: getAbnormalityParamSet(),
+    actionPointMax: some(charBaseActionPointMax),
+    actionPointRate: some(charBaseActionPointRate),
+    actionPointConsumption: some(charBaseActionPointConsumption),
+  )
 
 
-proc getCharactersWithId*(db: DbConn, ids: seq[int]): seq[JsonNode] =
+proc getCharactersWithId*(db: DbConn, ids: seq[int]): seq[Character] =
   for id in ids:
     let character = getCharacter(db, id)
     result.add(character)
@@ -315,10 +386,10 @@ proc getCharacterPieces*(db: DbConn): seq[JsonNode] =
   
 
 proc getCharacters*(db: DbConn): seq[JsonNode] =
-  let charactersRows = db.getAllRows(sql(selectCharacterSql))
+  let charactersRows = db.getAllRows(sql"SELECT characterId FROM characters")
 
   for characterRow in charactersRows:   
-    result.add(parseCharacterRow(characterRow))
+    result.add(%*getCharacter(db, parseInt(characterRow[0])))
 
 
 proc getCharacterMaxLevel*(db: DbConn): int =
@@ -347,20 +418,18 @@ proc getMdCharacterLevel(db: DbConn, level: int): MdCharacterLevel =
   )
 
 
-proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: seq[JsonNode]) =
+proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: var seq[Character]) =
   let charMaxLevel = getCharacterMaxLevel(db)
   let mdCharLevel = getMdCharacterLevel(db, charMaxLevel)
   let maxExp = mdCharLevel.exp
 
-  for character in characters:
-    let characterId = character["characterId"].getInt()
-    let exp = character.getOrDefault("exp").getInt()
+  for character in characters.mitems():
     for characterExp in characterExps:
-      if characterExp["characterId"] == character["characterId"]:
-        let sum = exp + characterExp["dropExp"].getInt()
+      if characterExp.getOrDefault("characterId").getInt(0) == character.characterId:
+        let sum = character.exp.get(0) + characterExp["dropExp"].getInt()
         let finalExp = if sum <= maxExp: sum else: maxExp
-        character["exp"] = %*finalExp
-        db.exec(sql"UPDATE characters SET exp = ? WHERE characterId = ?", finalExp, characterId)
+        character.exp = some(finalExp)
+        db.exec(sql"UPDATE characters SET exp = ? WHERE characterId = ?", finalExp, character.characterId)
         break
 
 
@@ -434,43 +503,3 @@ proc updateCharacterGear*(
   db.exec(sql"UPDATE characters SET gearSlot1 = ? WHERE characterId = ?", optionToSqlArg(gearSlot1), charId)
   db.exec(sql"UPDATE characters SET gearSlot2 = ? WHERE characterId = ?", optionToSqlArg(gearSlot2), charId)
   db.exec(sql"UPDATE characters SET gearSlot3 = ? WHERE characterId = ?", optionToSqlArg(gearSlot3), charId)
-
-
-proc getAbnormalityParamSet*(): JsonNode =
-  result = %*{
-    "electric": {
-      "attack_rate": 0,
-      "burst_resistance": 100,
-      "burst_resistance_increase_value": 0,
-      "burst_resistance_limit": 100,
-      "defense_rate": 0
-    },
-    "oily": {
-      "attack_rate": 0,
-      "burst_resistance": 100,
-      "burst_resistance_increase_value": 0,
-      "burst_resistance_limit": 100,
-      "defense_rate": 0
-    },
-    "pressure": {
-      "attack_rate": 0,
-      "burst_resistance": 100,
-      "burst_resistance_increase_value": 0,
-      "burst_resistance_limit": 100,
-      "defense_rate": 0
-    },
-    "scared": {
-      "attack_rate": 0,
-      "burst_resistance": 100,
-      "burst_resistance_increase_value": 0,
-      "burst_resistance_limit": 100,
-      "defense_rate": 0
-    },
-    "unfortified": {
-      "attack_rate": 0,
-      "burst_resistance": 100,
-      "burst_resistance_increase_value": 0,
-      "burst_resistance_limit": 100,
-      "defense_rate": 0
-    }
-  }
