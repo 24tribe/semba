@@ -99,6 +99,8 @@ proc checkStats(original: Character, newChar: Character) =
   doAssert(original.maxHp == newChar.maxHp)
   doAssert(original.criticalRate == newChar.criticalRate)
   doAssert(original.criticalDamageRate == newChar.criticalDamageRate)
+  doAssert(original.supportPowerRate.get(0) == newChar.supportPowerRate.get(0))
+  doAssert(original.recoveryGivenRate.get(0) == newChar.recoveryGivenRate.get(0))
 
 
 proc testCharacterGearStats() =
@@ -154,12 +156,15 @@ proc testCharacterGearStats() =
   yo.defense = some(125)
   yo.maxHp = some(836)
   yo.criticalDamageRate = some(70.0)
+  yo.recoveryGivenRate = some(8.33)
 
   iroha.attack = some(175)
   iroha.defense = some(135)
   iroha.maxHp = some(666)
   iroha.criticalRate = some(9.5)
   iroha.criticalDamageRate = some(80.0)
+  iroha.supportPowerRate = some(17)
+  iroha.recoveryGivenRate = some(35.0)
 
   koishi.attack = some(100)
   koishi.defense = some(141)
