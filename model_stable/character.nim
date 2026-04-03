@@ -2,6 +2,7 @@ import std/json
 import std/strutils
 import std/math
 import std/options
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -11,6 +12,7 @@ import user
 import mission
 import battle
 import timestamp
+import gear
 
 
 const charBaseMovementSpeed = 6.0
@@ -274,6 +276,121 @@ proc getMdCharacterLevelFromExp(db: DbConn, exp: int): MdCharacterLevel =
   )
 
 
+proc applyStatus(db: DbConn, character: var Character, originalChar: Character, statusEffect: MdStatusEffect) =
+  case statusEffect.`type`:
+  of statusEffectDamageCutRate:
+    let damageTakenRate = character.damageTakenRate.get(0)
+    character.damageTakenRate = some(damageTakenRate - statusEffect.value)
+  of statusEffectMaximumStamina:
+    let actionPointMax = character.actionPointMax.get(0)
+    character.actionPointMax = some(actionPointMax + statusEffect.value.int)
+  of statusEffectMovingSpeed:
+    let origMovementSpeed = originalChar.movementSpeed.get(0)
+    let movementSpeed = character.movementSpeed.get(0)
+    character.movementSpeed = some(movementSpeed + (statusEffect.value - 1.0)*origMovementSpeed)
+  of statusEffectDefense:
+    let origDef = originalChar.defense.get(0).float
+    let def = character.defense.get(0).float
+    character.defense = some(ceil(def + (statusEffect.value - 1.0)*origDef).int)
+  of statusEffectAttack:
+    let origAttack = originalChar.attack.get(0).float
+    let attack = character.attack.get(0).float
+    let newAttack = ceil(attack + origAttack*(statusEffect.value - 1.0)).int
+    character.attack = some(newAttack)
+  of statusEffectMaximumHP:
+    let origMaxHp = originalChar.maxHp.get(0).float
+    let maxHp = character.maxHp.get(0).float
+    let newMaxHp = ceil(maxHp + origMaxHp*(statusEffect.value - 1.0)).int
+    character.maxHp = some(newMaxHp)
+  of statusEffectCriticalRate:
+    character.criticalRate = character.criticalRate.map(proc (cr: float): float =
+      cr + statusEffect.value
+    )
+  of statusEffectCriticalDMGMultiplier:
+    character.criticalDamageRate = character.criticalDamageRate.map(proc (cdmg: float): float =
+      cdmg + statusEffect.value
+    )
+  of statusEffectFlatAtk:
+    character.attack = character.attack.map(proc (atk: int): int = atk + statusEffect.value.int)
+  of statusEffectFlatDef:
+    character.defense = character.defense.map(proc (def: int): int = def + statusEffect.value.int)
+  of statusEffectFlatHp:
+    character.maxHp = some(character.maxHp.get(0) + statusEffect.value.int)
+  of statusEffectSupport:
+    character.supportPowerRate = some(character.supportPowerRate.get(0) + ceil(statusEffect.value).int)
+  of statusEffectGrantRecoveryEffect:
+    character.recoveryGivenRate = some(character.recoveryGivenRate.get(0) + statusEffect.value)
+
+
+
+proc applyGearSubstat(db: DbConn, character: var Character, originalChar: Character, substatId: int) =
+  let statusEffect = getStatusEffect(db, substatId)
+
+  if statusEffect.isSome():
+    applyStatus(db, character, originalChar, statusEffect.get())
+
+
+proc applyMainStatus(db: DbConn, character: var Character, originalChar: Character, mdGear: MdGear) =
+  let mainStatus = mainStatusList[mdGear.mainStatusId - 1]
+  let value = mainStatus.values[mdGear.grade - 1]
+
+  let statusEffect = MdStatusEffect(`type`: mainStatus.`type`, value: value.float)
+  applyStatus(db, character, originalChar, statusEffect)
+
+
+proc applyGearStats(db: DbConn, character: var Character, originalChar: Character, gear: Gear, mdGear: MdGear) =
+  applyMainStatus(db, character, originalChar, mdGear)
+
+  if gear.subStatus1Id.isSome():
+    applyGearSubstat(db, character, originalChar, gear.subStatus1Id.get())
+
+  if gear.subStatus2Id.isSome():
+    applyGearSubstat(db, character, originalChar, gear.subStatus2Id.get())
+
+  if gear.subStatus3Id.isSome():
+    applyGearSubstat(db, character, originalChar, gear.subStatus3Id.get())
+
+
+proc gearsPassesSetRequirements(gears: openArray[MdGear], gearSet: GearSet): bool =
+  result = gears.countIt(it.gearTypeId.GearType == gearSet.gearType) >= setRequiredCount
+
+
+proc applySetEffect(db: DbConn, character: var Character, originalChar: Character, gears: openArray[MdGear]) =
+  let gearSets = [attackerGearSet, defenderGearSet, fortressGearSet, healerGearSet, tricksterGearSet]
+
+  for gearSet in gearSets:
+    if gearsPassesSetRequirements(gears, gearSet):
+      applyStatus(db, character, originalChar, gearSet.statusEffect)
+      break
+
+
+proc applyGearStats(db: DbConn, character: var Character) =
+  let originalChar = character
+
+  let gear1 = character.gearSlot1.map(proc (gearSlot: int): Gear = getGear(db, gearSlot))
+  let gear2 = character.gearSlot2.map(proc (gearSlot: int): Gear = getGear(db, gearSlot))
+  let gear3 = character.gearSlot3.map(proc (gearSlot: int): Gear = getGear(db, gearSlot))
+
+  var gears = newSeq[MdGear]()
+
+  if gear1.isSome():
+    let mdGear1 = getMdGear(db, gear1.get().gearId)
+    gears.add(mdGear1)
+    applyGearStats(db, character, originalChar, gear1.get(), mdGear1)
+
+  if gear2.isSome():
+    let mdGear2 = getMdGear(db, gear2.get().gearId)
+    gears.add(mdGear2)
+    applyGearStats(db, character, originalChar, gear2.get(), mdGear2)
+
+  if gear3.isSome():
+    let mdGear3 = getMdGear(db, gear3.get().gearId)
+    gears.add(mdGear3)
+    applyGearStats(db, character, originalChar, gear3.get(), mdGear3)
+
+  applySetEffect(db, character, originalChar, gears)
+
+
 proc getCharacter*(db: DbConn, characterId: int): Character =
   let row = db.getRow(sql"""
     SELECT characters.characterId, exp, hp, receivedAt, characterOwnershipType,
@@ -327,6 +444,8 @@ proc getCharacter*(db: DbConn, characterId: int): Character =
     actionPointRate: some(charBaseActionPointRate),
     actionPointConsumption: some(charBaseActionPointConsumption),
   )
+
+  applyGearStats(db, result)
 
 
 proc getCharactersWithId*(db: DbConn, ids: seq[int]): seq[Character] =
@@ -503,3 +622,15 @@ proc updateCharacterGear*(
   db.exec(sql"UPDATE characters SET gearSlot1 = ? WHERE characterId = ?", optionToSqlArg(gearSlot1), charId)
   db.exec(sql"UPDATE characters SET gearSlot2 = ? WHERE characterId = ?", optionToSqlArg(gearSlot2), charId)
   db.exec(sql"UPDATE characters SET gearSlot3 = ? WHERE characterId = ?", optionToSqlArg(gearSlot3), charId)
+
+
+proc getBalancedGears*(db: DbConn): seq[MdGear] =
+  let maxLevel = getCharacterMaxLevel(db)
+
+  case maxLevel:
+  of 10:
+    result = getMdGears(db, "grade 1 - Shinagawa")
+  of 15:
+    result = getMdGears(db, "grade 2 - Shinagawa")
+  else:
+    result = getMdGears(db, "grade 3 - Shinagawa") # FIXME: minato, chiyoda, fv???

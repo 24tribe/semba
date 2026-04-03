@@ -12,8 +12,6 @@ import timestamp
 import reward
 import entity
 import city
-import character
-
 
 type GearRarity* = enum
   gearRarityInvalid = 0
@@ -33,13 +31,14 @@ type Gear* = object
   subStatus3Id*: Option[int]
   trainingScoreLevelScore*: Option[int]
 
-type MdGear = object
-  id: int
-  grade: int
-  gearTypeId: int
-  descr: string
-  compressItemRewards: JsonNode # FIXME: proper type
-  compressItems: JsonNode # FIXME: proper type
+type MdGear* = object
+  id*: int
+  grade*: int
+  gearTypeId*: int
+  descr*: string
+  compressItemRewards*: JsonNode # FIXME: proper type
+  compressItems*: JsonNode # FIXME: proper type
+  mainStatusId*: int
 
 type MdGearStatusAbility = object
   ability_efficacy_id: int
@@ -56,8 +55,11 @@ type MdGSCharacterSkillPlus = object
 
 type MdStatusEffectType* = enum
   statusEffectMaximumHP = 1
+  statusEffectFlatHp = 2
   statusEffectAttack = 3
+  statusEffectFlatAtk = 4
   statusEffectDefense = 5
+  statusEffectFlatDef = 6
   statusEffectCriticalRate = 7
   statusEffectCriticalDMGMultiplier = 8
   statusEffectSupport = 9
@@ -65,6 +67,43 @@ type MdStatusEffectType* = enum
   statusEffectGrantRecoveryEffect = 29
   statusEffectMaximumStamina = 30
   statusEffectDamageCutRate = 32
+
+type MdStatusEffect* = object
+  `type`*: MdStatusEffectType
+  value*: float
+
+type GearType* = enum
+  gearAttacker = 101
+  gearDefender = 201
+  gearFortress = 203
+  gearHealer = 301
+  gearTrickster = 302
+
+type GearSet* = object
+  gearType*: GearType
+  statusEffect*: MdStatusEffect
+
+const attackerGearSet* = GearSet(
+  gearType: gearAttacker, statusEffect: MdStatusEffect(`type`: statusEffectAttack, value: 1.15)
+)
+
+const defenderGearSet* = GearSet(
+  gearType: gearDefender, statusEffect: MdStatusEffect(`type`: statusEffectMaximumHP, value: 1.1)
+)
+
+const fortressGearSet* = GearSet(
+  gearType: gearFortress, statusEffect: MdStatusEffect(`type`: statusEffectDamageCutRate, value: 0.08)
+)
+
+const healerGearSet* = GearSet(
+  gearType: gearHealer, statusEffect: MdStatusEffect(`type`: statusEffectGrantRecoveryEffect, value: 30.0)
+)
+
+const tricksterGearSet* = GearSet(
+  gearType: gearTrickster, statusEffect: MdStatusEffect(`type`: statusEffectSupport, value: 30.0)
+)
+
+const setRequiredCount* = 2
 
 type MdGearStatus = object
   id: int
@@ -75,6 +114,25 @@ type MdGearStatus = object
   abilities: seq[MdGearStatusAbility]
   adventureAbilities: seq[MdGearStatusAdventureAbility]
   characterSkillPlus: Option[MdGSCharacterSkillPlus]
+
+
+type GearMainStatus* = object
+  `type`*: MdStatusEffectType
+  values*: array[11, int]
+
+const headMainStatus = GearMainStatus(
+  `type`: statusEffectFlatDef, values: [21, 32, 43, 56, 69, 82, 106, 130, 154, 202, 250]
+)
+
+const bodyMainStatus = GearMainStatus(
+  `type`: statusEffectFlatHp, values: [105, 160, 215, 280, 345, 410, 530, 650, 770, 1010, 1250]
+)
+
+const weaponMainStatus = GearMainStatus(
+  `type`: statusEffectFlatAtk, values: [21, 32, 43, 56, 69, 82, 106, 130, 154, 202, 250]
+)
+
+const mainStatusList* = [headMainStatus, bodyMainStatus, weaponMainStatus]
 
 
 proc addGear*(db: DbConn, gear: Gear) =
@@ -120,9 +178,29 @@ proc getGears*(db: DbConn): seq[Gear] =
     result.add(getGear(db, parseInt(row[0])))
 
 
-proc getMdGears(db: DbConn, descr: string): seq[MdGear] =
+proc getMdGear*(db: DbConn, gearId: int): MdGear =
+  let row = db.getRow(sql"""
+    SELECT grade, gearTypeId, compressItemRewards, compressItems, mainStatusId, descr FROM mdGear
+    WHERE id = ?
+  """, gearId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't get MdGear for gearId=" & $gearId)
+
+  result = MdGear(
+    id: gearId,
+    grade: parseInt(row[0]),
+    gearTypeId: parseInt(row[1]),
+    compressItemRewards: parseJson(row[2]),
+    compressItems: parseJson(row[3]),
+    mainStatusId: parseInt(row[4]),
+    descr: row[5],
+  )
+
+
+proc getMdGears*(db: DbConn, descr: string): seq[MdGear] =
   let rows = db.getAllRows(sql"""
-    SELECT id, grade, gearTypeId, compressItemRewards, compressItems FROM mdGear
+    SELECT id, grade, gearTypeId, compressItemRewards, compressItems, mainStatusId FROM mdGear
     WHERE descr = ?
   """, descr)
 
@@ -134,6 +212,7 @@ proc getMdGears(db: DbConn, descr: string): seq[MdGear] =
       descr: descr,
       compressItemRewards: parseJson(row[3]),
       compressItems: parseJson(row[4]),
+      mainStatusId: parseInt(row[5]),
     ))
 
 
@@ -169,18 +248,6 @@ proc getMdGearStatsWithMaxRarity(db: DbConn, maxRarity: int): seq[MdGearStatus] 
     ))
 
 
-proc getBalancedGears(db: DbConn): seq[MdGear] =
-  let maxLevel = getCharacterMaxLevel(db)
-
-  case maxLevel:
-  of 10:
-    result = getMdGears(db, "grade 1 - Shinagawa")
-  of 15:
-    result = getMdGears(db, "grade 2 - Shinagawa")
-  else:
-    result = getMdGears(db, "grade 3 - Shinagawa") # FIXME: minato, chiyoda, fv???
-
-
 proc getRandomSubstatWithMaxRarity(db: DbConn, maxRarity: int): MdGearStatus =
   result = getMdGearStatsWithMaxRarity(db, maxRarity).sample()
 
@@ -206,9 +273,7 @@ proc getSubstats(db: DbConn, rarity: int): (Option[MdGearStatus], Option[MdGearS
   result = (subStatus1, subStatus2, subStatus3)
 
 
-proc randomGear*(db: DbConn, minRarity: int): (Gear, Reward) =
-  let mdGears = getBalancedGears(db)
-
+proc randomGear*(db: DbConn, minRarity: int, mdGears: seq[MdGear]): (Gear, Reward) =
   let mdGear = mdGears.sample()
 
   let rarity = toSeq(minRarity .. gearRaritySsr.int).sample()
@@ -249,3 +314,15 @@ proc randomGear*(db: DbConn, minRarity: int): (Gear, Reward) =
   )
 
   result = (gear, reward)
+
+
+proc getStatusEffect*(db: DbConn, gearStatusId: int): Option[MdStatusEffect] =
+  let row = db.getRow(sql"""
+    SELECT id, statusEffectType, statusEffectValue FROM mdGearStatus WHERE id = ?
+  """, gearStatusId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Failed to get status effect with gearStatusId=" & $gearStatusId)
+
+  if row[1] != "":
+    result = some(MdStatusEffect(`type`: parseInt(row[1]).MdStatusEffectType, value: parseFloat(row[2])))
