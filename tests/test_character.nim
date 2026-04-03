@@ -145,8 +145,8 @@ proc testCharacterGearStats() =
   iroha.gearSlot3 = some(3)
 
   var koishi = getCharacter(ctx.db, koishiCharId)
-  iroha.exp = some(2745)
-  iroha.gearSlot2 = some(5)
+  koishi.exp = some(2745)
+  koishi.gearSlot2 = some(5)
 
   updateCharacters(ctx.db, @[%*yo, %*iroha, %*koishi])
 
