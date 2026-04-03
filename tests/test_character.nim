@@ -161,11 +161,11 @@ proc testCharacterGearStats() =
   iroha.criticalRate = some(9.5)
   iroha.criticalDamageRate = some(80.0)
 
-  iroha.attack = some(100)
-  iroha.defense = some(141)
-  iroha.maxHp = some(786)
-  iroha.criticalRate = some(9.5)
-  iroha.criticalDamageRate = some(70.0)
+  koishi.attack = some(100)
+  koishi.defense = some(141)
+  koishi.maxHp = some(786)
+  koishi.criticalRate = some(9.5)
+  koishi.criticalDamageRate = some(70.0)
 
   let yoNew = getCharacter(ctx.db, yoCharId)
   checkStats(yo, yoNew)
