@@ -19,6 +19,7 @@ version 8: warpPoints, areas, areaGroups, cities
 version 9: characterPieces, userData
 version 10: dungeons
 version 11: magicOrbs, items, areaChangeLocks
+version 12: gears
 ]#
 
 import std/json
@@ -40,6 +41,7 @@ import model_stable/city
 import model_stable/dungeon
 import model_stable/formation
 import model_stable/gacha
+import model_stable/gear
 import model_stable/item
 import model_stable/lux_phantasma
 import model_stable/magic_orb
@@ -355,6 +357,13 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   else:
     setTutorialGacha(db)
 
+  db.exec(sql"DELETE FROM gears")
+
+  if version >= 12:
+    let gears = to(jsonData["gears"], seq[Gear])
+    for gear in gears:
+      addGear(db, gear)
+
 
 proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   const baseError = "Couldn't create save file"
@@ -391,9 +400,10 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   let magicOrbs = getMagicOrbs(db)
   let areaChangeLocks = getAreaChangeLocks(db)
   let items = getItems(db)
+  let gears = getGears(db)
 
   var jsonData = %*{
-    "version": 11,
+    "version": 12,
     "formations": formations,
     "tips": tips,
     "areaObjects": areaObjects,
@@ -423,6 +433,7 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     "magicOrbs": magicOrbs,
     "areaChangeLocks": areaChangeLocks,
     "items": items,
+    "gears": gears,
   }
 
   writeFile(saves_dir & "/" & name & ".save", $jsonData)
