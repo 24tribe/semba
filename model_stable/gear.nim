@@ -142,6 +142,10 @@ proc addGear*(db: DbConn, gear: Gear) =
         entityId, gearId, receivedAt, rarity, isLocked,
         subStatus1Id, subStatus2Id, subStatus3Id, trainingScoreLevelScore
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (entityId) DO
+      UPDATE SET gearId = excluded.gearId, receivedAt = excluded.receivedAt, rarity = excluded.rarity,
+        isLocked = excluded.isLocked, subStatus1Id = excluded.subStatus1Id, subStatus2Id = excluded.subStatus2Id,
+        subStatus3Id = excluded.subStatus3Id, trainingScoreLevelScore = excluded.trainingScoreLevelScore
     """,
     gear.entityId, gear.gearId, gear.receivedAt, gear.rarity, optionToSqlArg(gear.isLocked),
     optionToSqlArg(gear.subStatus1Id), optionToSqlArg(gear.subStatus2Id), optionToSqlArg(gear.subStatus3Id),
