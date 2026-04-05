@@ -26,9 +26,10 @@ proc testFindGraffiti() =
   doAssert(response.rewards.len == 1)
   doAssert(response.rewards[0].`type`.RewardType == rewardFreeGem)
   doAssert(response.rewards[0].quantity == 5)
+  doAssert(response.rewards[0].id == 1)
 
   doAssert(response.changedResources.wallet.isSome())
-  doAssert(response.changedResources.graffitiArts.get(@[]) == @[GraffitiArt(graffitiArtId: 10130102)])
+  doAssert(response.changedResources.graffitiArts.get(@[]) == @[GraffitiArt(graffitiArtId: graffitiArtId)])
 
 
 proc testSuiteGraffitiArt*() =
