@@ -1,23 +1,26 @@
 import std/json
 import std/strutils
 import std/tables
+import std/options
 
 import ../db_connector/db_sqlite
 
 
+type Item* = object
+  itemId: int
+  quantity: Option[int]
+
+
 const selectItemsSql = "SELECT itemId, quantity FROM items"
 
-proc addItem*(db: DbConn, item: JsonNode) =
-  let itemId = item["itemId"].getInt()
-  let quantity = item.getOrDefault("quantity").getInt()
-
+proc addItem*(db: DbConn, item: Item) =
   db.exec(sql"""
     INSERT INTO items (itemId, quantity) VALUES (?, ?)
     ON CONFLICT DO
     UPDATE SET quantity = excluded.quantity
-  """, itemId, quantity)
+  """, item.itemId, item.quantity.get(0))
 
-proc updateItems*(db: DbConn, items: seq[JsonNode]) =
+proc updateItems*(db: DbConn, items: seq[Item]) =
   for item in items:
     addItem(db, item)
 

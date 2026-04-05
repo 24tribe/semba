@@ -25,6 +25,7 @@ version 12: gears
 import std/json
 import std/files
 import std/paths
+import std/options
 
 import db_connector/db_sqlite
 
@@ -342,8 +343,8 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     let areaChangeLocks = jsonData["areaChangeLocks"].getElems()
     updateAreaChangeLocks(db, areaChangeLocks)
 
-    let items = jsonData["items"].getElems()
-    updateItems(db, items)
+    let items = to(jsonData["items"], Option[seq[Item]])
+    updateItems(db, items.get(@[]))
 
   db.exec(sql"DELETE FROM missions")
   # load missions from savefile

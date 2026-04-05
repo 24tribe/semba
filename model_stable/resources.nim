@@ -173,12 +173,11 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
 
   updateMagicOrbs(db, magicOrbs)
 
-  let items = changedResources.getOrDefault("items").getElems()
+  let items = to(changedResources.getOrDefault("items"), Option[seq[Item]])
   
-  if items.len > 0:
+  if items.isSome():
     handledKeys.incl("items")
-  
-  updateItems(db, items)
+    updateItems(db, items.get())
 
   let areaChangeLocks = changedResources.getOrDefault("areaChangeLocks").getElems()
 
