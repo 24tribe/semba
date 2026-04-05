@@ -53,6 +53,7 @@ semba_core_files = [
     'model_stable/enemy.nim',
     'model_stable/entity.nim',
     'model_stable/formation.nim',
+    'model_stable/graffiti_art.nim',
     'model_stable/gacha.nim',
     'model_stable/gear.nim',
     'model_stable/item.nim',

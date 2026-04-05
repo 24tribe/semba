@@ -22,6 +22,12 @@ import ../model_stable/warp_point
 import ../model_stable/reward
 import ../model_stable/gear
 import ../model_stable/item
+import ../model_stable/graffiti_art
+
+
+type AdventureFindGraffitiResponse* = object
+  rewards*: seq[Reward]
+  changedResources*: Resources
 
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =

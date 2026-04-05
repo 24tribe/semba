@@ -21,6 +21,7 @@ import character_piece
 import city
 import dungeon
 import formation
+import graffiti_art
 import item
 import magic_orb
 import nine_sequence
@@ -57,7 +58,7 @@ type Resources* = object
   formations: Option[seq[JsonNode]] # FIXME: Formation
   fractalVises: Option[seq[JsonNode]] # FIXME: FractalVise
   gears: Option[seq[JsonNode]] # FIXME: Gear
-  graffitiArts: Option[seq[JsonNode]] # FIXME: GraffitiArt
+  graffitiArts*: Option[seq[GraffitiArt]]
   guestCharacters: Option[seq[JsonNode]] # FIXME: GuestCharacter
   items: Option[seq[JsonNode]] # FIXME: Item
   loginBonuses: Option[seq[JsonNode]] # FIXME: LoginBonus
@@ -80,7 +81,7 @@ type Resources* = object
   totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
   tutorialStates: Option[seq[JsonNode]] # FIXME: TutorialState
-  wallet: Option[JsonNode] # FIXME: Wallet
+  wallet*: Option[JsonNode] # FIXME: Wallet
   warpPoints: Option[seq[JsonNode]] # FIXME: WarpPoint
   xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
 

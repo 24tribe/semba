@@ -4,6 +4,7 @@ import test_adventure
 import test_battle
 import test_character
 import test_extra
+import test_graffiti_art
 import test_reward
 import test_semba_private
 import test_tip
@@ -17,3 +18,4 @@ testSuiteExtra()
 testSuiteReward()
 testSuiteSembaPrivate()
 testSuiteTip()
+testSuiteGraffitiArt()
