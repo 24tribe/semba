@@ -20,6 +20,7 @@ version 9: characterPieces, userData
 version 10: dungeons
 version 11: magicOrbs, items, areaChangeLocks
 version 12: gears
+version 13: graffitis
 ]#
 
 import std/json
@@ -43,6 +44,7 @@ import model_stable/dungeon
 import model_stable/formation
 import model_stable/gacha
 import model_stable/gear
+import model_stable/graffiti_art
 import model_stable/item
 import model_stable/lux_phantasma
 import model_stable/magic_orb
@@ -365,6 +367,12 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     for gear in gears:
       addGear(db, gear)
 
+  db.exec(sql"DELETE FROM graffitiArts")
+
+  if version >= 13:
+    let graffitiArts = to(jsonData["graffitiArts"], seq[GraffitiArt])
+    addGraffitiArts(db, graffitiArts)
+
 
 proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   const baseError = "Couldn't create save file"
@@ -402,9 +410,10 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   let areaChangeLocks = getAreaChangeLocks(db)
   let items = getItems(db)
   let gears = getGears(db)
+  let graffitiArts = getGraffitiArts(db)
 
   var jsonData = %*{
-    "version": 12,
+    "version": 13,
     "formations": formations,
     "tips": tips,
     "areaObjects": areaObjects,
@@ -435,6 +444,7 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     "areaChangeLocks": areaChangeLocks,
     "items": items,
     "gears": gears,
+    "graffitiArts": graffitiArts,
   }
 
   writeFile(saves_dir & "/" & name & ".save", $jsonData)
