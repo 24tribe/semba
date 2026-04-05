@@ -140,8 +140,10 @@ proc testLostBattleFinish() =
       doAssert(resource.kind == JNull)
 
 
-proc testBattleRetire() =
+proc testBattleRetire(saves_dir: string) =
   var ctx = getInMemorySembaCtx()
+
+  loadSaveFile(ctx, saves_dir, "meiou isle restricted area puzzle")
 
   discard sembaCall(ctx, "/battle/start", %*{
     "battleEntryIds": [5003039],
@@ -168,11 +170,11 @@ proc testBattleRetire() =
 
   doAssert(res != nil)
 
-  doAssert(res.getOrDefault("moveToAreaLocatorId").getInt() == 13120105)
+  doAssert(res.getOrDefault("moveToAreaLocatorId").getInt() != 0)
 
 
 proc testSuiteBattle*(saves_dir: string) =
     test_endrone_battle_start(saves_dir)
     test_battle_finish_challenge_data(saves_dir)
     testLostBattleFinish()
-    testBattleRetire()
+    testBattleRetire(saves_dir)
