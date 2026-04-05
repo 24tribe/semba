@@ -7,6 +7,8 @@ import ../model_stable/resources
 import ../model_stable/character
 import ../model_stable/gear
 import ../model_stable/timestamp
+import ../model_stable/item
+import ../model_stable/user
 import utils
 
 const yoCharId = 100101
@@ -182,7 +184,52 @@ proc testCharacterGearStats() =
   checkStats(koishi, koishiNew)
 
 
+proc testCharacterEnhance() =
+  var ctx = getInMemorySembaCtx()
+
+  addItem(ctx.db, Item(itemId: lifeDataId, quantity: some(2)))
+  addItem(ctx.db, Item(itemId: goodLifeDataId, quantity: some(3)))
+  addItem(ctx.db, Item(itemId: greatLifeDataId, quantity: some(2)))
+
+  const expReceived = 18500
+
+  let status = getUserStatus(ctx.db)
+  status["gold"] = %*(2*expReceived + 100)
+  setUserStatus(ctx.db, status)
+
+  let iroha = getCharacter(ctx.db, irohaCharId)
+
+  let res = to(sembaCall(ctx, "/character/enhance", %*{
+    "characterId": irohaCharId,
+    "consumedItems": [
+      {"itemId": lifeDataId, "quantity": 2},
+      {"itemId": goodLifeDataId, "quantity": 3},
+      {"itemId": greatLifeDataId, "quantity": 2},
+    ]
+  }), Option[ChangedResourcesResponse])
+
+  doAssert(res.isSome())
+
+  let changedResources = res.get().changedResources
+
+  let characters = changedResources.characters.get(@[])
+  doAssert(characters.len == 1)
+  doAssert(characters[0].exp.get(0) == iroha.exp.get(0) + expReceived)
+
+  let ld = getItem(ctx.db, lifeDataId)
+  doAssert(ld.isSome() and ld.get().quantity.get(0) == 0)
+
+  let goodLd = getItem(ctx.db, goodLifeDataId)
+  doAssert(goodLd.isSome() and goodLd.get().quantity.get(0) == 0)
+
+  let greatLd = getItem(ctx.db, greatLifeDataId)
+  doAssert(greatLd.isSome() and greatLd.get().quantity.get(0) == 0)
+
+  doAssert(getUserStatus(ctx.db)["gold"].getInt() == 100)
+
+
 proc testSuiteCharacter*() =
   testCharacterEquip()
   testCharacterStatsDependOnLevel()
   testCharacterGearStats()
+  testCharacterEnhance()
