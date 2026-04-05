@@ -37,6 +37,7 @@ semba_core_files = [
     'model_stable/area_group.nim',
     'model_stable/area_item.nim',
     'model_stable/area.nim',
+    'model_stable/area_locator.nim',
     'model_stable/area_object.nim',
     'model_stable/area_object_lock.nim',
     'model_stable/battle.nim',

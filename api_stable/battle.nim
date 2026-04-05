@@ -4,6 +4,7 @@ import std/tables
 
 import ../db_connector/db_sqlite
 
+import ../model_stable/area_locator
 import ../model_stable/character
 import ../model_stable/battle
 import ../model_stable/user
@@ -124,6 +125,21 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   for characterUpdate in req.characterUpdates:
     setCharacterHp(db, characterUpdate.characterId, characterUpdate.hp.get(0))
 
+  var characters = getCharactersWithId(db, characterIds)
+
+  if req.battleResult.get("") == "retire":
+    let moveToAreaLocatorId = getRetireAreaLocatorId(db, status)
+    return %*{
+      "changedResources": {
+        "status": status,
+        "characters": characters,
+      },
+      "moveToAreaLocatorId": moveToAreaLocatorId
+    }
+
+  let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
+  updateCharacterExps(db, characterExps, characters)
+
   for battleTrigger in battleTriggers:
     var isAreaObject = battleTrigger.triggerType.get("") == "area_object"
     var isActionSequence = battleTrigger.triggerType.get("") == "action_sequence"
@@ -175,11 +191,6 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   for item in items:
     addItem(db, item)
-
-  let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
-
-  var characters = getCharactersWithId(db, characterIds)
-  updateCharacterExps(db, characterExps, characters)
 
   result = %*{
     "characterExps": characterExps,
