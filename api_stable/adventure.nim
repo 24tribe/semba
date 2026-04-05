@@ -2,6 +2,7 @@ import std/json
 import std/strutils
 import std/options
 import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -20,6 +21,7 @@ import ../model_stable/tutorial_state
 import ../model_stable/warp_point
 import ../model_stable/reward
 import ../model_stable/gear
+import ../model_stable/item
 
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -213,9 +215,11 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
   var rewards = getAreaItemRewards(db, areaItemId)
 
   var gears = newSeq[Gear]()
+  var itemsTable: Table[int, Item]
 
   for reward in rewards[0].contents.mitems():
-    if reward.`type` == rewardGearDrop.int:
+    case reward.`type`.RewardType:
+    of rewardGearDrop:
       # FIXME: only golden chests should have a minRarity of gearRaritySsr
       let mdGears = getBalancedGears(db)
       let (gear, gearReward) = randomGear(db, gearRaritySsr.int, mdGears)
@@ -223,8 +227,19 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
       reward = gearReward
       addGear(db, gear)
       gears.add(gear)
+    of rewardItem:
+      if not (reward.id in itemsTable):
+        let item = getItem(db, reward.id)
+        itemsTable[reward.id] = item.get(Item(itemId: reward.id, quantity: some(0)))
 
-  let changedResources = %*{"gears": gears}
+      itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
+    else:
+      discard
+
+  let items = itemsTable.values().toSeq()
+  updateItems(db, items)
+
+  let changedResources = %*{"gears": gears, "items": items}
 
   # FIXME: update kane, char exp and items
 

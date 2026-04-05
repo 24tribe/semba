@@ -7,8 +7,8 @@ import ../db_connector/db_sqlite
 
 
 type Item* = object
-  itemId: int
-  quantity: Option[int]
+  itemId*: int
+  quantity*: Option[int]
 
 
 const selectItemsSql = "SELECT itemId, quantity FROM items"
@@ -50,3 +50,13 @@ proc getItemsTable*(db: DbConn): Table[int, JsonNode] =
 proc itemsTableToItemsSeq*(itemsTable: Table[int, JsonNode]): seq[JsonNode] =
   for item in itemsTable.values():
     result.add(item)
+
+
+proc getItem*(db: DbConn, itemId: int): Option[Item] =
+  let row = db.getRow(sql"SELECT quantity FROM items WHERE itemId = ?", itemId)
+
+  if row[0] != "":
+    result = some(Item(
+      itemId: itemId,
+      quantity: some(parseInt(row[0]))
+    ))
