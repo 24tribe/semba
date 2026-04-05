@@ -10,6 +10,8 @@ type Item* = object
   itemId*: int
   quantity*: Option[int]
 
+type ConsumedItem* = Item
+
 
 const lifeDataId* = 3
 const lifeDataExp* = 500
