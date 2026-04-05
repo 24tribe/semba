@@ -140,7 +140,39 @@ proc testLostBattleFinish() =
       doAssert(resource.kind == JNull)
 
 
+proc testBattleRetire() =
+  var ctx = getInMemorySembaCtx()
+
+  discard sembaCall(ctx, "/battle/start", %*{
+    "battleEntryIds": [5003039],
+    "lineCharacterIds": [100201, 100101, 100501],
+    "battleTriggers": [{"triggerType": "area_berserk_enemy", "triggerIds": [40030102]}],
+    "advantageType": "advantage",
+    "isAttackHit": true,
+    "currentLocation": {
+      "areaType": 1, "direction": 3, "positionCoordinates": {"x": -1.3, "y": 0.007, "z": -0.8}, "areaKeyId": 131201
+    },
+    "bloodStainLocation": {
+      "areaKeyId": 131201, "areaType": 1, "positionCoordinates": {"x": -1.4, "y": 0.007, "z": -1.06}
+    }
+  })
+
+  let res = sembaCall(ctx, "/battle/finish", %*{
+    "characterUpdates": [
+      {"characterId": 100201, "hp": 1011},
+      {"characterId": 100101, "hp": 1080},
+      {"characterId": 100501, "hp": 1072}
+    ],
+    "battleResult": "retire", "encounteredEnemyIds": [257402], "battleTimeSecond": 23,"taskConditionResult": {}
+  })
+
+  doAssert(res != nil)
+
+  doAssert(res.getOrDefault("moveToAreaLocatorId").getInt() == 13120105)
+
+
 proc testSuiteBattle*(saves_dir: string) =
     test_endrone_battle_start(saves_dir)
     test_battle_finish_challenge_data(saves_dir)
     testLostBattleFinish()
+    testBattleRetire()
