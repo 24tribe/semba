@@ -25,6 +25,8 @@ proc getJsonResultStable*(
 ): JsonNode =
   if uri == "/adventure/area_object":
     result = adventure_AreaObject(db, jsonReq)
+  elif uri == "/adventure/find_graffiti":
+    result = %*adventure_FindGraffiti(db, to(jsonReq, AdventureFindGraffitiRequest))
   elif uri == "/adventure/move_to_area":
     result = adventure_MoveToArea(db, jsonReq)
   elif uri == "/adventure/update_character_status":
