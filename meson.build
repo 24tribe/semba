@@ -144,6 +144,7 @@ test_semba_depend_files = [
     'tests/test_semba_private.nim',
     'tests/test_tip.nim',
     'tests/utils.nim',
+    'tests/test_graffiti_art.nim',
 ]
 
 test_semba = custom_target(
