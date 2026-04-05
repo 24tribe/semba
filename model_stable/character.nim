@@ -537,18 +537,25 @@ proc getMdCharacterLevel(db: DbConn, level: int): MdCharacterLevel =
   )
 
 
-proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: var seq[Character]) =
+proc updateCharacterExp*(db: DbConn, addExp: int, character: var Character, maxExp: int) =
+  let finalExp = min(character.exp.get(0) + addExp, maxExp)
+  character.exp = some(finalExp)
+  db.exec(sql"UPDATE characters SET exp = ? WHERE characterId = ?", finalExp, character.characterId)
+
+
+proc getCharacterMaxExp*(db: DbConn): int =
   let charMaxLevel = getCharacterMaxLevel(db)
   let mdCharLevel = getMdCharacterLevel(db, charMaxLevel)
-  let maxExp = mdCharLevel.exp
+  return mdCharLevel.exp
+
+
+proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: var seq[Character]) =
+  let maxExp = getCharacterMaxExp(db)
 
   for character in characters.mitems():
     for characterExp in characterExps:
       if characterExp.getOrDefault("characterId").getInt(0) == character.characterId:
-        let sum = character.exp.get(0) + characterExp["dropExp"].getInt()
-        let finalExp = if sum <= maxExp: sum else: maxExp
-        character.exp = some(finalExp)
-        db.exec(sql"UPDATE characters SET exp = ? WHERE characterId = ?", finalExp, character.characterId)
+        updateCharacterExp(db, characterExp["dropExp"].getInt(), character, maxExp)
         break
 
 
