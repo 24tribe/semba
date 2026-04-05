@@ -187,26 +187,30 @@ proc testCharacterGearStats() =
 proc testCharacterEnhance() =
   var ctx = getInMemorySembaCtx()
 
-  addItem(ctx.db, Item(itemId: lifeDataId, quantity: some(2)))
-  addItem(ctx.db, Item(itemId: goodLifeDataId, quantity: some(3)))
-  addItem(ctx.db, Item(itemId: greatLifeDataId, quantity: some(2)))
+  const level10MinExp = 4856
+  const grossExp = 18500
 
-  const expReceived = 18500
+  let consumedItems = [
+    Item(itemId: lifeDataId, quantity: some(2)),
+    Item(itemId: goodLifeDataId, quantity: some(3)),
+    Item(itemId: greatLifeDataId, quantity: some(2)),
+  ]
+
+  for item in consumedItems:
+    addItem(ctx.db, item)
 
   let status = getUserStatus(ctx.db)
-  status["gold"] = %*(2*expReceived + 100)
+  status["gold"] = %*(2*grossExp + 100)
   setUserStatus(ctx.db, status)
 
   let iroha = getCharacter(ctx.db, irohaCharId)
 
   let res = to(sembaCall(ctx, "/character/enhance", %*{
     "characterId": irohaCharId,
-    "consumedItems": [
-      {"itemId": lifeDataId, "quantity": 2},
-      {"itemId": goodLifeDataId, "quantity": 3},
-      {"itemId": greatLifeDataId, "quantity": 2},
-    ]
+    "consumedItems": consumedItems
   }), Option[ChangedResourcesResponse])
+
+  doAssert(calcLifeDataExp(consumedItems) == grossExp)
 
   doAssert(res.isSome())
 
@@ -214,7 +218,7 @@ proc testCharacterEnhance() =
 
   let characters = changedResources.characters.get(@[])
   doAssert(characters.len == 1)
-  doAssert(characters[0].exp.get(0) == iroha.exp.get(0) + expReceived)
+  doAssert(characters[0].exp.get(0) == level10MinExp)
 
   let ld = getItem(ctx.db, lifeDataId)
   doAssert(ld.isSome() and ld.get().quantity.get(0) == 0)
