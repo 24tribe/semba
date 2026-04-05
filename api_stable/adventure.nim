@@ -217,6 +217,8 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
   var gears = newSeq[Gear]()
   var itemsTable: Table[int, Item]
 
+  var status = getUserStatus(db)
+
   for reward in rewards[0].contents.mitems():
     case reward.`type`.RewardType:
     of rewardGearDrop:
@@ -233,15 +235,18 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
         itemsTable[reward.id] = item.get(Item(itemId: reward.id, quantity: some(0)))
 
       itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
+    of rewardGold:
+      status["gold"] = %*(status.getOrDefault("gold").getInt() + reward.quantity)
     else:
       discard
 
   let items = itemsTable.values().toSeq()
   updateItems(db, items)
 
-  let changedResources = %*{"gears": gears, "items": items}
+  setUserStatus(db, status)
 
-  # FIXME: update kane, char exp and items
+  # FIXME: update character exps
+  let changedResources = %*{"gears": gears, "items": items, "status": status}
 
   return %*{
     "areaItem": {
