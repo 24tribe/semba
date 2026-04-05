@@ -23,7 +23,12 @@ import ../model_stable/reward
 import ../model_stable/gear
 import ../model_stable/item
 import ../model_stable/graffiti_art
+import ../model_stable/wallet
 
+
+type AdventureFindGraffitiRequest* = object
+  graffitiArtId: int
+  currentLocation: Option[JsonNode] # FIXME: use CurrentLocation
 
 type AdventureFindGraffitiResponse* = object
   rewards*: seq[Reward]
@@ -305,3 +310,20 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): JsonNode =
       "status": status
     }
   }
+
+
+proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): AdventureFindGraffitiResponse =
+  let graffitiArt = GraffitiArt(graffitiArtId: req.graffitiArtId)
+  addGraffitiArt(db, graffitiArt)
+  result.changedResources.graffitiArts = some(@[graffitiArt])
+
+  const graffitiFreeGems = 5
+
+  result.rewards = @[Reward(`type`: rewardFreeGem.int, id: 1, quantity: graffitiFreeGems)]
+
+  var wallet = getWallet(db)
+  wallet.free = some(wallet.free.get(0) + graffitiFreeGems)
+  setWallet(db, wallet)
+  result.changedResources.wallet = some(wallet)
+
+  result.changedResources.status = some(getUserStatus(db))

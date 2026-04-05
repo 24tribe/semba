@@ -31,6 +31,7 @@ import tension_card
 import user
 import lux_phantasma
 import timestamp
+import wallet
 
 
 type Resources* = object
@@ -81,7 +82,7 @@ type Resources* = object
   totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
   tutorialStates: Option[seq[JsonNode]] # FIXME: TutorialState
-  wallet*: Option[JsonNode] # FIXME: Wallet
+  wallet*: Option[Wallet]
   warpPoints: Option[seq[JsonNode]] # FIXME: WarpPoint
   xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
 
