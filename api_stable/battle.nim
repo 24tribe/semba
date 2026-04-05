@@ -190,7 +190,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   let items = itemsTableToItemsSeq(changedItems)
 
   for item in items:
-    addItem(db, item)
+    addItem(db, to(item, Item))
 
   result = %*{
     "characterExps": characterExps,
