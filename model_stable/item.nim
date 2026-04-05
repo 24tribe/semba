@@ -71,3 +71,16 @@ proc getItem*(db: DbConn, itemId: int): Option[Item] =
       itemId: itemId,
       quantity: some(parseInt(row[0]))
     ))
+
+
+proc calcLifeDataExp*(consumedItems: openArray[ConsumedItem]): int =
+  for item in consumedItems:
+    case item.itemId:
+    of lifeDataId:
+      result += item.quantity.get(0)*lifeDataExp
+    of goodLifeDataId:
+      result += item.quantity.get(0)*goodLifeDataExp
+    of greatLifeDataId:
+      result += item.quantity.get(0)*greatLifeDataExp
+    else:
+      echo("WARNING: item.id=" & $item.itemId & " is not a life data!")
