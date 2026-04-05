@@ -92,6 +92,9 @@ def main():
     with open(args.masterdata_dir/"area_locator.json", "r", encoding="utf-8") as f:
         md_area_locator_json = json.load(f)
 
+    with open(args.masterdata_dir/"warp_point.json", "r", encoding="utf-8") as f:
+        md_warp_point_json = json.load(f)
+
     with open(args.out_sql, "w", encoding="utf-8") as f:
         gen_md_tension_card(md_tension_card_json, f)
         gen_md_ability_tension_card(md_ability_tension_card_json, f)
@@ -119,6 +122,17 @@ def main():
         gen_md_gear_status(md_gear_status_json, f)
         gen_md_character(md_character_json, f)
         gen_md_area_locator(md_area_locator_json, f)
+        gen_md_warp_point(md_warp_point_json, f)
+
+
+def gen_md_warp_point(md_warp_point_json, f):
+    xprint = lambda *args: print(*args, file=f)
+
+    xprint("INSERT INTO mdWarpPoint (id, areaLocatorId) VALUES")
+
+    write_rows(xprint, f, [(warp_point["id"], warp_point["area_locator_id"]) for warp_point in md_warp_point_json])
+
+    xprint(";")
 
 
 def gen_md_area_locator(md_area_locator_json, f):
