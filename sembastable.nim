@@ -64,6 +64,8 @@ proc getJsonResultStable*(
     result = character_LimitBreak(db, jsonReq)
   elif uri == "/character/equip":
     result = %*character_Equip(db, to(jsonReq, CharacterEquipRequest))
+  elif uri == "/character/enhance":
+    result = %*character_Enhance(db, to(jsonReq, CharacterEnhanceRequest))
 
   elif uri == "/dungeon/entry":
     result = dungeon_Entry(db, jsonReq)

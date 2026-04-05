@@ -5,6 +5,7 @@ import ../db_connector/db_sqlite
 
 import ../model_stable/character
 import ../model_stable/resources
+import ../model_stable/item
 
 
 type CharacterEquipRequest* = object
@@ -12,6 +13,10 @@ type CharacterEquipRequest* = object
   gearSlot1*: Option[int]
   gearSlot2*: Option[int]
   gearSlot3*: Option[int]
+
+type CharacterEnhanceRequest* = object
+  characterId*: int
+  consumedItems*: Option[seq[ConsumedItem]]
 
 
 proc character_CostumeUpdate*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -56,3 +61,7 @@ proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc character_Equip*(db: DbConn, req: CharacterEquipRequest): ChangedResourcesResponse =
   updateCharacterGear(db, req.characterId, req.gearSlot1, req.gearSlot2, req.gearSlot3)
   result.changedResources.characters = some(@[getCharacter(db, req.characterId)])
+
+
+proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResourcesResponse =
+  discard
