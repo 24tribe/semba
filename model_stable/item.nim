@@ -11,14 +11,14 @@ type Item* = object
   quantity*: Option[int]
 
 
-const lifeDataId = 3
-const lifeDataExp = 500
+const lifeDataId* = 3
+const lifeDataExp* = 500
 
-const goodLifeDataId = 4
-const goodLifeDataExp = 2500
+const goodLifeDataId* = 4
+const goodLifeDataExp* = 2500
 
-const greatLifeDataId = 5
-const greatLifeDataExp = 5000
+const greatLifeDataId* = 5
+const greatLifeDataExp* = 5000
 
 const selectItemsSql = "SELECT itemId, quantity FROM items"
 
