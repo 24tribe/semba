@@ -2,6 +2,25 @@ import std/json
 import std/strutils
 
 import ../db_connector/db_sqlite
+import ../semba_error
+
+
+type MdWarpPoint* = object
+  id*: int
+  areaLocatorId*: int
+
+
+proc getLastWarpPoint*(db: DbConn): MdWarpPoint =
+  let row = db.getRow(sql"""
+    SELECT mdWarpPoint.id, mdWarpPoint.areaLocatorId
+    FROM mdWarpPoint INNER JOIN warpPoints ON mdWarpPoint.id = warpPoints.warpPointId
+    ORDER BY warpPoints.warpPointId DESC
+  """)
+
+  if row[0] == "":
+    raise newException(SembaError, "Failed to get last warp point")
+
+  result = MdWarpPoint(id: parseInt(row[0]), areaLocatorId: parseInt(row[1]))
 
 
 proc getWarpPoints*(db: DbConn): seq[JsonNode] =

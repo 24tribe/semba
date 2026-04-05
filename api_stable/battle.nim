@@ -4,7 +4,6 @@ import std/tables
 
 import ../db_connector/db_sqlite
 
-import ../model_stable/area_locator
 import ../model_stable/character
 import ../model_stable/battle
 import ../model_stable/user
@@ -17,6 +16,7 @@ import ../model_stable/item
 import ../model_stable/challenge_task
 import ../model_stable/challenge_progress
 import ../model_stable/resources
+import ../model_stable/warp_point
 import ../semba_error
 
 
@@ -128,7 +128,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   var characters = getCharactersWithId(db, characterIds)
 
   if req.battleResult.get("") == "retire":
-    let moveToAreaLocatorId = getRetireAreaLocatorId(db, status)
+    let moveToAreaLocatorId = getLastWarpPoint(db).areaLocatorId
     return %*{
       "changedResources": {
         "status": status,
