@@ -81,7 +81,7 @@ proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResour
 
   var character = getCharacter(db, req.characterId)
   updateCharacterExp(db, addExp, character, getCharacterMaxExp(db))
-  result.changedResources.characters = some(@[character])
+  result.changedResources.characters = some(@[getCharacter(db, req.characterId)])
 
   let kane = 2*addExp
 

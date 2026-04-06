@@ -537,9 +537,8 @@ proc getMdCharacterLevel(db: DbConn, level: int): MdCharacterLevel =
   )
 
 
-proc updateCharacterExp*(db: DbConn, addExp: int, character: var Character, maxExp: int) =
+proc updateCharacterExp*(db: DbConn, addExp: int, character: Character, maxExp: int) =
   let finalExp = min(character.exp.get(0) + addExp, maxExp)
-  character.exp = some(finalExp)
   db.exec(sql"UPDATE characters SET exp = ? WHERE characterId = ?", finalExp, character.characterId)
 
 
@@ -549,10 +548,10 @@ proc getCharacterMaxExp*(db: DbConn): int =
   return mdCharLevel.exp
 
 
-proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: var seq[Character]) =
+proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: seq[Character]) =
   let maxExp = getCharacterMaxExp(db)
 
-  for character in characters.mitems():
+  for character in characters:
     for characterExp in characterExps:
       if characterExp.getOrDefault("characterId").getInt(0) == character.characterId:
         updateCharacterExp(db, characterExp["dropExp"].getInt(), character, maxExp)
