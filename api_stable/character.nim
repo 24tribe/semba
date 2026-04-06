@@ -6,6 +6,7 @@ import ../db_connector/db_sqlite
 import ../model_stable/character
 import ../model_stable/resources
 import ../model_stable/item
+import ../model_stable/user
 
 
 type CharacterEquipRequest* = object
@@ -79,7 +80,12 @@ proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResour
   let addExp = calcLifeDataExp(consumedItems)
 
   var character = getCharacter(db, req.characterId)
-
   updateCharacterExp(db, addExp, character, getCharacterMaxExp(db))
-
   result.changedResources.characters = some(@[character])
+
+  let kane = 2*addExp
+
+  var status = getUserStatus(db)
+  status["gold"] = %*(status.getOrDefault("gold").getInt() - kane)
+  setUserStatus(db, status)
+  result.changedResources.status = some(status)
