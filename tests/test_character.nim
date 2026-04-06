@@ -1,4 +1,5 @@
 import std/assertions
+import std/algorithm
 import std/json
 import std/options
 import std/sequtils
@@ -230,6 +231,14 @@ proc testCharacterEnhance() =
   doAssert(greatLd.isSome() and greatLd.get().quantity.get(0) == 0)
 
   doAssert(getUserStatus(ctx.db)["gold"].getInt() == 100)
+
+  var changedItems = changedResources.items.get(@[])
+  changedItems.sort(proc (x1, x2: Item): int = cmp(x1.itemId, x2.itemId))
+  doAssert(changedItems == @[
+    Item(itemId: lifeDataId, quantity: some(0)),
+    Item(itemId: goodLifeDataId, quantity: some(0)),
+    Item(itemId: greatLifeDataId, quantity: some(0)),
+  ])
 
 
 proc testSuiteCharacter*() =
