@@ -64,7 +64,19 @@ proc character_Equip*(db: DbConn, req: CharacterEquipRequest): ChangedResourcesR
 
 
 proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResourcesResponse =
-  let addExp = calcLifeDataExp(req.consumedItems.get(@[]))
+  let consumedItems = req.consumedItems.get(@[])
+
+  var items = newSeq[Item]()
+
+  for item in consumedItems:
+    var dbItem = getItem(db, item.itemId).get()
+    dbItem.quantity = some(dbItem.quantity.get(0) - item.quantity.get(0))
+    items.add(dbItem)
+    addItem(db, dbItem)
+
+  result.changedResources.items = some(items)
+
+  let addExp = calcLifeDataExp(consumedItems)
 
   var character = getCharacter(db, req.characterId)
 
