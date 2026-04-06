@@ -1,7 +1,28 @@
 import std/json
 import std/strutils
+import std/options
 
 import ../db_connector/db_sqlite
+
+import ../semba_error
+
+
+type FormationMembers* = object
+  character1Id*: Option[int]
+  character2Id*: Option[int]
+  character3Id*: Option[int]
+  character1OwnershipType*: Option[int]
+  character2OwnershipType*: Option[int]
+  character3OwnershipType*: Option[int]
+
+
+proc getFormationMembers*(db: DbConn, number: int): FormationMembers =
+  let row = db.getRow(sql"SELECT members FROM formations WHERE number = ?", number)
+
+  if row[0] == "":
+    raise newException(SembaError, "Failed to get members of formation " & $number)
+
+  result = to(parseJson(row[0]), FormationMembers)
 
 
 proc getFormations*(db: DbConn): seq[JsonNode] =
