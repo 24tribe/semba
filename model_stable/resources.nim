@@ -61,7 +61,7 @@ type Resources* = object
   gears: Option[seq[JsonNode]] # FIXME: Gear
   graffitiArts*: Option[seq[GraffitiArt]]
   guestCharacters: Option[seq[JsonNode]] # FIXME: GuestCharacter
-  items: Option[seq[JsonNode]] # FIXME: Item
+  items*: Option[seq[Item]] # FIXME: Item
   loginBonuses: Option[seq[JsonNode]] # FIXME: LoginBonus
   magicOrbs: Option[seq[JsonNode]] # FIXME: MagicOrb
   missions: Option[seq[JsonNode]] # FIXME: Mission
