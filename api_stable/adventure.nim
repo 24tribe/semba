@@ -24,6 +24,7 @@ import ../model_stable/gear
 import ../model_stable/item
 import ../model_stable/graffiti_art
 import ../model_stable/wallet
+import ../model_stable/formation
 
 
 type AdventureFindGraffitiRequest* = object
@@ -230,6 +231,8 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   var status = getUserStatus(db)
 
+  var characters = newSeq[Character]()
+
   for reward in rewards[0].contents.mitems():
     case reward.`type`.RewardType:
     of rewardGearDrop:
@@ -248,6 +251,23 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
       itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
     of rewardGold:
       status["gold"] = %*(status.getOrDefault("gold").getInt() + reward.quantity)
+    of rewardCharacterExp:
+      let formationNumber = status.getOrDefault("formationNumber").getInt()
+      let members = getFormationMembers(db, formationNumber)
+
+      let maxExp = getCharacterMaxExp(db)
+
+      if members.character1Id.isSome():
+        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character1Id.get()), maxExp)
+        characters.add(getCharacter(db, members.character1Id.get()))
+
+      if members.character2Id.isSome():
+        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character2Id.get()), maxExp)
+        characters.add(getCharacter(db, members.character2Id.get()))
+
+      if members.character3Id.isSome():
+        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character3Id.get()), maxExp)
+        characters.add(getCharacter(db, members.character3Id.get()))
     else:
       discard
 
@@ -256,8 +276,7 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   setUserStatus(db, status)
 
-  # FIXME: update character exps
-  let changedResources = %*{"gears": gears, "items": items, "status": status}
+  let changedResources = %*{"gears": gears, "items": items, "status": status, "characters": characters}
 
   return %*{
     "areaItem": {
