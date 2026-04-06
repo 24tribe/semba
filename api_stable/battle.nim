@@ -125,7 +125,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   for characterUpdate in req.characterUpdates:
     setCharacterHp(db, characterUpdate.characterId, characterUpdate.hp.get(0))
 
-  var characters = getCharactersWithId(db, characterIds)
+  let characters = getCharactersWithId(db, characterIds)
 
   if req.battleResult.get("") == "retire":
     let moveToAreaLocatorId = getLastWarpPoint(db).areaLocatorId
@@ -139,6 +139,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
   updateCharacterExps(db, characterExps, characters)
+  let newCharacters = getCharactersWithId(db, characterIds)
 
   for battleTrigger in battleTriggers:
     var isAreaObject = battleTrigger.triggerType.get("") == "area_object"
@@ -202,7 +203,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
     ],
     "changedResources": {
       "status": status,
-      "characters": characters,
+      "characters": newCharacters,
       "items": items,
     }
   }
