@@ -84,7 +84,11 @@ proc int32ToGameVersion(gameVersion: int32): Option[SembaExGameVersion] =
 proc sembaExInit(
     dbPath: cstring, gameVersion: int32, status: ptr int32
 ): ptr SembaExContext {.exportc: "SembaExInit", dynlib.} =
+    echo("Inside sembaExInit")
+
     let version = int32ToGameVersion(gameVersion)
+
+    echo("After int32ToGameVersion")
 
     if version.isNone():
         if status != nil:
@@ -93,12 +97,16 @@ proc sembaExInit(
 
     var db: DbConn
 
+    echo("Trying to open db...")
+
     try:
         db = open($dbPath, "", "", "")
     except DbError:
         if status != nil:
             status[] = statusDbError.int32
         return nil
+
+    echo("Allocating SembaExContext...")
 
     result = cast[ptr SembaExContext](c_malloc(sizeof(SembaExContext).csize_t))
 
@@ -107,10 +115,14 @@ proc sembaExInit(
             status[] = statusAllocError.int32
         return nil
 
+    echo("Creating SembaExContext...")
+
     result[] = SembaExContext(db: db, gameVersion: version.get(), lastBattleInfo: none(BattleInfo))
 
     if status != nil:
         status[] = statusOk.int32
+
+    echo("End sembaExInit...")
 
 
 proc sembaExCall(
