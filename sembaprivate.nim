@@ -61,6 +61,9 @@ proc semba_LoadSaveFile(jsonReq: JsonNode, db: DbConn): JsonNode =
 
 proc semba_CreateSaveFile(jsonReq: JsonNode, db: DbConn): JsonNode =
   let saves_dir = jsonReq["saves_dir"].getStr()
+
+  discard existsOrCreateDir(saves_dir)
+
   let name = jsonReq["name"].getStr()
 
   let err = createSaveFile(db, saves_dir, name)
