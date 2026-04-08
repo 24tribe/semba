@@ -78,7 +78,7 @@ semba_core_files = [
     'model_stable/xb.nim',
 ]
 
-nim_release_args = []
+nim_release_args = ['--cc:gcc', '--gcc.exe=cc', '--gcc.linkerexe=cc']
 
 # always static link libc with windows (to avoid shipping mingw dlls)
 if host_machine.system() == 'windows'
