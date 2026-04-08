@@ -115,6 +115,8 @@ proc sembaExInit(
             status[] = statusAllocError.int32
         return nil
 
+    zeroMem(result, sizeof(SembaExContext))
+
     echo("Creating SembaExContext...")
 
     result[] = SembaExContext(db: db, gameVersion: version.get(), lastBattleInfo: none(BattleInfo))
