@@ -326,7 +326,11 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
       "warpPointId": warpPointId
     })
 
-  # TODO: update also missions (zero sensei?), areaObjects and guestCharacters
+  let areaId = getWarpPointAreaId(db, warpPointId)
+  let areaObjects = getRespawnAreaEnemies(db, areaId)
+  resetAreaEnemies(db)
+
+  # TODO: update also missions (zero sensei?) and guestCharacters
 
   return AdventureAccessWarpPointResponse(
     changedResources: Resources(
@@ -334,6 +338,7 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
       tutorialStates: some(changedTutorialStates),
       status: some(status)
     ),
+    areaObjects: areaObjects,
   )
 
 

@@ -41,3 +41,16 @@ proc addWarpPoint*(db: DbConn, warpPointId: int) =
     INSERT INTO warpPoints (warpPointId) VALUES (?)
     ON CONFLICT (warpPointId) DO NOTHING
   """, warpPointId)
+
+
+proc getWarpPointAreaId*(db: DbConn, warpPointId: int): int =
+  let row = db.getRow(sql"""
+    SELECT mdAreaLocator.areaId
+    FROM mdWarpPoint INNER JOIN mdAreaLocator ON mdWarpPoint.areaLocatorId = mdAreaLocator.id
+    WHERE mdWarpPoint.id = ?
+  """, warpPointId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't find areaId for warpPoint with id=" & $warpPointId)
+
+  result = parseInt(row[0])
