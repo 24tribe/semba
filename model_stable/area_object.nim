@@ -1,6 +1,8 @@
 import std/json
 import std/strutils
 import std/options
+import std/sets
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -109,6 +111,40 @@ proc getAreaEnemies*(db: DbConn): seq[JsonNode] =
     }
 
     result.add(areaEnemy)
+
+
+proc getAreaEnemiesInArea*(db: DbConn, areaId: int): seq[AreaObject] =
+  let rows = db.getAllRows(sql"""
+    SELECT areaPointId, areaEnemyRateSetId, action
+    FROM areaEnemies WHERE areaId = ?
+  """, areaId)
+
+  for row in rows:
+    result.add(AreaObject(
+      areaPointId: parseInt(row[0]),
+      areaEnemyRateSetId: some(parseInt(row[1])),
+      action: some(to(parseJson(row[2]), AreaObjectAction)),
+    ))
+
+
+proc getOriginalAreaEnemies*(db: DbConn, areaId: int): seq[AreaObject] =
+  let rows = db.getAllRows(sql"""
+    SELECT areaPointId, areaEnemyRateSetId, action
+    FROM areaEnemiesOriginal WHERE areaId = ?
+  """, areaId)
+
+  for row in rows:
+    result.add(AreaObject(
+      areaPointId: parseInt(row[0]),
+      areaEnemyRateSetId: some(parseInt(row[1])),
+      action: some(to(parseJson(row[2]), AreaObjectAction)),
+    ))
+
+
+proc getRespawnAreaEnemies*(db: DbConn, areaId: int): seq[AreaObject] =
+  let areaEnemies = getAreaEnemiesInArea(db, areaId).toHashSet()
+  let origAreaEnemies = getOriginalAreaEnemies(db, areaId).toHashSet()
+  result = (origAreaEnemies - areaEnemies).toSeq()
 
 
 # FIXME: this should not be called directly by adventure_AreaObject
