@@ -83,7 +83,7 @@ type Resources* = object
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
   tutorialStates*: Option[seq[JsonNode]] # FIXME: TutorialState
   wallet*: Option[Wallet]
-  warpPoints: Option[seq[JsonNode]] # FIXME: WarpPoint
+  warpPoints*: Option[seq[JsonNode]] # FIXME: WarpPoint
   xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
 
 type ChangedResourcesResponse* = object
