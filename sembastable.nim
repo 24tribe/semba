@@ -42,7 +42,7 @@ proc getJsonResultStable*(
   elif uri == "/adventure/hospital":
     result = adventure_Hospital(db)
   elif uri == "/adventure/access_warp_point":
-    result = adventure_AccessWarpPoint(db, jsonReq)
+    result = %*adventure_AccessWarpPoint(db, jsonReq)
 
   elif uri == "/auth/steam_user":
     result = %*{"userId": 696969696969}
