@@ -35,6 +35,10 @@ type AdventureFindGraffitiResponse* = object
   rewards*: seq[Reward]
   changedResources*: Resources
 
+type AdventureAccessWarpPointResponse* = object
+  changedResources*: Resources
+  areaObjects*: seq[AreaObject]
+
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let status = getUserStatus(db)
@@ -300,7 +304,7 @@ proc adventure_Hospital*(db: DbConn): JsonNode =
   }
 
 
-proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): JsonNode =
+proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessWarpPointResponse =
   let warpPointId = jsonReq["warpPointId"].getInt()
 
   var changedTutorialStates = newSeq[JsonNode]()
@@ -322,13 +326,13 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   # TODO: update also missions (zero sensei?), areaObjects and guestCharacters
 
-  return %*{
-    "changedResources": {
-      "warpPoints": changedWarpPoints,
-      "tutorialStates": changedTutorialStates,
-      "status": status
-    }
-  }
+  return AdventureAccessWarpPointResponse(
+    changedResources: Resources(
+      warpPoints: some(changedWarpPoints),
+      tutorialStates: some(changedTutorialStates),
+      status: some(status)
+    ),
+  )
 
 
 proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): AdventureFindGraffitiResponse =
