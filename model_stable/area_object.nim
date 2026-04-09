@@ -262,3 +262,8 @@ proc getDummyAreaObjects*(db: DbConn, areaId: int): seq[AreaObject] =
       areaObjectBehaviorId: some(parseInt(row[1])),
       action: some(to(parseJson(row[2]), AreaObjectAction))
     ))
+
+
+proc resetAreaEnemies*(db: DbConn) =
+  db.exec(sql"DELETE FROM areaEnemies")
+  db.exec(sql"INSERT INTO areaEnemies SELECT * FROM areaEnemiesOriginal")
