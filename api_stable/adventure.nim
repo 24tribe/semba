@@ -43,6 +43,8 @@ type AdventureAccessWarpPointResponse* = object
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let status = getUserStatus(db)
 
+  resetAreaEnemies(db)
+
   return %*{
     "changedResources": {
       "status": status
