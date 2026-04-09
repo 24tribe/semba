@@ -12,9 +12,16 @@ type Wallet* = object
 
 proc getWallet*(db: DbConn): Wallet =
   let freeGemsRow = db.getRow(sql"SELECT val FROM userData WHERE keyName='freeGems'")
-  let freeGems = parseInt(freeGemsRow[0])
+  var freeGems = parseInt(freeGemsRow[0])
   let paidGemsRow = db.getRow(sql"SELECT val FROM userData WHERE keyName='paidGems'")
-  let paidGems = parseInt(paidGemsRow[0])
+  var paidGems = parseInt(paidGemsRow[0])
+  
+  if freeGems >= 5_000_000:
+    freeGems = 4_000_000
+
+  if paidGems >= 5_000_000:
+    paidGems = 4_000_000
+
   result = Wallet(free: some(freeGems), paid: some(paidGems))
 
 
