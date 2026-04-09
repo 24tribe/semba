@@ -81,7 +81,7 @@ type Resources* = object
   tips*: Option[seq[Tip]]
   totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
-  tutorialStates: Option[seq[JsonNode]] # FIXME: TutorialState
+  tutorialStates*: Option[seq[JsonNode]] # FIXME: TutorialState
   wallet*: Option[Wallet]
   warpPoints: Option[seq[JsonNode]] # FIXME: WarpPoint
   xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
