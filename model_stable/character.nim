@@ -10,7 +10,6 @@ import ../semba_error
 import ../extsqlite
 import user
 import mission
-import battle
 import timestamp
 import gear
 
@@ -563,17 +562,6 @@ proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: 
       if characterExp.getOrDefault("characterId").getInt(0) == character.characterId:
         updateCharacterExp(db, characterExp["dropExp"].getInt(), character, maxExp)
         break
-
-
-proc getCharacterExps*(db: DbConn, characterIds: seq[int], battleEntryIds: seq[int]): seq[JsonNode] =
-  let dropExp = round(getBattleExp(db, battleEntryIds)).int
-
-  for characterId in characterIds:
-    result.add(%*{
-      "characterId": characterId,
-      "exp": dropExp,
-      "dropExp": dropExp
-    })
 
 
 proc getCharacterCostumes*(db: DbConn): seq[JsonNode] =

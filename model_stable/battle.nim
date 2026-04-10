@@ -2,12 +2,17 @@ import std/options
 import std/json
 import std/strutils
 import std/math
+import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 
 import ../semba_error
 import enemy
 import dungeon
+import character
+import mission
+import timestamp
 
 
 type BattleTrigger* = object
@@ -160,6 +165,17 @@ proc getBattleExp*(db: DbConn, battleEntryIds: seq[int]): float =
     result += dropExp
 
 
+proc getCharacterExps*(db: DbConn, characterIds: seq[int], battleEntryIds: seq[int]): seq[JsonNode] =
+  let dropExp = round(getBattleExp(db, battleEntryIds)).int
+
+  for characterId in characterIds:
+    result.add(%*{
+      "characterId": characterId,
+      "exp": dropExp,
+      "dropExp": dropExp
+    })
+
+
 proc getMdBattleEnemy(db: DbConn, battleEnemyId: int): MdBattleEnemy =
   let row = db.getRow(sql"""
     SELECT enemyId, hpStackCountOverride, hpStatusFactor, atkStatusFactor FROM mdBattleEnemy
@@ -226,3 +242,35 @@ proc getBattleParametersFromBattleEntryIds*(db: DbConn, battleEntryIds: seq[int]
       id: battleParameter.id,
       enemies: enemies,
     ))
+
+
+proc getChangedAttackTestMissions*(db: DbConn, characters: openArray[Character], cityId: int): seq[Mission] =
+  let attackTestMissions = getAttackTestMissionsForCity(db, cityId)
+
+  let currentMissions = getMissionsWithIds(db, attackTestMissions.mapIt(it.id)).mapIt((it.missionId, it)).toTable()
+
+  for mdMission in attackTestMissions:
+    var currentMission =
+      if mdMission.id in currentMissions:
+        currentMissions[mdMission.id]
+      else:
+        Mission(missionId: mdMission.id)
+
+    if currentMission.clearedAt.isSome():
+      continue
+
+    let minChars = getAttackTestMissionMinChars(mdMission.id)
+
+    if characters.len >= minChars:
+      let targetAttack = mdMission.steps[0].count
+      let charactersWithMoreAttack = characters.filterIt(it.attack.get(0) >= targetAttack).toSeq()
+
+      if charactersWithMoreAttack.len >= minChars:
+        currentMission.count = some(charactersWithMoreAttack.mapIt(it.attack.get(0)).min())
+        currentMission.clearedAt = some(getTimestampNow())
+      else:
+        currentMission.count = some(max(
+          characters.mapIt(it.attack.get(0)).min(), currentMission.count.get(0)
+        ))
+
+      result.add(currentMission)
