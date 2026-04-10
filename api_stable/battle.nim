@@ -4,6 +4,7 @@ import std/tables
 
 import ../db_connector/db_sqlite
 
+import ../model_stable/city
 import ../model_stable/character
 import ../model_stable/battle
 import ../model_stable/user
@@ -17,6 +18,7 @@ import ../model_stable/challenge_task
 import ../model_stable/challenge_progress
 import ../model_stable/resources
 import ../model_stable/warp_point
+import ../model_stable/mission
 import ../semba_error
 
 
@@ -193,6 +195,11 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   for item in items:
     addItem(db, to(item, Item))
 
+  let cityId = areaIdToCityId(currentLocation["areaKeyId"].getInt())
+
+  let missions = getChangedAttackTestMissions(db, newCharacters, cityId)
+  updateMissions(db, missions)
+
   result = %*{
     "characterExps": characterExps,
     "rewards": [
@@ -205,6 +212,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
       "status": status,
       "characters": newCharacters,
       "items": items,
+      "missions": missions,
     }
   }
 
