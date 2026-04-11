@@ -1,6 +1,7 @@
 import std/options
 import std/strutils
 import std/json
+import std/sequtils
 
 import db_connector/sqlite3
 
@@ -29,3 +30,5 @@ proc tryParseBool*(s: string): Option[bool] = (if s != "": some(parseBool(s)) el
 proc tryParseFloat*(s: string): Option[float] = (if s != "": some(parseFloat(s)) else: none(float))
 
 proc tryParseJson*(s: string): Option[JsonNode] = (if s != "": some(parseJson(s)) else: none(JsonNode))
+
+proc sqlIntTuple*(values: openArray[int]): string = "(" & values.mapIt($it).join(",") & ")"

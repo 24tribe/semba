@@ -1,6 +1,8 @@
 import std/assertions
+import std/sequtils
 
 import ../db_connector/db_sqlite
+import ../extsqlite
 import utils
 
 proc test_null() =
@@ -22,6 +24,16 @@ proc test_bool_is_not_zero_or_one() =
   doAssert(row[0] == "true")
 
 
+proc testSqlIntTuple() =
+  let db = initMemoryDb()
+  db.exec(sql"CREATE TABLE asd (id INTEGER, val INTEGER)")
+  db.exec(sql"INSERT INTO asd (id, val) VALUES (1, 4), (2, 8), (3, 9)")
+
+  let rows = db.getAllRows(sql("SELECT val FROM asd WHERE id IN " & sqlIntTuple([2, 3])))
+  doAssert(rows.mapIt(it[0]) == ["8", "9"])
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
+  testSqlIntTuple()
