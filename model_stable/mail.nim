@@ -3,8 +3,10 @@ import std/strutils
 import std/options
 
 import ../db_connector/db_sqlite
+import ../extsqlite
 import reward
 import timestamp
+import entity
 
 type MailType* = enum
   MailInvalid = 0
@@ -83,3 +85,45 @@ proc getMails*(db: DbConn): MailList =
 
 
 proc hasUnopenedMails*(mailList: MailList): bool = mailList.unopened.len > 0
+
+
+proc getUnopenedMailsWithIds*(db: DbConn, entityIds: openArray[int]): seq[Mail] =
+  let rows = db.getAllRows(sql("""
+    SELECT entityId, mailType, rewards, createdAt, endAt
+    FROM mails WHERE opened = false AND entityId IN """ & sqlIntTuple(entityIds) & """
+  """))
+
+  for row in rows:
+    let entityId = parseInt(row[0])
+    let mailType = parseInt(row[1])
+    let rewards = to(parseJson(row[2]), seq[Resource])
+    let createdAt = row[3].Timestamp
+    let endAt = row[4].Timestamp
+
+    let bulkMailId = entityId*1000
+
+    result.add(Mail(
+      entityId: entityId,
+      mailType: mailType,
+      mailParams: MailParams(
+        bulkMailId: some(bulkMailId),
+      ),
+      rewards: rewards,
+      createdAt: createdAt,
+      endAt: endAt,
+    ))
+
+
+proc setMailsWithIdsAsOpened*(db: DbConn, entityIds: openArray[int]) =
+  db.exec(sql("UPDATE mails SET opened = true WHERE entityId IN " & sqlIntTuple(entityIds)))
+
+
+proc mailRewardsToProperRewards*(db: DbConn, rewards: openArray[Resource]): seq[Reward] =
+  for reward in rewards:
+    result.add(Reward(
+      `type`: reward.`type`,
+      id: reward.id,
+      quantity: reward.quantity,
+      resourceParams: reward.resourceParams,
+      entityId: if shouldHaveEntityId(reward.`type`.RewardType): some(popEntityId(db)) else: none(int)
+    ))

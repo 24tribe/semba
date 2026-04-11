@@ -1,5 +1,6 @@
 import std/json
 import std/options
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -30,4 +31,16 @@ proc mail_List*(db: DbConn): MailListResponse =
 
 
 proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
-  discard
+  let mails = getUnopenedMailsWithIds(db, req.entityIds)
+  setMailsWithIdsAsOpened(db, req.entityIds)
+
+  var rewards = mails.foldl(a.concat(mailRewardsToProperRewards(db, b.rewards)), newSeq[Reward]())
+
+  let changedResources = updateResourcesFromRewards(db, rewards)
+
+  let mailList = getMails(db)
+
+  result.list = mailList
+  result.rewards = rewards
+  result.changedResources = to(changedResources, Resources)
+  result.changedResources.notifications = some(Notifications(mail: some(mailList.hasUnopenedMails())))
