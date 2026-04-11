@@ -350,3 +350,17 @@ proc getStatusEffect*(db: DbConn, gearStatusId: int): Option[MdStatusEffect] =
 
   if row[1] != "":
     result = some(MdStatusEffect(`type`: parseInt(row[1]).MdStatusEffectType, value: parseFloat(row[2])))
+
+
+proc getMdGearId*(db: DbConn, mainStatusId: int, gearType: GearType, grade: int): int =
+  let row = db.getRow(sql"""
+    SELECT id FROM mdGear WHERE grade = ? AND gearTypeId = ? AND mainStatusId = ?
+  """, grade, gearType.int, mainStatusId)
+
+  if row[0] == "":
+    raise newException(
+      SembaError,
+      "Failed to get gear id for grade=" & $grade & ", mainStatusId=" & $mainStatusId & "and gearType " & $gearType
+    )
+
+  result = parseInt(row[0])
