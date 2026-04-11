@@ -48,6 +48,19 @@ type MailList* = object
   bulkMails*: seq[BulkMail]
 
 
+proc bulkMailIdFromEntityId(entityId: int): int = entityId*1000
+
+
+proc sendMail*(
+  db: DbConn, subject, body, sender: string, rewards: openArray[Resource], createdAt, endAt: Timestamp
+) =
+  let entityId = popMailEntityId(db)
+  db.exec(sql"""
+    INSERT INTO mails (entityId, mailType, subject, body, sender, rewards, createdAt, endAt, opened)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  """, entityId, MailBulkMail.int, subject, body, sender, $(%*rewards), createdAt, endAt, false)
+
+
 proc getMails*(db: DbConn): MailList =
   let rows = db.getAllRows(sql"""
     SELECT entityId, mailType, subject, body, sender, rewards, createdAt, endAt, opened
@@ -56,7 +69,7 @@ proc getMails*(db: DbConn): MailList =
 
   for row in rows:
     let entityId = parseInt(row[0])
-    let bulkMailId = entityId*1000
+    let bulkMailId = bulkMailIdFromEntityId(entityId)
 
     let mail = Mail(
       entityId: entityId,
