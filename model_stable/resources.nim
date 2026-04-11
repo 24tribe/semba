@@ -22,6 +22,7 @@ import city
 import dungeon
 import formation
 import graffiti_art
+import gacha
 import item
 import magic_orb
 import nine_sequence
@@ -33,6 +34,11 @@ import lux_phantasma
 import timestamp
 import wallet
 
+
+type Notifications* = object
+  gacha*: Option[GachaNotification]
+  mail*: Option[bool]
+  itemRequest*: Option[bool]
 
 type Resources* = object
   adventureVariables: Option[seq[AdventureVariable]]
@@ -67,7 +73,7 @@ type Resources* = object
   missions: Option[seq[JsonNode]] # FIXME: Mission
   missionCountRewardStates: Option[seq[JsonNode]] # FIXME: MissionCountRewardState
   nineSequences: Option[seq[NineSequence]]
-  notifications: Option[JsonNode] # FIXME: Notifications
+  notifications*: Option[Notifications]
   profile: Option[JsonNode] # FIXME: Profile
   profileBadges: Option[seq[JsonNode]] # FIXME: ProfileBadge
   profileBanners: Option[seq[JsonNode]] # FIXME: ProfileBanner
