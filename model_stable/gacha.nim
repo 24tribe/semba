@@ -2,6 +2,7 @@ import std/json
 import std/strutils
 import std/random
 import std/tables
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -13,6 +14,10 @@ import tension_card
 import ../semba_error
 import ../extsqlite
 
+
+type GachaNotification* = object
+  latestGachaStartAt*: Option[Timestamp]
+  executableGachaIds*: Option[seq[int]]
 
 type GachaButton* = enum
   gachaButtonSingle = 1,
