@@ -24,10 +24,9 @@ type MailOpenResponse* = object
 
 proc mail_List*(db: DbConn): MailListResponse =
   let mailList = getMails(db)
-  let mailNotification = mailList.unopened.len > 0
 
   result.list = mailList
-  result.changedResources.notifications = some(Notifications(mail: some(mailNotification)))
+  result.changedResources.notifications = some(Notifications(mail: some(mailList.hasUnopenedMails())))
 
 
 proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
