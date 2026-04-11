@@ -80,3 +80,6 @@ proc getMails*(db: DbConn): MailList =
       body: row[3],
       sender: row[4],
     ))
+
+
+proc hasUnopenedMails*(mailList: MailList): bool = mailList.unopened.len > 0
