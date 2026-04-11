@@ -277,6 +277,22 @@ proc getSubstats(db: DbConn, rarity: int): (Option[MdGearStatus], Option[MdGearS
   result = (subStatus1, subStatus2, subStatus3)
 
 
+proc gearRewardToGear*(reward: Reward): Gear =
+  let gearRewardStatus = reward.resourceParams.get().gearRewardStatus.get()
+  let subStatusIds = gearRewardStatus.subStatusIds.get(@[])
+
+  result = Gear(
+    entityId: reward.entityId.get(),
+    gearId: reward.id,
+    receivedAt: getTimestampNow(),
+    subStatus1Id: if subStatusIds.len >= 1: some(subStatusIds[0]) else: none(int),
+    subStatus2Id: if subStatusIds.len >= 2: some(subStatusIds[1]) else: none(int),
+    subStatus3Id: if subStatusIds.len == 3: some(subStatusIds[2]) else: none(int),
+    trainingScoreLevelScore: some(1),
+    rarity: gearRewardStatus.gearRarity,
+  )
+
+
 proc randomGear*(db: DbConn, minRarity: int, mdGears: seq[MdGear]): (Gear, Reward) =
   let mdGear = mdGears.sample()
 

@@ -325,6 +325,10 @@ proc updateResourcesFromRewards*(db: DbConn, rewards: var seq[Reward]): JsonNode
       reward = gearReward
       addGear(db, gear)
       gears.add(gear)
+    of rewardGear:
+      let gear = gearRewardToGear(reward)
+      addGear(db, gear)
+      gears.add(gear)
     of rewardItem:
       if not (reward.id in itemsTable):
         let item = getItem(db, reward.id)
