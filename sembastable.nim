@@ -95,6 +95,8 @@ proc getJsonResultStable*(
   
   elif uri == "/mail/list":
     result = %*mail_List(db)
+  elif uri == "/mail/open":
+    result = %*mail_Open(db, to(jsonReq, MailOpenRequest))
 
   elif uri == "/news/user_list":
     result = news_UserList()
