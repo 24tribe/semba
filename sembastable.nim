@@ -94,7 +94,7 @@ proc getJsonResultStable*(
     result = gacha_Execute(db, jsonReq)
   
   elif uri == "/mail/list":
-    result = mail_List(db)
+    result = %*mail_List(db)
 
   elif uri == "/news/user_list":
     result = news_UserList()
