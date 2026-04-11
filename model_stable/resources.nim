@@ -2,6 +2,7 @@ import std/json
 import std/sets
 import std/options
 import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -21,11 +22,13 @@ import character_piece
 import city
 import dungeon
 import formation
+import gear
 import graffiti_art
 import gacha
 import item
 import magic_orb
 import nine_sequence
+import reward
 import tutorial_state
 import tip
 import tension_card
@@ -302,3 +305,57 @@ proc changeReadSequenceResponse*(db: DbConn, seqReqId: int, response: JsonNode) 
     changedResources["challengeTasks"] = %*resources.challengeTasks.get()
     changedResources["challengeProgresses"] = %*resources.challengeProgresses.get()
     response["areaObjects"] = %*areaObjects
+
+
+proc updateResourcesFromRewards*(db: DbConn, rewards: var seq[Reward]): JsonNode =
+  var gears = newSeq[Gear]()
+  var itemsTable: Table[int, Item]
+
+  var status = getUserStatus(db)
+
+  var characters = newSeq[Character]()
+
+  for reward in rewards.mitems():
+    case reward.`type`.RewardType:
+    of rewardGearDrop:
+      # FIXME: only golden chests should have a minRarity of gearRaritySsr
+      let mdGears = getBalancedGears(db)
+      let (gear, gearReward) = randomGear(db, gearRaritySsr.int, mdGears)
+
+      reward = gearReward
+      addGear(db, gear)
+      gears.add(gear)
+    of rewardItem:
+      if not (reward.id in itemsTable):
+        let item = getItem(db, reward.id)
+        itemsTable[reward.id] = item.get(Item(itemId: reward.id, quantity: some(0)))
+
+      itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
+    of rewardGold:
+      status["gold"] = %*(status.getOrDefault("gold").getInt() + reward.quantity)
+    of rewardCharacterExp:
+      let formationNumber = status.getOrDefault("formationNumber").getInt()
+      let members = getFormationMembers(db, formationNumber)
+
+      let maxExp = getCharacterMaxExp(db)
+
+      if members.character1Id.isSome():
+        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character1Id.get()), maxExp)
+        characters.add(getCharacter(db, members.character1Id.get()))
+
+      if members.character2Id.isSome():
+        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character2Id.get()), maxExp)
+        characters.add(getCharacter(db, members.character2Id.get()))
+
+      if members.character3Id.isSome():
+        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character3Id.get()), maxExp)
+        characters.add(getCharacter(db, members.character3Id.get()))
+    else:
+      discard
+
+  let items = itemsTable.values().toSeq()
+  updateItems(db, items)
+
+  setUserStatus(db, status)
+
+  result = %*{"gears": gears, "items": items, "status": status, "characters": characters}

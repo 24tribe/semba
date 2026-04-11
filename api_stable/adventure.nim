@@ -232,57 +232,7 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   var rewards = getAreaItemRewards(db, areaItemId)
 
-  var gears = newSeq[Gear]()
-  var itemsTable: Table[int, Item]
-
-  var status = getUserStatus(db)
-
-  var characters = newSeq[Character]()
-
-  for reward in rewards[0].contents.mitems():
-    case reward.`type`.RewardType:
-    of rewardGearDrop:
-      # FIXME: only golden chests should have a minRarity of gearRaritySsr
-      let mdGears = getBalancedGears(db)
-      let (gear, gearReward) = randomGear(db, gearRaritySsr.int, mdGears)
-
-      reward = gearReward
-      addGear(db, gear)
-      gears.add(gear)
-    of rewardItem:
-      if not (reward.id in itemsTable):
-        let item = getItem(db, reward.id)
-        itemsTable[reward.id] = item.get(Item(itemId: reward.id, quantity: some(0)))
-
-      itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
-    of rewardGold:
-      status["gold"] = %*(status.getOrDefault("gold").getInt() + reward.quantity)
-    of rewardCharacterExp:
-      let formationNumber = status.getOrDefault("formationNumber").getInt()
-      let members = getFormationMembers(db, formationNumber)
-
-      let maxExp = getCharacterMaxExp(db)
-
-      if members.character1Id.isSome():
-        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character1Id.get()), maxExp)
-        characters.add(getCharacter(db, members.character1Id.get()))
-
-      if members.character2Id.isSome():
-        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character2Id.get()), maxExp)
-        characters.add(getCharacter(db, members.character2Id.get()))
-
-      if members.character3Id.isSome():
-        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character3Id.get()), maxExp)
-        characters.add(getCharacter(db, members.character3Id.get()))
-    else:
-      discard
-
-  let items = itemsTable.values().toSeq()
-  updateItems(db, items)
-
-  setUserStatus(db, status)
-
-  let changedResources = %*{"gears": gears, "items": items, "status": status, "characters": characters}
+  let changedResources = updateResourcesFromRewards(db, rewards[0].contents)
 
   return %*{
     "areaItem": {
