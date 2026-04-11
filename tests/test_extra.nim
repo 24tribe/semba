@@ -1,5 +1,6 @@
 import std/assertions
 import std/sequtils
+import std/json
 
 import ../db_connector/db_sqlite
 import ../extsqlite
@@ -33,7 +34,21 @@ proc testSqlIntTuple() =
   doAssert(rows.mapIt(it[0]) == ["8", "9"])
 
 
+proc testEnumToJson() =
+  type Bar = enum
+    Bar1
+    Bar2
+
+  type Foo = object
+    bar: Bar
+
+  let foo = %*Foo(bar: Bar2)
+
+  doAssert(foo["bar"].getStr() == "Bar2")
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
   testSqlIntTuple()
+  testEnumToJson()
