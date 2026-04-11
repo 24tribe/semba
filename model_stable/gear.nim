@@ -74,10 +74,14 @@ type MdStatusEffect* = object
 
 type GearType* = enum
   gearAttacker = 101
+  gearBerserker = 102
+  gearGladiator = 103
   gearDefender = 201
+  gearPaladin = 202
   gearFortress = 203
   gearHealer = 301
   gearTrickster = 302
+  gearEnchanter = 303
 
 type GearSet* = object
   gearType*: GearType
