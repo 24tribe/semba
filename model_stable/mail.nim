@@ -75,6 +75,7 @@ proc getMails*(db: DbConn): MailList =
       result.unopened.add(mail)
 
     result.bulkMails.add(BulkMail(
+      id: bulkMailId,
       subject: row[2],
       body: row[3],
       sender: row[4],
