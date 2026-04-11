@@ -87,10 +87,10 @@ proc getMails*(db: DbConn): MailList =
 proc hasUnopenedMails*(mailList: MailList): bool = mailList.unopened.len > 0
 
 
-proc getUnopenedMailsWithIds*(db: DbConn, entityIds: openArray[int]): seq[Mail] =
+proc getMailsWithIds*(db: DbConn, entityIds: openArray[int]): seq[Mail] =
   let rows = db.getAllRows(sql("""
     SELECT entityId, mailType, rewards, createdAt, endAt
-    FROM mails WHERE opened = false AND entityId IN """ & sqlIntTuple(entityIds) & """
+    FROM mails WHERE entityId IN """ & sqlIntTuple(entityIds) & """
   """))
 
   for row in rows:

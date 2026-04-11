@@ -31,7 +31,7 @@ proc mail_List*(db: DbConn): MailListResponse =
 
 
 proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
-  let mails = getUnopenedMailsWithIds(db, req.entityIds)
+  let mails = getMailsWithIds(db, req.entityIds)
   setMailsWithIdsAsOpened(db, req.entityIds)
 
   var rewards = mails.foldl(a.concat(mailRewardsToProperRewards(db, b.rewards)), newSeq[Reward]())
