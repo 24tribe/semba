@@ -38,7 +38,7 @@ type Mail* = object
   rewards*: seq[Resource]
   createdAt*: Timestamp
   openedAt*: Option[Timestamp]
-  endAt*: Option[Timestamp]
+  endAt*: Timestamp
 
 type MailList* = object
   unopened*: seq[Mail]
@@ -64,7 +64,7 @@ proc getMails*(db: DbConn): MailList =
       ),
       rewards: to(parseJson(row[5]), seq[Resource]),
       createdAt: row[6].Timestamp,
-      endAt: (if row[7] != "": some(row[7].Timestamp) else: none(Timestamp)),
+      endAt: row[7].Timestamp,
     )
 
     let opened = parseBool(row[8])
