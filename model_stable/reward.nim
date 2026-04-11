@@ -95,3 +95,11 @@ proc getRandomRewards*(db: DbConn, itemsIds: seq[int]): seq[Reward] =
 
     if max > 2:
       max -= 2
+
+
+proc shouldHaveEntityId*(rewardType: RewardType): bool =
+  case rewardType:
+  of rewardGear, rewardTensionCard:
+    true
+  else:
+    false
