@@ -1,12 +1,19 @@
 import std/strutils
 import std/json
 import std/os
+import std/sequtils
+import std/options
 
 import db_connector/db_sqlite
 
 import sembasave
 import extsqlite
 import model_stable/tutorial
+import model_stable/reward
+import model_stable/mail
+import model_stable/gear
+import model_stable/timestamp
+import model_semba/gear
 
 const sembaSql = slurp("semba.sql")
 
@@ -46,6 +53,16 @@ type GachaRateId = enum
   PromisedPullThreeStarTCRateId = 109,
   PromisedPullTwoStarCharRateId = 110,
   PromisedPullTwoStarTCRateId = 111
+
+
+type SembaMailGearRequest* = object
+  rarity: int
+  piece: int
+  `set`: int
+  tier: int
+  substat1: int
+  substat2: int
+  substat3: int
 
 
 proc semba_LoadSaveFile(jsonReq: JsonNode, db: DbConn): JsonNode =
@@ -164,6 +181,34 @@ proc semba_GetSkipTutorial(db: DbConn): SembaGetSkipTutorialResponse =
   result.skipTutorial = getSkipTutorial(db)
 
 
+proc semba_MailGear(db: DbConn, req: SembaMailGearRequest) =
+  let gearRarity = sembaGearRarityToProperGearRarity(req.rarity)
+  let mainStatusId = sembaPieceToMainStatusId(req.piece)
+  let gearType = sembaSetToGearType(req.`set`)
+  let grade = sembaTierToGrade(req.tier)
+  let subStatus1Id = sembaSubstatToGearStatusId(req.substat1)
+  let subStatus2Id = sembaSubstatToGearStatusId(req.substat2)
+  let subStatus3Id = sembaSubstatToGearStatusId(req.substat3)
+
+  let gearId = getMdGearId(db, mainStatusId, gearType, grade)
+
+  let substatusIds = [subStatus1Id, subStatus2Id, subStatus3Id].filterIt(it.isSome()).mapIt(it.get())
+
+  let rewards = [Resource(
+    `type`: rewardGear.int,
+    id: gearId,
+    quantity: 1,
+    resourceParams: some(ResourceParams(
+      gearRewardStatus: some(GearRewardStatus(
+        subStatusIds: some(substatusIds),
+        gearRarity: gearRarity.int
+      ))
+    ))
+  )]
+
+  sendMail(db, "New patimon", "Your patimon is here!!!", "TNZ", rewards, getTimestampNow(), getFutureTimestamp())
+
+
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =
   if uri == "/semba/echo":
     let dataUpper = jsonReq["data"].getStr().toUpperAscii()
@@ -192,3 +237,5 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
     semba_SetSkipTutorial(db, to(jsonReq, SembaSetSkipTutorialRequest))
   elif uri == "/semba/get_skip_tutorial":
     result = %*semba_GetSkipTutorial(db)
+  elif uri == "/semba/mail_gear":
+    semba_MailGear(db, to(jsonReq, SembaMailGearRequest))

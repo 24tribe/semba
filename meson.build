@@ -76,6 +76,7 @@ semba_core_files = [
     'model_stable/wallet.nim',
     'model_stable/warp_point.nim',
     'model_stable/xb.nim',
+    'model_semba/gear.nim',
 ]
 
 nim_release_args = ['--cc:gcc', '--gcc.exe=cc', '--gcc.linkerexe=cc']
