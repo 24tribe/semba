@@ -1,25 +1,20 @@
 import std/json
+import std/options
 
 import ../db_connector/db_sqlite
 
 import ../model_stable/mail
+import ../model_stable/resources
 
 
-proc mail_List*(db: DbConn): JsonNode =
-  var bulkMails = newSeq[JsonNode]()
-  let opened = getMails(db, #[ opened = ]# true, bulkMails)
-  let unopened = getMails(db, #[ opened = ]# false, bulkMails)
-  let mailNotification = unopened.len > 0
+type MailListResponse = object
+  list: MailList
+  changedResources: Resources
 
-  result = %*{
-    "list": {
-      "opened": opened,
-      "unopened": unopened,
-      "bulkMails": bulkMails
-    },
-    "changedResources": {
-      "notifications": {
-        "mail": mailNotification
-      }
-    }
-  }
+
+proc mail_List*(db: DbConn): MailListResponse =
+  let mailList = getMails(db)
+  let mailNotification = mailList.unopened.len > 0
+
+  result.list = mailList
+  result.changedResources.notifications = some(Notifications(mail: some(mailNotification)))

@@ -1,43 +1,81 @@
 import std/json
 import std/strutils
+import std/options
 
 import ../db_connector/db_sqlite
+import reward
+import timestamp
+
+type MailType* = enum
+  MailInvalid = 0
+  MailTemplate = 1
+  MailInLine = 2
+  MailBulkMail = 3
+
+type MailParams* = object
+  mailTemplateId: Option[int]
+  subject: Option[string]
+  body: Option[string]
+  bulkMailId: Option[int]
+  sender: Option[string]
+
+type Resource* = object
+  `type`*: int
+  id*: int
+  quantity*: int
+  resourceParams*: Option[ResourceParams]
+
+type BulkMail* = object
+  id*: int
+  subject*: string
+  body*: string
+  sender*: string
+
+type Mail* = object
+  entityId*: int
+  mailType*: int
+  mailParams*: MailParams
+  rewards*: seq[Resource]
+  createdAt*: Timestamp
+  openedAt*: Option[Timestamp]
+  endAt*: Option[Timestamp]
+
+type MailList* = object
+  unopened*: seq[Mail]
+  opened*: seq[Mail]
+  bulkMails*: seq[BulkMail]
 
 
-proc getMails*(db: DbConn, opened: bool, bulkMails: var seq[JsonNode]): seq[JsonNode] =
-  let openedInt = if opened: 1 else: 0
-
+proc getMails*(db: DbConn): MailList =
   let rows = db.getAllRows(sql"""
-    SELECT entityId, mailType, subject, body, sender, rewards, createdAt, endAt
+    SELECT entityId, mailType, subject, body, sender, rewards, createdAt, endAt, opened
     FROM mails
-    WHERE opened = ?
-  """, openedInt)
+  """)
 
   for row in rows:
     let entityId = parseInt(row[0])
-    let mailType = parseInt(row[1])
-    let subject = row[2]
-    let body = row[3]
-    let sender = row[4]
-    let rewards = parseJson(row[5])
-    let createdAt = row[6]
-    let endAt = row[7]
     let bulkMailId = entityId*1000
 
-    result.add(%*{
-      "entityId": entityId,
-      "mailType": mailType,
-      "mailParams": {
-        "bulkMailId": bulkMailId,
-      },
-      "rewards": rewards,
-      "createdAt": createdAt,
-      "endAt": endAt
-    })
+    let mail = Mail(
+      entityId: entityId,
+      mailType: parseInt(row[1]),
+      mailParams: MailParams(
+        bulkMailId: some(bulkMailId),
+      ),
+      rewards: to(parseJson(row[5]), seq[Resource]),
+      createdAt: row[6].Timestamp,
+      endAt: (if row[7] != "": some(row[7].Timestamp) else: none(Timestamp)),
+    )
 
-    bulkMails.add(%*{
-      "id": bulkMailId,
-      "subject": subject,
-      "body": body,
-      "sender": sender,
-    })
+    let opened = parseBool(row[8])
+
+    if opened:
+      result.opened.add(mail)
+    else:
+      result.unopened.add(mail)
+
+    result.bulkMails.add(BulkMail(
+      subject: row[2],
+      body: row[3],
+      sender: row[4],
+    ))
