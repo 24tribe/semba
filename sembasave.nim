@@ -373,6 +373,8 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     let graffitiArts = to(jsonData["graffitiArts"], seq[GraffitiArt])
     addGraffitiArts(db, graffitiArts)
 
+  db.exec(sql"DELETE FROM mails")
+
 
 proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   const baseError = "Couldn't create save file"
