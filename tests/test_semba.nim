@@ -8,6 +8,7 @@ import test_graffiti_art
 import test_reward
 import test_semba_private
 import test_tip
+import test_mission
 
 
 let saves_dir = paramStr(1)
@@ -19,3 +20,4 @@ testSuiteReward()
 testSuiteSembaPrivate()
 testSuiteTip()
 testSuiteGraffitiArt()
+testSuiteMission()
