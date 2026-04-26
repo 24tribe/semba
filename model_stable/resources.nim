@@ -27,6 +27,7 @@ import graffiti_art
 import gacha
 import item
 import magic_orb
+import mission
 import nine_sequence
 import reward
 import tutorial_state
@@ -73,7 +74,7 @@ type Resources* = object
   items*: Option[seq[Item]] # FIXME: Item
   loginBonuses: Option[seq[JsonNode]] # FIXME: LoginBonus
   magicOrbs: Option[seq[JsonNode]] # FIXME: MagicOrb
-  missions: Option[seq[JsonNode]] # FIXME: Mission
+  missions*: Option[seq[Mission]]
   missionCountRewardStates: Option[seq[JsonNode]] # FIXME: MissionCountRewardState
   nineSequences: Option[seq[NineSequence]]
   notifications*: Option[Notifications]
