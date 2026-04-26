@@ -26,6 +26,7 @@ semba_core_files = [
     'api_stable/formation.nim',
     'api_stable/gacha.nim',
     'api_stable/mail.nim',
+    'api_stable/mission.nim',
     'api_stable/news.nim',
     'api_stable/tension_card.nim',
     'api_stable/tip.nim',
@@ -143,6 +144,7 @@ test_semba_depend_files = [
     'tests/test_reward.nim',
     'tests/test_semba_private.nim',
     'tests/test_tip.nim',
+    'tests/test_mission.nim',
     'tests/utils.nim',
     'tests/test_graffiti_art.nim',
 ]
