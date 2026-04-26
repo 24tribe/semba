@@ -4,12 +4,16 @@ import std/json
 import std/options
 import std/sequtils
 
+import ../db_connector/db_sqlite
+
 import utils
 import ../model_stable/adventure_variable
 import ../model_stable/area_object
+import ../model_stable/character
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
 import ../model_stable/nine_sequence
+import ../model_stable/resources
 import ../model_stable/reward
 import ../model_stable/timestamp
 
@@ -390,6 +394,63 @@ proc testDummyAreaObjects() =
   doAssert(areaObjects.any(proc (x: AreaObject): bool = x == dummyAreaObject))
 
 
+proc checkCharactersHpIsMax(db: DbConn, charIds: openArray[int], changedResources: Resources) =
+  proc cmpCharacters(chr1, chr2: Character): int = cmp(chr1.characterId, chr2.characterId)
+
+  var changedCharacters = changedResources.characters.get().filterIt(it.characterId in charIds)
+  changedCharacters.sort(cmpCharacters)
+
+  var changedHps = changedCharacters.mapIt((it.characterId, it.hp.get(0))).toSeq()
+
+  var dbChars = getCharactersWithId(db, charIds)
+  dbChars.sort(cmpCharacters)
+
+  var dbHps = dbChars.mapIt((it.characterId, it.hp.get(0))).toSeq()
+
+  let expectedHps = dbChars.mapIt((it.characterId, it.maxHp.get(0))).toSeq()
+
+  doAssert(changedHps == expectedHps)
+  doAssert(dbHps == expectedHps)
+
+
+proc testHealRespiteUnitByWarp() =
+  var ctx = getInMemorySembaCtx()
+
+  let charIds = [100101, 100201]
+
+  knockOutCharacters(ctx.db, charIds)
+
+  let res = ctx.sembaCall("/adventure/warp_area_locator", %*{"warpAreaType": 1, "warpAreaId": 109110})
+
+  doAssert(res != nil)
+
+  let changedResources = to(res["changedResources"], Resources)
+
+  checkCharactersHpIsMax(ctx.db, charIds, changedResources)
+
+
+proc testHealRespiteUnitByAccess() =
+  var ctx = getInMemorySembaCtx()
+
+  let charIds = [100101, 100201]
+
+  knockOutCharacters(ctx.db, charIds)
+
+  let res = ctx.sembaCall("/adventure/access_warp_point", %*{
+    "warpPointId": 109110,
+    "currentLocation": {
+      "areaType": 1, "direction": 1, "areaKeyId": 101316,
+      "positionCoordinates": { "x": 3.0797358, "y": 0.036458492, "z": 1}
+    }
+  })
+
+  doAssert(res != nil)
+
+  let changedResources = to(res["changedResources"], Resources)
+
+  checkCharactersHpIsMax(ctx.db, charIds, changedResources)
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -398,4 +459,6 @@ proc testSuiteAdventure*(saves_dir: string) =
 
   testAcquireAreaItemInLogs()
   testAcquireAreaItemNotInLogs()
+  testHealRespiteUnitByWarp()
+  testHealRespiteUnitByAccess()
   testDummyAreaObjects()
