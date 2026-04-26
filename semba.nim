@@ -6,7 +6,6 @@ import system/ansi_c
 import db_connector/db_sqlite
 
 import sembastable
-import sembademo
 import sembaprivate
 import model_stable/battle
 import model_stable/timestamp
@@ -58,11 +57,7 @@ proc sembaExCallImpl*(
     if path.startsWith("/semba/"):
       jsonRes = getJsonResultPrivateApi(path, jsonReq, ctx.db)
     else:
-      case ctx.gameVersion
-      of gameVersion_0_2_1_20:
-          jsonRes = getJsonResultDemo(path, jsonReq, ctx.db)
-      of gameVersion_1_1_3_35:
-          jsonRes = getJsonResultStable(path, jsonReq, ctx.db, ctx.lastBattleInfo)
+      jsonRes = getJsonResultStable(path, jsonReq, ctx.db, ctx.lastBattleInfo)
 
     ctx.db.exec(sql"COMMIT")
     committed = true
