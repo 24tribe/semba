@@ -75,6 +75,10 @@ proc updateMissions*(db: DbConn, missions: openArray[Mission]) =
       sql"""
         INSERT INTO missions (missionId, count, receivedStepCount, resetAt, clearedAt)
         VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT (missionId) DO
+        UPDATE SET
+          count = excluded.count, receivedStepCount = excluded.receivedStepCount,
+          resetAt = excluded.resetAt, clearedAt = excluded.clearedAt
       """,
       mission.missionId, mission.count.get(0), mission.receivedStepCount.get(0),
       mission.resetAt.get("".Timestamp), mission.clearedAt.get("".Timestamp)
