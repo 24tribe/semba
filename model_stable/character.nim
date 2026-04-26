@@ -448,7 +448,7 @@ proc getCharacter*(db: DbConn, characterId: int): Character =
   applyGearStats(db, result)
 
 
-proc getCharactersWithId*(db: DbConn, ids: seq[int]): seq[Character] =
+proc getCharactersWithId*(db: DbConn, ids: openArray[int]): seq[Character] =
   for id in ids:
     let character = getCharacter(db, id)
     result.add(character)
@@ -504,11 +504,18 @@ proc getCharacterPieces*(db: DbConn): seq[JsonNode] =
     })
   
 
-proc getCharacters*(db: DbConn): seq[JsonNode] =
+proc getCharacters*(db: DbConn): seq[JsonNode] {.deprecated: "use getCharactersTypeSafe instead".} =
   let charactersRows = db.getAllRows(sql"SELECT characterId FROM characters")
 
   for characterRow in charactersRows:   
     result.add(%*getCharacter(db, parseInt(characterRow[0])))
+
+
+proc getCharactersTypeSafe*(db: DbConn): seq[Character] =
+  let charactersRows = db.getAllRows(sql"SELECT characterId FROM characters")
+
+  for characterRow in charactersRows:
+    result.add(getCharacter(db, parseInt(characterRow[0])))
 
 
 proc getCharacterMaxLevel*(db: DbConn): int =
@@ -589,7 +596,7 @@ proc getCharacterCostumes*(db: DbConn): seq[JsonNode] =
 Set the characters hp to max in the database and return the characters with
 changed hp.
 ]#
-proc healCharacters*(db: DbConn): seq[JsonNode] =
+proc healCharacters*(db: DbConn): seq[JsonNode] {.deprecated: "use healCharactersTypeSafe instead".} =
   let characters = getCharacters(db)
 
   for character in characters:
@@ -599,6 +606,16 @@ proc healCharacters*(db: DbConn): seq[JsonNode] =
     if hp != maxHp:
       setCharacterHp(db, characterId, maxHp)
       character["hp"] = %*maxHp
+      result.add(character)
+
+
+proc healCharactersTypeSafe*(db: DbConn): seq[Character] =
+  var characters = getCharactersTypeSafe(db)
+
+  for character in characters.mitems():
+    if character.hp.get(0) != character.maxHp.get(0):
+      setCharacterHp(db, character.characterId, character.maxHp.get(0))
+      character.hp = character.maxHp
       result.add(character)
 
 
@@ -640,3 +657,7 @@ proc getBalancedGears*(db: DbConn): seq[MdGear] =
     result = getMdGears(db, "grade 2 - Shinagawa")
   else:
     result = getMdGears(db, "grade 3 - Shinagawa") # FIXME: minato, chiyoda, fv???
+
+
+proc knockOutCharacters*(db: DbConn, charIds: openArray[int]) =
+  db.exec(sql("UPDATE characters SET hp=0 WHERE characterId IN " & sqlIntTuple(charIds)))

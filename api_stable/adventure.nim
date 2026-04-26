@@ -41,14 +41,15 @@ type AdventureAccessWarpPointResponse* = object
 
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let status = getUserStatus(db)
-
   resetAreaEnemies(db)
 
+  let changedResources = Resources(
+    status: some(getUserStatus(db)),
+    characters: some(healCharactersTypeSafe(db)),
+  )
+
   return %*{
-    "changedResources": {
-      "status": status
-    }
+    "changedResources": changedResources
   }
 
 
@@ -286,7 +287,8 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
     changedResources: Resources(
       warpPoints: some(changedWarpPoints),
       tutorialStates: some(changedTutorialStates),
-      status: some(status)
+      status: some(status),
+      characters: some(healCharactersTypeSafe(db)),
     ),
     areaObjects: areaObjects,
   )
