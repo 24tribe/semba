@@ -11,6 +11,7 @@ import api_stable/event
 import api_stable/formation
 import api_stable/gacha
 import api_stable/mail
+import api_stable/mission
 import api_stable/news
 import api_stable/tension_card
 import api_stable/tip
@@ -97,6 +98,9 @@ proc getJsonResultStable*(
     result = %*mail_List(db)
   elif uri == "/mail/open":
     result = %*mail_Open(db, to(jsonReq, MailOpenRequest))
+
+  elif uri == "/mission/receive":
+    result = %*mission_Receive(db, to(jsonReq, MissionReceiveRequest))
 
   elif uri == "/news/user_list":
     result = news_UserList()
