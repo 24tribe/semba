@@ -519,8 +519,8 @@ proc getCharactersTypeSafe*(db: DbConn): seq[Character] =
 
 
 proc getCharacterMaxLevel*(db: DbConn): int =
-  let status = getUserStatus(db)
-  let flowerMarks = status.getOrDefault("flowerMark").getInt()
+  let status = getUserStatusTypeSafe(db)
+  let flowerMarks = status.flowerMark.get(0)
 
   let flowerMarkLevels = getFlowerMarkLevels(db)
 

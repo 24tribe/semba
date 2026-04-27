@@ -117,7 +117,7 @@ proc dungeon_Resume*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc dungeon_Entry*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let dungeonId = jsonReq["dungeonId"].getInt()
 
-  let status = getUserStatus(db)
+  let status = getUserStatusTypeSafe(db)
   var dungeons = newSeq[JsonNode]()
 
   if getDungeon(db, dungeonId) == nil:

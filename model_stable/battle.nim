@@ -13,6 +13,7 @@ import dungeon
 import character
 import mission
 import timestamp
+import status
 
 
 type BattleTrigger* = object
@@ -22,7 +23,6 @@ type BattleTrigger* = object
 type BattleInfo* = object
   battleEntryIds*: seq[int]
   lineCharacterIds*: seq[int]
-  currentLocation*: JsonNode
   battleTriggers*: seq[BattleTrigger]
   dungeonId*: Option[int]
   advantageType*: Option[string]

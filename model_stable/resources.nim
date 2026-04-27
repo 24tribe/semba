@@ -47,7 +47,7 @@ type Notifications* = object
 
 type Resources* = object
   adventureVariables: Option[seq[AdventureVariable]]
-  areas: Option[seq[Area]]
+  areas*: Option[seq[Area]]
   areaChangeLocks: Option[seq[AreaChangeLock]]
   areaGroups: Option[seq[AreaGroup]]
   areaObjectLocks: Option[seq[AreaObjectLock]]
@@ -86,7 +86,7 @@ type Resources* = object
   seasonPasses: Option[seq[JsonNode]] # FIXME: SeasonPass
   seasonPassTierStates: Option[seq[JsonNode]] # FIXME: SeasonPassTierState
   shopProductStates: Option[seq[JsonNode]] # FIXME: ShopProductState
-  status*: Option[JsonNode] # FIXME: Status
+  status*: Option[Status]
   synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
   tensionCards: Option[seq[JsonNode]] # FIXME: TensionCard
   tips*: Option[seq[Tip]]
@@ -112,15 +112,15 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
 
   if changedResources.getOrDefault("status") != nil:
     handledKeys.incl("status")
-    var status = getUserStatus(db)
+    var status = getUserStatusTypeSafe(db)
 
     if formations.len > 0:
       let formationNumber = changedResources["status"].getOrDefault("formationNumber").getInt()
-      status["formationNumber"] = %*formationNumber
+      status.formationNumber = some(formationNumber)
 
-    updateStatusFromStatusLocation(status, changedResources["status"])
-    changedResources["status"] = status
-    setUserStatus(db, status);
+    updateStatusFromStatusLocation(status, to(changedResources["status"], Status))
+    changedResources["status"] = %*status
+    setUserStatusTypeSafe(db, status);
 
   let nineSequences = changedResources.getOrDefault("nineSequences")
 
@@ -313,7 +313,7 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
   var gears = newSeq[Gear]()
   var itemsTable: Table[int, Item]
 
-  var status = getUserStatus(db)
+  var status = getUserStatusTypeSafe(db)
 
   var characters = newSeq[Character]()
 
@@ -338,11 +338,11 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
 
       itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
     of rewardGold:
-      status["gold"] = %*(status.getOrDefault("gold").getInt() + reward.quantity)
+      status.gold = some(status.gold.get(0) + reward.quantity)
     of rewardFlowerMark:
-      status["flowerMark"] = %*(status.getOrDefault("flowerMark").getInt() + reward.quantity)
+      status.flowerMark = some(status.flowerMark.get(0) + reward.quantity)
     of rewardCharacterExp:
-      let formationNumber = status.getOrDefault("formationNumber").getInt()
+      let formationNumber = status.formationNumber.get(0)
       let members = getFormationMembers(db, formationNumber)
 
       let maxExp = getCharacterMaxExp(db)
@@ -364,7 +364,7 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
   let items = itemsTable.values().toSeq()
   updateItems(db, items)
 
-  setUserStatus(db, status)
+  setUserStatusTypeSafe(db, status)
 
   result.gears = some(gears)
   result.items = some(items)
@@ -376,3 +376,10 @@ proc updateResourcesFromRewards*(
   db: DbConn, rewards: var seq[Reward]
 ): JsonNode {.deprecated: "use updateResourcesFromRewardsTypeSafe instead".} =
   result = %*updateResourcesFromRewardsTypeSafe(db, rewards)
+
+
+proc updateStatusFromCurrentLocation*(status: var Status, currentLocation: CurrentLocation) =
+  status.currentAreaType = currentLocation.areaType
+  status.currentDirection = currentLocation.direction
+  status.currentPositionCoordinates = currentLocation.positionCoordinates
+  status.currentAreaKeyId = currentLocation.areaKeyId

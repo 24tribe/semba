@@ -11,6 +11,12 @@ type PositionCoordinates* = object
   y*: Option[float]
   z*: Option[float]
 
+type CurrentLocation* = object
+  areaType*: Option[int]
+  areaKeyId*: Option[int]
+  positionCoordinates*: Option[PositionCoordinates]
+  direction*: Option[int]
+
 type Status* = object
   exp*: Option[int]
   rank*: int
@@ -47,9 +53,8 @@ proc setUserStatusTypeSafe*(db: DbConn, status: Status) =
   db.exec(sql"UPDATE userData SET val = ? WHERE keyName = ?", %*status, "status")
 
 
-proc getUserStatus*(db: DbConn): JsonNode {.deprecated: "use getUserStatusTypeSafe instead".} =
-  return %*getUserStatusTypeSafe(db)
-
-
-proc setUserStatus*(db: DbConn, status: JsonNode) {.deprecated: "use setUserStatusTypeSafe instead".} =
-  setUserStatusTypeSafe(db, to(status, Status))
+proc updateStatusFromStatusLocation*(status: var Status, otherStatus: Status) =
+  status.currentAreaType = otherStatus.currentAreaType
+  status.currentDirection = otherStatus.currentDirection
+  status.currentPositionCoordinates = otherStatus.currentPositionCoordinates
+  status.currentAreaKeyId = otherStatus.currentAreaKeyId

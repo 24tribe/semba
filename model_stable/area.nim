@@ -9,8 +9,15 @@ import ../semba_error
 
 
 type Area* = object
-  areaId: int
-  isDark: Option[bool]
+  areaId*: int
+  isDark*: Option[bool]
+
+type AreaBgm* = object
+  id*: int
+  eventName*: Option[string]
+
+type AreaBehavior* = object
+  actionSequenceId*: int
 
 
 proc getAreaBgms*(db: DbConn): seq[JsonNode] =
@@ -54,58 +61,17 @@ proc calcDistance(x1: float, y1: float, z1: float, x2: float, y2: float, z2: flo
   return sqrt(pow(x2-x1, 2) + pow(y2-y1, 2) + pow(z2-z1, 2))
 
 
-proc getAreaBgm*(db: DbConn, areaId: int): JsonNode =
+proc getAreaBgm*(db: DbConn, areaId: int): AreaBgm =
   let areaBgmRow = db.getRow(sql"SELECT id, eventName FROM areaBgm WHERE areaId = ?", areaId)
 
   if areaBgmRow[0] == "":
     raise newException(SembaError, "Couldn't find areaBgm for areaId=" & $areaId)
 
-  let areaBgmId = parseInt(areaBgmRow[0])
+  result.id = parseInt(areaBgmRow[0])
   let eventName = areaBgmRow[1]
 
-  result = %*{"id": areaBgmId}
-
   if eventName != "":
-    result["eventName"] = %*eventName
-
-
-proc updatePos*(db: DbConn, status: var JsonNode, fromAreaId: int, toAreaId: int) =
-  let gatesRows = db.getAllRows(sql"""
-    SELECT fromPosX, fromPosY, fromPosZ, toPosX, toPosY, toPosZ, toDirection
-    FROM gates
-    WHERE fromAreaId = ? AND toAreaId = ?
-  """, fromAreaId, toAreaId)
-
-  let currentPosX = status["currentPositionCoordinates"]["x"].getFloat()
-  let currentPosY = status["currentPositionCoordinates"]["y"].getFloat()
-  let currentPosZ = status["currentPositionCoordinates"]["z"].getFloat()
-
-  var hasDist = false
-  var smallestDist = 0.0
-  var foundToPosX = 0.0
-  var foundToPosY = 0.0
-  var foundToPosZ = 0.0
-  var foundToDirection = 0
-
-  for gateRow in gatesRows:
-    let fromPosX = parseFloat(gateRow[0])
-    let fromPosY = parseFloat(gateRow[1])
-    let fromPosZ = parseFloat(gateRow[2])
-
-    let dist = calcDistance(fromPosX, fromPosY, fromPosZ, currentPosX, currentPosY, currentPosZ)
-
-    if not hasDist or dist < smallestDist:
-      hasDist = true
-      smallestDist = dist
-      foundToPosX = parseFloat(gateRow[3])
-      foundToPosX = parseFloat(gateRow[4])
-      foundToPosX = parseFloat(gateRow[5])
-      foundToDirection = parseInt(gateRow[6])
-
-  if not hasDist:
-    echo "[SembaCall] Warning: updatePos couldn't find a gate..."
-  else:
-    status["currentPositionCoordinates"] = %*{"x": foundToPosX, "y": foundToPosY, "z": foundToPosZ}
+    result.eventName = some(eventName)
 
 
 proc getAreaChangeLocksForAreaId*(db: DbConn, areaId: int): seq[JsonNode] =

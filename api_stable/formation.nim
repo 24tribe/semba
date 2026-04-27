@@ -1,4 +1,5 @@
 import std/json
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -21,9 +22,9 @@ proc formation_Update*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
 proc formation_Switch*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let formationNumber = jsonReq["formationNumber"].getInt()
-  let status = getUserStatus(db)
-  status["formationNumber"] = %*formationNumber
-  setUserStatus(db, status)
+  var status = getUserStatusTypeSafe(db)
+  status.formationNumber = some(formationNumber)
+  setUserStatusTypeSafe(db, status)
   result = %*{
     "changedResources": {
       "status": status,

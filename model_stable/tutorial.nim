@@ -1,4 +1,5 @@
 import std/json
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -8,6 +9,7 @@ import challenge
 import user
 import gacha
 import status
+import timestamp
 
 
 proc isFirstLogin*(db: DbConn): bool =
@@ -55,9 +57,9 @@ proc resetToTutorial*(db: DbConn) =
 
   setTutorialGacha(db)
 
-  setUserStatus(db, %*{
-    "rank": 1,
-    "staminaUpdatedAt": "2025-10-27T16:22:38Z",
-    "formationNumber": 1,
-    "loggedInAt": "2025-10-26T16:22:38Z"
-  })
+  setUserStatusTypeSafe(db, Status(
+    rank: 1,
+    staminaUpdatedAt: "2025-10-27T16:22:38Z".Timestamp,
+    formationNumber: some(1),
+    loggedInAt: "2025-10-26T16:22:38Z".Timestamp,
+  ))

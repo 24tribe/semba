@@ -17,9 +17,7 @@ import ../model_stable/resources
 import ../model_stable/reward
 import ../model_stable/sequence_request
 import ../model_stable/status
-import ../model_stable/timestamp
 import ../model_stable/tutorial_state
-import ../model_stable/user
 import ../model_stable/wallet
 import ../model_stable/warp_point
 
@@ -36,12 +34,23 @@ type AdventureAccessWarpPointResponse* = object
   changedResources*: Resources
   areaObjects*: seq[AreaObject]
 
+type AdventureMoveToAreaRequest* = object
+  areaId*: int
+  currentLocation*: Option[CurrentLocation]
+  respawnAtHospital*: Option[bool]
+
+type AdventureMoveToAreaResponse* = object
+  changedResources*: Resources
+  areaChangeLocks*: seq[JsonNode] # FIXME: use AreaChangeLock
+  areaBehavior*: Option[AreaBehavior]
+  areaBgm*: AreaBgm
+
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
   resetAreaEnemies(db)
 
   let changedResources = Resources(
-    status: some(getUserStatus(db)),
+    status: some(getUserStatusTypeSafe(db)),
     characters: some(healCharactersTypeSafe(db)),
   )
 
@@ -99,56 +108,34 @@ proc adventure_AreaObject*(db: DbConn, jsonReq: JsonNode): JsonNode =
   return %*{"areaObjects": areaObjects, "areaItems": areaItemsRes}
 
 
-proc adventure_MoveToArea*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let areaId = jsonReq["areaId"].getInt()
+proc adventure_MoveToArea*(db: DbConn, req: AdventureMoveToAreaRequest): AdventureMoveToAreaResponse =
+  var status = getUserStatusTypeSafe(db)
 
-  var status = getUserStatus(db)
+  if req.currentLocation.isNone(): # dungeon? areaId=80XXXX or areaId=81XXXX
+    result.changedResources.status = some(status)
+    result.areaBgm.id = 1002
+    result.areaBgm.eventName = some("bgm_adv_00_basic_01")
+    return result
 
-  if areaId == 800010:
-    return %*{
-      "changedResources": {"status": status},
-      "areaBgm": {
-        "id": 1002,
-        "eventName": "bgm_adv_00_basic_01"
-      }
-    }
+  var changedAreas = newSeq[Area]()
 
-  var changedAreas = newSeq[JsonNode]()
+  if not hasArea(db, req.areaId):
+    addArea(db, req.areaId)
+    changedAreas.add(Area(areaId: req.areaId))
 
-  if not hasArea(db, areaId):
-    addArea(db, areaId)
-    changedAreas.add(%*{"areaId": areaId})
+  updateStatusFromCurrentLocation(status, req.currentLocation.get())
 
-  let currentLocation = jsonReq["currentLocation"]
+  setUserStatusTypeSafe(db, status)
 
-  let fromAreaId = currentLocation["areaKeyId"].getInt()
+  result.areaBgm = getAreaBgm(db, req.areaId)
+  result.areaChangeLocks = getAreaChangeLocksForAreaId(db, req.areaId)
+  result.changedResources.status = some(status)
+  result.changedResources.areas = some(changedAreas)
 
-  if fromAreaId == areaId:
-    updateStatusFromCurrentLocation(status, currentLocation)
-  else:
-    # FIXME: should update status["currentAreaType"] here
-    updatePos(db, status, fromAreaId, areaId)
-    status["currentAreaKeyId"] = %*areaId
-
-  setUserStatus(db, status)
-
-  let areaBgm = getAreaBgm(db, areaId)
-
-  let areaChangeLocks = getAreaChangeLocksForAreaId(db, areaId)
-
-  result = %*{
-    "areaBgm": areaBgm,
-    "areaChangeLocks": areaChangeLocks,
-    "changedResources": {
-      "status": status,
-      "areas": changedAreas
-    }
-  }
-
-  let actionSequenceId = getActionSequenceId(db, areaId)
+  let actionSequenceId = getActionSequenceId(db, req.areaId)
 
   if actionSequenceId != 0:
-    result["areaBehavior"] = %*{"actionSequenceId": actionSequenceId}
+    result.areaBehavior = some(AreaBehavior(actionSequenceId: actionSequenceId))
 
 
 proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -243,7 +230,7 @@ proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
 
 proc adventure_Hospital*(db: DbConn): JsonNode =
-  let status = getUserStatus(db)
+  let status = getUserStatusTypeSafe(db)
   let changedCharacters = healCharacters(db)
 
   return %*{
@@ -259,7 +246,7 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
 
   var changedTutorialStates = newSeq[JsonNode]()
   var changedWarpPoints = newSeq[JsonNode]()
-  let status = getUserStatus(db)
+  let status = getUserStatusTypeSafe(db)
 
   if not getTutorialState(db, respiteUnitTutorialStatusKey):
     updateTutorialState(db, respiteUnitTutorialStatusKey, true)
@@ -305,4 +292,4 @@ proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): Adv
   setWallet(db, wallet)
   result.changedResources.wallet = some(wallet)
 
-  result.changedResources.status = some(getUserStatus(db))
+  result.changedResources.status = some(getUserStatusTypeSafe(db))

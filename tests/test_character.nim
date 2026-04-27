@@ -201,9 +201,9 @@ proc testCharacterEnhance() =
   for item in consumedItems:
     addItem(ctx.db, item)
 
-  let status = getUserStatus(ctx.db)
-  status["gold"] = %*(2*grossExp + 100)
-  setUserStatus(ctx.db, status)
+  var status = getUserStatusTypeSafe(ctx.db)
+  status.gold = some(2*grossExp + 100)
+  setUserStatusTypeSafe(ctx.db, status)
 
   let res = to(sembaCall(ctx, "/character/enhance", %*{
     "characterId": irohaCharId,
@@ -229,7 +229,7 @@ proc testCharacterEnhance() =
   let greatLd = getItem(ctx.db, greatLifeDataId)
   doAssert(greatLd.isSome() and greatLd.get().quantity.get(0) == 0)
 
-  doAssert(getUserStatus(ctx.db)["gold"].getInt() == 100)
+  doAssert(getUserStatusTypeSafe(ctx.db).gold.get(0) == 100)
 
   var changedItems = changedResources.items.get(@[])
   changedItems.sort(proc (x1, x2: Item): int = cmp(x1.itemId, x2.itemId))

@@ -51,16 +51,13 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
   let lineCharacterIds = to(jsonReq["lineCharacterIds"], seq[int])
   let characters = getCharactersWithId(db, lineCharacterIds)
 
-  let status = getUserStatus(db)
+  var status = getUserStatusTypeSafe(db)
 
-  let currentLocation = jsonReq["currentLocation"]
-  
-  status["currentAreaKeyId"] = currentLocation["areaKeyId"]
-  status["currentAreaType"] = currentLocation["areaType"]
-  status["currentDirection"] = currentLocation["direction"]
-  status["currentPositionCoordinates"] = currentLocation["positionCoordinates"]
+  let currentLocation = to(jsonReq["currentLocation"], CurrentLocation)
 
-  setUserStatus(db, status)
+  updateStatusFromCurrentLocation(status, currentLocation)
+
+  setUserStatusTypeSafe(db, status)
 
   let battleEntryIds = to(jsonReq["battleEntryIds"], seq[int])
 
@@ -81,7 +78,6 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
   lastBattleInfo = some(BattleInfo(
     battleEntryIds: battleEntryIds,
     lineCharacterIds: lineCharacterIds,
-    currentLocation: currentLocation,
     battleTriggers: to(jsonReq["battleTriggers"], seq[BattleTrigger]),
     advantageType: to(advantageType, Option[string]),
   ))
@@ -100,7 +96,7 @@ proc battle_Restart*(
 
   result.characters = getCharactersWithId(db, req.lineCharacterIds)
   result.tensionCards = getEquippedTensionCards(db)
-  result.changedResources.status = some(getUserStatus(db))
+  result.changedResources.status = some(getUserStatusTypeSafe(db))
   result.battleParameters = getBattleParametersFromBattleEntryIds(db, lastBattleInfo.get().battleEntryIds)
   result.battleTriggers = lastBattleInfo.get().battleTriggers
   result.advantageType = lastBattleInfo.get().advantageType
@@ -112,7 +108,6 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   let characterIds = lastBattleInfo.get().lineCharacterIds
   let battleTriggers = lastBattleInfo.get().battleTriggers
-  let currentLocation = lastBattleInfo.get().currentLocation
   let battleEntryIds = lastBattleInfo.get().battleEntryIds
   let dungeonId = lastBattleInfo.get().dungeonId
 
@@ -120,7 +115,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   let req = to(jsonReq, BattleFinishRequest)
 
-  let status = getUserStatus(db)
+  let status = getUserStatusTypeSafe(db)
 
   if req.battleResult.get("") == "lost":
     return %*{"changedResources": {"status": status}}
@@ -154,7 +149,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
         if isDungeon:
           removeDungeonEnemy(db, dungeonId.get(), triggerId)
         else:
-          let areaKeyId = currentLocation["areaKeyId"].getInt()
+          let areaKeyId = status.currentAreaKeyId.get(0)
           if isAreaObject:
             removeAreaObject(db, areaKeyId, triggerId)
           else:
@@ -196,7 +191,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   for item in items:
     addItem(db, to(item, Item))
 
-  let cityId = areaIdToCityId(currentLocation["areaKeyId"].getInt())
+  let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
 
   let missions = getChangedAttackTestMissions(db, newCharacters, cityId)
   updateMissions(db, missions)

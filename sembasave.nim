@@ -317,7 +317,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
 
   if version >= 4:
     let status = jsonData["status"]
-    setUserStatus(db, status)
+    setUserStatusTypeSafe(db, to(status, Status))
 
   if version >= 5:
     loadSaveFileVer5(db, jsonData, dontDeleteAllAreaObjects)
@@ -387,7 +387,7 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   let tips = getTips(db)
   let areaObjects = getAreaObjects(db)
   let areaEnemies = getAreaEnemies(db)
-  let status = getUserStatus(db)
+  let status = getUserStatusTypeSafe(db)
   let offlineLogs = getOfflineLogs(db)
   let areaBgms = getAreaBgms(db)
   let characters = getCharacters(db)

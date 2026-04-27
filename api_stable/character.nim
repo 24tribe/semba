@@ -6,7 +6,6 @@ import ../db_connector/db_sqlite
 import ../model_stable/character
 import ../model_stable/resources
 import ../model_stable/item
-import ../model_stable/user
 import ../model_stable/status
 
 
@@ -86,7 +85,7 @@ proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResour
 
   let kane = 2*addExp
 
-  var status = getUserStatus(db)
-  status["gold"] = %*(status.getOrDefault("gold").getInt() - kane)
-  setUserStatus(db, status)
+  var status = getUserStatusTypeSafe(db)
+  status.gold = some(status.gold.get(0) - kane)
+  setUserStatusTypeSafe(db, status)
   result.changedResources.status = some(status)

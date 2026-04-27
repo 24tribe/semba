@@ -29,7 +29,7 @@ proc getJsonResultStable*(
   elif uri == "/adventure/find_graffiti":
     result = %*adventure_FindGraffiti(db, to(jsonReq, AdventureFindGraffitiRequest))
   elif uri == "/adventure/move_to_area":
-    result = adventure_MoveToArea(db, jsonReq)
+    result = %*adventure_MoveToArea(db, to(jsonReq, AdventureMoveToAreaRequest))
   elif uri == "/adventure/update_character_status":
     result = adventure_UpdateCharacterStatus(db, jsonReq)
   elif uri == "/adventure/read_sequence":

@@ -35,10 +35,9 @@ import ../model_stable/warp_point
 
 proc user_CrossDate*(db: DbConn, jsonReq: JsonNode): JsonNode =
   # FIXME: move status loggedInAt update to user_LogIn
-  let status = getUserStatus(db)
-  let loggedInAt = getDateNow()
-  status["loggedInAt"] = %*loggedInAt
-  setUserStatus(db, status)
+  var status = getUserStatusTypeSafe(db)
+  status.loggedInAt = getTimestampNow()
+  setUserStatusTypeSafe(db, status)
   return %*{
     "changedResources": {
       "status": status,
@@ -107,7 +106,7 @@ proc user_LogIn*(db: DbConn): JsonNode =
       "profile": {"name": "Yo Kuronaka3", "profileBannerId": 2010011, "characterLikabilityScale": 500},
       "profileBanners": [{"profileBannerId": 2010011, "receivedAt": "2025-09-10T02:22:51Z"}],
       "questStates": questStates,
-      "status": getUserStatus(db),
+      "status": getUserStatusTypeSafe(db),
       "tensionCards": getTensionCards(db),
       "tips": getTips(db),
       "totalTasks": getTotalTasks(db),

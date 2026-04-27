@@ -1,5 +1,6 @@
 import std/json
 import std/strutils
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -111,8 +112,8 @@ proc getFormationCards(db: DbConn, formationNumber: int): JsonNode =
   result = parseJson(row[0])
 
 proc getEquippedTensionCards*(db: DbConn): seq[JsonNode] =
-  let status = getUserStatus(db)
-  let formationNumber = status.getOrDefault("formationNumber").getInt()
+  let status = getUserStatusTypeSafe(db)
+  let formationNumber = status.formationNumber.get(0)
   let cards = getFormationCards(db, formationNumber)
 
   let tensionCard1Id = cards.getOrDefault("tensionCard1Id")
