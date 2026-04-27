@@ -308,7 +308,7 @@ proc changeReadSequenceResponse*(db: DbConn, seqReqId: int, response: JsonNode) 
     response["areaObjects"] = %*areaObjects
 
 
-proc updateResourcesFromRewards*(db: DbConn, rewards: var seq[Reward]): JsonNode =
+proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): Resources =
   var gears = newSeq[Gear]()
   var itemsTable: Table[int, Item]
 
@@ -363,4 +363,13 @@ proc updateResourcesFromRewards*(db: DbConn, rewards: var seq[Reward]): JsonNode
 
   setUserStatus(db, status)
 
-  result = %*{"gears": gears, "items": items, "status": status, "characters": characters}
+  result.gears = some(gears)
+  result.items = some(items)
+  result.status = some(status)
+  result.characters = some(characters)
+
+
+proc updateResourcesFromRewards*(
+  db: DbConn, rewards: var seq[Reward]
+): JsonNode {.deprecated: "use updateResourcesFromRewardsTypeSafe instead".} =
+  result = %*updateResourcesFromRewardsTypeSafe(db, rewards)
