@@ -30,6 +30,7 @@ import magic_orb
 import mission
 import nine_sequence
 import reward
+import status
 import tutorial_state
 import tip
 import tension_card

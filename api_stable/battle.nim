@@ -17,6 +17,7 @@ import ../model_stable/item
 import ../model_stable/challenge_task
 import ../model_stable/challenge_progress
 import ../model_stable/resources
+import ../model_stable/status
 import ../model_stable/warp_point
 import ../model_stable/mission
 import ../semba_error

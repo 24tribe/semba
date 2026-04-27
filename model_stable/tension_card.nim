@@ -4,8 +4,8 @@ import std/strutils
 import ../db_connector/db_sqlite
 
 import ../semba_error
-import user
 import timestamp
+import status
 
 
 const dbTensionCardsFields = """

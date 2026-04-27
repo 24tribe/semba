@@ -7,6 +7,7 @@ import ../model_stable/character
 import ../model_stable/resources
 import ../model_stable/item
 import ../model_stable/user
+import ../model_stable/status
 
 
 type CharacterEquipRequest* = object

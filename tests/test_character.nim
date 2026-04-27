@@ -8,6 +8,7 @@ import ../model_stable/resources
 import ../model_stable/character
 import ../model_stable/gear
 import ../model_stable/timestamp
+import ../model_stable/status
 import ../model_stable/item
 import ../model_stable/user
 import utils

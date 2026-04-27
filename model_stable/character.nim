@@ -9,6 +9,7 @@ import ../db_connector/db_sqlite
 import ../semba_error
 import ../extsqlite
 import user
+import status
 import mission
 import timestamp
 import gear

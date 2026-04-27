@@ -16,6 +16,7 @@ import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
 import ../model_stable/sequence_request
+import ../model_stable/status
 import ../model_stable/timestamp
 import ../model_stable/tutorial_state
 import ../model_stable/user

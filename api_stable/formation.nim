@@ -4,6 +4,7 @@ import ../db_connector/db_sqlite
 
 import ../model_stable/formation
 import ../model_stable/user
+import ../model_stable/status
 
 
 proc formation_Update*(db: DbConn, jsonReq: JsonNode): JsonNode =

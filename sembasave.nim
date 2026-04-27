@@ -49,6 +49,7 @@ import model_stable/item
 import model_stable/lux_phantasma
 import model_stable/magic_orb
 import model_stable/nine_sequence
+import model_stable/status
 import model_stable/tension_card
 import model_stable/tip
 import model_stable/total_task

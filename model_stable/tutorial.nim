@@ -7,6 +7,7 @@ import challenge_progress
 import challenge
 import user
 import gacha
+import status
 
 
 proc isFirstLogin*(db: DbConn): bool =
