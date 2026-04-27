@@ -11,7 +11,6 @@ import ../semba_error
 import timestamp
 import reward
 import entity
-import city
 
 type GearRarity* = enum
   gearRarityInvalid = 0
