@@ -74,7 +74,7 @@ proc getJsonResultStable*(
     result = dungeon_Start(db, jsonReq)
   elif uri == "/dungeon/finish":
     result = dungeon_Finish(db, jsonReq)
-  elif uri == "/dungeon/battle_start":
+  elif uri == "/dungeon/battle_start" or uri == "/dungeon/battle/start":
     result = dungeon_BattleStart(db, jsonReq, lastBattleInfo)
   elif uri == "/dungeon/resume":
     result = dungeon_Resume(db, jsonReq)
