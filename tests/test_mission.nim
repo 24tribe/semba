@@ -43,6 +43,7 @@ proc testMissionReceive() =
     )
 
     doAssert(res.rewards.len > 0)
+    doAssert(res.changedResources.status.get().getOrDefault("flowerMark").getInt() == 2)
 
 
 proc testSuiteMission*() =
