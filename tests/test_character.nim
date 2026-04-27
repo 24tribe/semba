@@ -204,8 +204,6 @@ proc testCharacterEnhance() =
   status["gold"] = %*(2*grossExp + 100)
   setUserStatus(ctx.db, status)
 
-  let iroha = getCharacter(ctx.db, irohaCharId)
-
   let res = to(sembaCall(ctx, "/character/enhance", %*{
     "characterId": irohaCharId,
     "consumedItems": consumedItems
