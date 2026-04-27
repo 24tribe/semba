@@ -46,6 +46,16 @@ proc getAttackTestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
     ))
 
 
+proc getMdMissionsWithIds*(db: DbConn, ids: openArray[int]): seq[MdMission] = 
+  let rows = db.getAllRows(sql("SELECT id, steps, cityId FROM mdMission WHERE id IN " & sqlIntTuple(ids)))
+
+  result = rows.mapIt(MdMission(
+    id: parseInt(it[0]),
+    steps: to(parseJson(it[1]), seq[MdMissionStep]),
+    cityId: tryParseInt(it[2]),
+  )).toSeq()
+
+
 proc getAttackTestMissionMinChars*(missionId: int): int =
   case missionId:
   of 1041041: 1
