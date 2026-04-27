@@ -68,7 +68,7 @@ type Resources* = object
   follows: Option[seq[JsonNode]] # FIXME: Follow
   formations: Option[seq[JsonNode]] # FIXME: Formation
   fractalVises: Option[seq[JsonNode]] # FIXME: FractalVise
-  gears: Option[seq[JsonNode]] # FIXME: Gear
+  gears*: Option[seq[Gear]]
   graffitiArts*: Option[seq[GraffitiArt]]
   guestCharacters: Option[seq[JsonNode]] # FIXME: GuestCharacter
   items*: Option[seq[Item]] # FIXME: Item
