@@ -1,7 +1,12 @@
+import std/sequtils
+import std/tables
+import std/options
+
 import ../db_connector/db_sqlite
 
 import ../model_stable/resources
 import ../model_stable/reward
+import ../model_stable/mission
 
 
 type MissionReceiveRequest* = object
@@ -13,4 +18,38 @@ type MissionReceiveResponse* = object
 
 
 proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveResponse =
-  discard
+  let missions = getMissionsWithIds(db, req.missionIds).mapIt((it.missionId, it)).toTable()
+  let mdMissions = getMdMissionsWithIds(db, req.missionIds)
+
+  var changedMissions = newSeq[Mission]()
+  var rewards = newSeq[Reward]()
+
+  for mdMission in mdMissions:
+    var mission = missions[mdMission.id]
+
+    let stepsWithIndex = zip((0 .. mdMission.steps.high).toSeq(), mdMission.steps)
+
+    let steps =
+      if mission.receivedStepCount.isNone():
+        stepsWithIndex
+      else:
+        stepsWithIndex[mission.receivedStepCount.get() .. stepsWithIndex.high]
+
+    let completedSteps = stepsWithIndex.filterIt(mission.count.get(0) >= it[1].count)
+
+    for completedStep in completedSteps:
+      let rewardSet = getMdRewardSet(db, completedStep[1].rewardSetId)
+      rewards.insert(rewardSet.rewards.mapIt(Reward(
+        `type`: it.`type`, `id`: it.`id`, quantity: it.quantity
+      )), rewards.len)
+
+    let receivedStepCount = completedSteps[completedSteps.high][0] + 1
+
+    mission.receivedStepCount = some(receivedStepCount)
+    changedMissions.add(mission)
+
+  updateMissions(db, changedMissions)
+
+  result.changedResources = updateResourcesFromRewardsTypeSafe(db, rewards)
+  result.changedResources.missions = some(changedMissions)
+  result.rewards = rewards
