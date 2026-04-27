@@ -5,9 +5,22 @@ import std/tables
 
 import utils
 import ../api_stable/mission
+import ../model_stable/mission
+import ../model_stable/timestamp
 
 proc testMissionReceive() =
     var ctx = getInMemorySembaCtx()
+
+    updateMissions(ctx.db, [
+        Mission(
+            missionId: 1041041, count: some(155),
+            receivedStepCount: some(0), clearedAt: some(getTimestampNow())
+        ),
+        Mission(
+            missionId: 1041042, count: some(155),
+            receivedStepCount: some(0), clearedAt: some(getTimestampNow())
+        ),
+    ])
 
     let missionIds = [1041041, 1041042]
 
