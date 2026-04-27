@@ -38,6 +38,10 @@ proc testMissionReceive() =
         let mission = missions[missionId]
         doAssert(mission.receivedStepCount.get(0) == 1)
 
+    doAssert(
+        getMissionsWithIds(ctx.db, missionIds).all(proc (mi: Mission): bool = mi.receivedStepCount.get(0) == 1)
+    )
+
     doAssert(res.rewards.len > 0)
 
 
