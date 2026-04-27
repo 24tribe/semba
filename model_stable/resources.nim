@@ -338,6 +338,8 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
       itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
     of rewardGold:
       status["gold"] = %*(status.getOrDefault("gold").getInt() + reward.quantity)
+    of rewardFlowerMark:
+      status["flowerMark"] = %*(status.getOrDefault("flowerMark").getInt() + reward.quantity)
     of rewardCharacterExp:
       let formationNumber = status.getOrDefault("formationNumber").getInt()
       let members = getFormationMembers(db, formationNumber)
