@@ -4,6 +4,7 @@ import std/random
 import std/json
 
 import ../db_connector/db_sqlite
+import ../semba_error
 
 
 type RewardType* = enum
@@ -65,8 +66,26 @@ type Rewards* = object
   `type`*: Option[int]
   contents*: seq[Reward]
 
+type MdReward* = object
+  `id`*: int
+  quantity*: int
+  `type`*: int
+
+type MdRewardSet* = object
+  `id`*: int
+  rewards*: seq[MdReward]
+
 
 let enigmaticRemnentId* = 105
+
+
+proc getMdRewardSet*(db: DbConn, rewardSetId: int): MdRewardSet =
+  let row = db.getRow(sql"SELECT rewards FROM mdRewardSet WHERE id = ?", rewardSetId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't get reward set for id=" & $rewardSetId)
+
+  result = MdRewardSet(`id`: rewardSetId, rewards: to(parseJson(row[0]), seq[MdReward]))
 
 
 proc getRewardGroupIdFromEnemyGroupId*(db: DbConn, enemyGroupId: int): Option[int] =
