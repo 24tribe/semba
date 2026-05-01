@@ -2,6 +2,7 @@ import std/json
 import std/strutils
 import std/options
 import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 import ../extsqlite
@@ -142,3 +143,25 @@ proc getFlowerMarkLevels*(db: DbConn): seq[FlowerMarkLevel] =
       requiredFlowerMark: requiredFlowerMark,
       characterMaxLevel: characterMaxLevel
     ))
+
+
+proc getMissionsWithNewCount*(
+  db: DbConn, mdMissions: openArray[MdMission], getNewCount: proc (mission: Mission, mdMission: MdMission): Option[int]
+): seq[Mission] =
+  var missions = getMissionsWithIds(db, mdMissions.mapIt(it.id)).mapIt((it.missionId, it)).toTable()
+
+  for mdMission in mdMissions:
+    var mission = missions.getOrDefault(mdMission.id, Mission(missionId: mdMission.id))
+
+    if mission.clearedAt.isSome():
+      continue
+
+    let newCount = getNewCount(mission, mdMission)
+
+    if newCount.isSome():
+      mission.count = newCount
+
+      if newCount.get() >= mdMission.steps[mdMission.steps.high].count:
+        mission.clearedAt = some(getTimestampNow())
+
+      result.add(mission)

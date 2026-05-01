@@ -244,29 +244,15 @@ proc getBattleParametersFromBattleEntryIds*(db: DbConn, battleEntryIds: seq[int]
     ))
 
 
-proc getChangedAttackTestMissions*(db: DbConn, characters: openArray[Character], cityId: int): seq[Mission] =
+proc getChangedAttackTestMissions*(db: DbConn, characters: seq[Character], cityId: int): seq[Mission] =
   let attackTestMissions = getAttackTestMissionsForCity(db, cityId)
 
-  let currentMissions = getMissionsWithIds(db, attackTestMissions.mapIt(it.id)).mapIt((it.missionId, it)).toTable()
-
-  for mdMission in attackTestMissions:
-    var currentMission = currentMissions.getOrDefault(mdMission.id, Mission(missionId: mdMission.id))
-
-    if currentMission.clearedAt.isSome():
-      continue
-
+  return getMissionsWithNewCount(db, attackTestMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
     let minChars = getAttackTestMissionMinChars(mdMission.id)
 
-    if characters.len >= minChars:
-      let targetAttack = mdMission.steps[0].count
-      let charactersWithMoreAttack = characters.filterIt(it.attack.get(0) >= targetAttack).toSeq()
+    let targetAttack = mdMission.steps[0].count
+    let charactersWithMoreAttack = characters.filterIt(it.attack.get(0) >= targetAttack).toSeq()
 
-      if charactersWithMoreAttack.len >= minChars:
-        currentMission.count = some(charactersWithMoreAttack.mapIt(it.attack.get(0)).min())
-        currentMission.clearedAt = some(getTimestampNow())
-      else:
-        currentMission.count = some(max(
-          characters.mapIt(it.attack.get(0)).min(), currentMission.count.get(0)
-        ))
-
-      result.add(currentMission)
+    if charactersWithMoreAttack.len >= minChars:
+      result = some(charactersWithMoreAttack.mapIt(it.attack.get(0)).min())
+  )
