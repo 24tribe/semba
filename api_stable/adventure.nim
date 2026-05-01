@@ -5,14 +5,15 @@ import std/strutils
 
 import ../db_connector/db_sqlite
 
-import ../model_stable/area_item
 import ../model_stable/adventure_variable
 import ../model_stable/area
 import ../model_stable/area_item
 import ../model_stable/area_object
 import ../model_stable/character
+import ../model_stable/city
 import ../model_stable/graffiti_art
 import ../model_stable/lux_phantasma
+import ../model_stable/mission
 import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
@@ -45,6 +46,10 @@ type AdventureMoveToAreaResponse* = object
   areaChangeLocks*: seq[JsonNode] # FIXME: use AreaChangeLock
   areaBehavior*: Option[AreaBehavior]
   areaBgm*: AreaBgm
+
+type AdventureAcquireAreaItemRequest* = object
+  areaItemId*: int
+  currentLocation*: CurrentLocation
 
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -202,18 +207,23 @@ proc adventure_ReadSequence*(db: DbConn, jsonReq: JsonNode): JsonNode =
     # TODO: does a nineSequence change an area action like in the other branch of the if?
 
 
-proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let areaItemId = jsonReq["areaItemId"].getInt()
-
-  let areaItem = getMdAreaItem(db, areaItemId)
+proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest): JsonNode =
+  let areaItem = getMdAreaItem(db, req.areaItemId)
 
   var rewards = getAreaItemRewards(db, areaItem.areaItemRewardIds)
 
-  let changedResources = updateResourcesFromRewards(db, rewards[0].contents)
+  var changedResources = updateResourcesFromRewardsTypeSafe(db, rewards[0].contents)
+
+  if isChestAreaItem(areaItem.areaItemBaseId):
+    let cityId = areaIdToCityId(req.currentLocation.areaKeyId.get())
+    let missions = getChangedOpenChestMissions(db, cityId)
+
+    changedResources.missions = some(missions)
+    updateMissions(db, missions)
 
   return %*{
     "areaItem": {
-      "areaItemId": areaItemId,
+      "areaItemId": req.areaItemId,
       "acquired": true
     },
     "rewards": rewards,

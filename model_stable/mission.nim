@@ -165,3 +165,10 @@ proc getMissionsWithNewCount*(
         mission.clearedAt = some(getTimestampNow())
 
       result.add(mission)
+
+
+proc getChangedOpenChestMissions*(db: DbConn, cityId: int): seq[Mission] = 
+  let openChestMissions = getOpenChestMissionsForCity(db, cityId)
+  return getMissionsWithNewCount(db, openChestMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
+    result = some(mission.count.get(0) + 1)
+  )

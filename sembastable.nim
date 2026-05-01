@@ -35,7 +35,7 @@ proc getJsonResultStable*(
   elif uri == "/adventure/read_sequence":
     result = adventure_ReadSequence(db, jsonReq)
   elif uri == "/adventure/acquire_area_item":
-    result = adventure_AcquireAreaItem(db, jsonReq)
+    result = adventure_AcquireAreaItem(db, to(jsonReq, AdventureAcquireAreaItemRequest))
   elif uri == "/adventure/release_event_lift":
     result = adventure_ReleaseEventLift(jsonReq)
   elif uri == "/adventure/warp_area_locator":

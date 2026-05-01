@@ -9,6 +9,11 @@ import ../semba_error
 import ../model_stable/reward
 
 
+type AreaItemBaseId* = enum
+  areaItemBaseIdRegularChest = 500001
+  areaItemBaseIdValuableChest = 500002
+  areaItemBaseIdLuxuriousChest = 500003
+
 type AreaItemContentType* = enum
   kaneContentType = 3,
   gearContentType = 6,
@@ -60,6 +65,14 @@ proc getMdAreaItemReward(db: DbConn, areaItemRewardId: int): MdAreaItemReward =
 
   if row[1] != "":
     result.quantityLotteryReward = some(to(parseJson(row[1]), MdQuantityLotteryReward))
+
+
+proc isChestAreaItem*(areaItemBaseId: int): bool =
+  case areaItemBaseId:
+  of areaItemBaseIdRegularChest.int, areaItemBaseIdValuableChest.int, areaItemBaseIdLuxuriousChest.int:
+    true
+  else:
+    false
 
 
 proc getAreaItemRewards*(db: DbConn, areaItemRewardIds: seq[int]): seq[Rewards] =
