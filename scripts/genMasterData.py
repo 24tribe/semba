@@ -242,10 +242,11 @@ def gen_md_area_item_reward(md_area_item_reward_json, f):
 def gen_md_area_item(md_area_item_json, f):
     xprint = lambda *args: print(*args, file=f)
 
-    xprint("INSERT INTO mdAreaItem (id, areaItemRewardIds) VALUES")
+    xprint("INSERT INTO mdAreaItem (id, areaItemRewardIds, areaItemBaseId, cityId) VALUES")
 
     write_rows(xprint, f, [
-        (area_item["id"], area_item["area_item_reward_ids"]) for area_item in md_area_item_json
+        (area_item["id"], area_item["area_item_reward_ids"], area_item["area_item_base_id"], area_item["city_id"])
+        for area_item in md_area_item_json
     ])
 
     xprint(";")
