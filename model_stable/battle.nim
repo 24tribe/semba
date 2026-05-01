@@ -250,11 +250,7 @@ proc getChangedAttackTestMissions*(db: DbConn, characters: openArray[Character],
   let currentMissions = getMissionsWithIds(db, attackTestMissions.mapIt(it.id)).mapIt((it.missionId, it)).toTable()
 
   for mdMission in attackTestMissions:
-    var currentMission =
-      if mdMission.id in currentMissions:
-        currentMissions[mdMission.id]
-      else:
-        Mission(missionId: mdMission.id)
+    var currentMission = currentMissions.getOrDefault(mdMission.id, Mission(missionId: mdMission.id))
 
     if currentMission.clearedAt.isSome():
       continue
