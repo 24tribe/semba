@@ -5,6 +5,7 @@ import std/strutils
 
 import ../db_connector/db_sqlite
 
+import ../model_stable/area_item
 import ../model_stable/adventure_variable
 import ../model_stable/area
 import ../model_stable/area_item
@@ -204,7 +205,9 @@ proc adventure_ReadSequence*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc adventure_AcquireAreaItem*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let areaItemId = jsonReq["areaItemId"].getInt()
 
-  var rewards = getAreaItemRewards(db, areaItemId)
+  let areaItem = getMdAreaItem(db, areaItemId)
+
+  var rewards = getAreaItemRewards(db, areaItem.areaItemRewardIds)
 
   let changedResources = updateResourcesFromRewards(db, rewards[0].contents)
 

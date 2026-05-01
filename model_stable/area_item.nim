@@ -1,6 +1,7 @@
 import std/json
 import std/options
 import std/random
+import std/strutils
 
 import ../db_connector/db_sqlite
 
@@ -26,14 +27,27 @@ type MdAreaItemReward = object
   id: int
   quantity_lottery_reward: Option[MdQuantityLotteryReward]
 
+type MdAreaItem* = object
+  id*: int
+  areaItemRewardIds*: seq[int]
+  areaItemBaseId*: int
+  cityId*: int
 
-proc getAreaItemRewardIds(db: DbConn, areaItemId: int): seq[int] =
-  let row = db.getRow(sql"SELECT areaItemRewardIds FROM mdAreaItem WHERE id = ?", areaItemId)
+
+proc getMdAreaItem*(db: DbConn, areaItemId: int): MdAreaItem =
+  let row = db.getRow(
+    sql"SELECT areaItemRewardIds, areaItemBaseId, cityId FROM mdAreaItem WHERE id = ?", areaItemId
+  )
 
   if row[0] == "":
-    raise newException(SembaError, "Couldn't find reward ids for areaItemId=" & $areaItemId)
+    raise newException(SembaError, "Couldn't find MdAreaItem for areaItemId=" & $areaItemId)
 
-  result = to(parseJson(row[0]), seq[int])
+  result = MdAreaItem(
+    id: areaItemId,
+    areaItemRewardIds: to(parseJson(row[0]), seq[int]),
+    areaItemBaseId: parseInt(row[1]),
+    cityId: parseInt(row[2]),
+  )
 
 
 proc getMdAreaItemReward(db: DbConn, areaItemRewardId: int): MdAreaItemReward = 
@@ -48,9 +62,7 @@ proc getMdAreaItemReward(db: DbConn, areaItemRewardId: int): MdAreaItemReward =
     result.quantityLotteryReward = some(to(parseJson(row[1]), MdQuantityLotteryReward))
 
 
-proc getAreaItemRewards*(db: DbConn, areaItemId: int): seq[Rewards] =
-  let areaItemRewardIds = getAreaItemRewardIds(db, areaItemId)
-
+proc getAreaItemRewards*(db: DbConn, areaItemRewardIds: seq[int]): seq[Rewards] =
   var rewards = newSeq[Reward]()
 
   for areaItemRewardId in areaItemRewardIds:
