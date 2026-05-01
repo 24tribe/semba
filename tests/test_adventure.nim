@@ -323,7 +323,19 @@ proc sameReward(r1: Reward, r2: Reward): bool =
 proc testAcquireAreaItemInLogs() =
   var ctx = getInMemorySembaCtx()
 
-  let res = ctx.sembaCall("/adventure/acquire_area_item", %*{"areaItemId": 10500102})
+  let res = ctx.sembaCall("/adventure/acquire_area_item", %*{
+    "areaItemId": 10500102,
+    "currentLocation": {
+      "areaType": 1,
+      "direction": 1,
+      "positionCoordinates": {
+        "x": 1.53473973,
+        "y": 0.0416665077,
+        "z": 1.69789064
+      },
+      "areaKeyId": 100411
+    }
+  })
 
   doAssert(res != nil)
 
@@ -367,7 +379,19 @@ proc testAcquireAreaItemInLogs() =
 proc testAcquireAreaItemNotInLogs() =
   var ctx = getInMemorySembaCtx()
 
-  let res = ctx.sembaCall("/adventure/acquire_area_item", %*{"areaItemId": 10519701})
+  let res = ctx.sembaCall("/adventure/acquire_area_item", %*{
+    "areaItemId": 10519701,
+    "currentLocation": {
+      "areaType": 1,
+      "direction": 3,
+      "positionCoordinates": {
+        "x": 19.365921,
+        "y": 0.515625,
+        "z": -2.65037036
+      },
+      "areaKeyId": 100421
+    },
+  })
 
   doAssert(res != nil)
 
