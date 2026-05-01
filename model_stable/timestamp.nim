@@ -1,7 +1,11 @@
 import std/times
 import std/json
 
+export times
+
 type Timestamp* = distinct string
+
+proc timestamp*(dt: DateTime): Timestamp = ($(dt.utc)).Timestamp
 
 proc getDateNow*(): string = $(now().utc)
 proc getTimestampNow*(): Timestamp = getDateNow().Timestamp

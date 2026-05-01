@@ -28,6 +28,7 @@ semba_core_files = [
     'api_stable/mail.nim',
     'api_stable/mission.nim',
     'api_stable/news.nim',
+    'api_stable/shop.nim',
     'api_stable/tension_card.nim',
     'api_stable/tip.nim',
     'api_stable/user.nim',

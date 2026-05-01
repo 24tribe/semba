@@ -13,6 +13,7 @@ import api_stable/gacha
 import api_stable/mail
 import api_stable/mission
 import api_stable/news
+import api_stable/shop
 import api_stable/tension_card
 import api_stable/tip
 import api_stable/user
@@ -106,6 +107,11 @@ proc getJsonResultStable*(
     result = news_UserList()
   elif uri == "/news/list":
     result = news_UserList()
+
+  elif uri == "/shop/gem_list":
+    result = %*shop_GemList()
+  elif uri == "/shop/random_costume_list":
+    result = %*shop_RandomCostumeList()
 
   elif uri == "/tension_card/limit_break_enhance":
     result = tensionCard_LimitBreakEnhance(db, jsonReq)
