@@ -30,12 +30,10 @@ type MdMission* = object
   steps*: seq[MdMissionStep]
 
 
-proc getAttackTestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
-  let rows = db.getAllRows(sql"""
-    SELECT id, steps FROM mdMission
-    WHERE id IN (1041041, 1041042, 1041043, 1041044, 1041335, 1041345, 1041346, 1041438, 1041439, 1041440)
-      AND cityId = ?
-  """, cityId)
+proc getMissionsForCity*(db: DbConn, missionIds: openArray[int], cityId: int): seq[MdMission] =
+  let rows = db.getAllRows(sql("""
+    SELECT id, steps FROM mdMission WHERE id IN """ & sqlIntTuple(missionIds) & """ AND cityId = ?
+  """), cityId)
 
   for row in rows:
     result.add(MdMission(
@@ -43,6 +41,16 @@ proc getAttackTestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
       cityId: some(cityId),
       steps: to(parseJson(row[1]), seq[MdMissionStep])
     ))
+
+
+proc getOpenChestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041062, 1041063, 1041064, 1041362, 1041363, 1041364, 1041462, 1041463, 1041464]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
+proc getAttackTestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041041, 1041042, 1041043, 1041044, 1041335, 1041345, 1041346, 1041438, 1041439, 1041440]
+  return getMissionsForCity(db, missionIds, cityId)
 
 
 proc getMdMissionsWithIds*(db: DbConn, ids: openArray[int]): seq[MdMission] = 
