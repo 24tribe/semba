@@ -35,7 +35,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
       else:
         stepsWithIndex[mission.receivedStepCount.get() .. stepsWithIndex.high]
 
-    let completedSteps = stepsWithIndex.filterIt(mission.count.get(0) >= it[1].count)
+    let completedSteps = steps.filterIt(mission.count.get(0) >= it[1].count)
 
     for completedStep in completedSteps:
       let rewardSet = getMdRewardSet(db, completedStep[1].rewardSetId)
