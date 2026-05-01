@@ -7,6 +7,7 @@ import utils
 import ../api_stable/mission
 import ../model_stable/mission
 import ../model_stable/timestamp
+import ../model_stable/area_object
 
 proc testMissionReceive() =
     var ctx = getInMemorySembaCtx()
@@ -46,5 +47,26 @@ proc testMissionReceive() =
     doAssert(res.changedResources.status.get().flowerMark.get(0) == 2)
 
 
+proc testUnlockFullMarkGates() =
+    let ctx = getInMemorySembaCtx()
+
+    proc getGate(): AreaObject =
+        let areaObjects = to(%*getAreaObjectsInArea(ctx.db, 101103), seq[AreaObject])
+        result = areaObjects.filterIt(it.areaPointId == 101103801).toSeq()[0]
+
+    let gateBefore = getGate()
+
+    doAssert(gateBefore.action.get() == AreaObjectAction(
+        `type`: 3, id: some(1), label: some("Fence"), sequenceId: some(10836901)
+    ))
+
+    unlockFullMarksGates(ctx.db, 17)
+
+    let gateAfter = getGate()
+
+    doAssert(gateAfter.action.get() == AreaObjectAction(`type`: 7, id: some(1)))
+
+
 proc testSuiteMission*() =
     testMissionReceive()
+    testUnlockFullMarkGates()

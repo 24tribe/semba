@@ -4,9 +4,11 @@ import std/options
 
 import ../db_connector/db_sqlite
 
+import ../model_stable/area_object
+import ../model_stable/mission
 import ../model_stable/resources
 import ../model_stable/reward
-import ../model_stable/mission
+import ../model_stable/status
 
 
 type MissionReceiveRequest* = object
@@ -53,3 +55,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   result.changedResources = updateResourcesFromRewardsTypeSafe(db, rewards)
   result.changedResources.missions = some(changedMissions)
   result.rewards = rewards
+
+  result.changedResources.status.map(proc (status: Status) =
+    unlockFullMarksGates(db, status.flowerMark.get(0))
+  )

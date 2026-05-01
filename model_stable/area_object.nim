@@ -303,3 +303,29 @@ proc getDummyAreaObjects*(db: DbConn, areaId: int): seq[AreaObject] =
 proc resetAreaEnemies*(db: DbConn) =
   db.exec(sql"DELETE FROM areaEnemies")
   db.exec(sql"INSERT INTO areaEnemies SELECT * FROM areaEnemiesOriginal")
+
+
+proc getAreaObjectsInArea*(db: DbConn, areaId: int): seq[JsonNode] =
+  let rows = db.getAllRows(sql"""
+    SELECT areaObjectId, areaPointId, areaObjectBehaviorId, action
+    FROM areaObjects
+    WHERE areaId = ?
+  """, areaId)
+
+  for row in rows:
+    result.add(parseAreaObjectRow(row))
+
+
+proc unlockFullMarksGates*(db: DbConn, flowerMark: int) =
+  db.exec(sql"""
+    UPDATE areaObjects
+      SET action='{"type": 7, "id": 1}'
+      FROM (
+        SELECT mdAreaObjectBehavior.areaObjectId
+          FROM mdAreaObjectBehavior
+          JOIN mdAreaObjectBehaviorCondition
+          ON mdAreaObjectBehavior.id = mdAreaObjectBehaviorCondition.areaObjectBehaviorId
+          WHERE mdAreaObjectBehaviorCondition.type = 11 AND ? >= mdAreaObjectBehaviorCondition.id
+      ) AS unlockedGateAreaBehavior
+      WHERE areaObjects.areaObjectId = unlockedGateAreaBehavior.areaObjectId
+  """, flowerMark)

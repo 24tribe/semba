@@ -67,22 +67,11 @@ proc adventure_ReleaseEventLift*(jsonReq: JsonNode): JsonNode =
 
 proc adventure_AreaObject*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let areaId = jsonReq["areaId"].getInt()
-  let rows = db.getAllRows(sql"""
-    SELECT areaObjectId, areaPointId, areaObjectBehaviorId, action
-    FROM areaObjects
-    WHERE areaId = ?
-  """, areaId)
 
-  var areaObjects = newSeq[JsonNode]();
+  var areaObjects = getAreaObjectsInArea(db, areaId);
 
   if areaId == 130801: # Mita's Hideout
-    areaObjects = getLuxPhantasmaAreaObjects()
-
-  # FIXME: put this in another function
-
-  for row in rows:
-    let areaObject = parseAreaObjectRow(row)
-    areaObjects.add(areaObject)
+    areaObjects.insert(getLuxPhantasmaAreaObjects(), areaObjects.len)
 
   let enemyRows = db.getAllRows(sql"""
     SELECT areaPointId, areaEnemyRateSetId, action
