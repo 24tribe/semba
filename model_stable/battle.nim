@@ -3,7 +3,6 @@ import std/json
 import std/strutils
 import std/math
 import std/sequtils
-import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -12,8 +11,6 @@ import enemy
 import dungeon
 import character
 import mission
-import timestamp
-import status
 
 
 type BattleTrigger* = object

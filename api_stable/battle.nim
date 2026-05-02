@@ -7,7 +7,6 @@ import ../db_connector/db_sqlite
 import ../model_stable/city
 import ../model_stable/character
 import ../model_stable/battle
-import ../model_stable/user
 import ../model_stable/tension_card
 import ../model_stable/dungeon
 import ../model_stable/area_object
