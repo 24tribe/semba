@@ -12,8 +12,19 @@ type HappyWorkerListResponse* = object
   happyWorkerItems: seq[HappyWorkerItem]
   changedResources: Resources
 
+type HappyWorkerStartRequest* = object
+  happyWorkerItemId*: int
+
+type HappyWorkerStartResponse* = object
+  happyWorkerItem*: HappyWorkerItem
+  changedResources*: Resources
+
 
 proc happy_worker_List*(db: DbConn): HappyWorkerListResponse =
   let cityIds = getCities(db).mapIt(to(it, City).cityId).toSeq()
 
   result.happyWorkerItems = getHappyWorkerItems(db, cityIds)
+
+
+proc happy_worker_Start*(db: DbConn, req: HappyWorkerStartRequest): HappyWorkerStartResponse =
+  discard

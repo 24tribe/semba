@@ -153,6 +153,7 @@ test_semba_depend_files = [
     'tests/test_mission.nim',
     'tests/test_status.nim',
     'tests/test_shop.nim',
+    'tests/test_happy_worker.nim',
     'tests/utils.nim',
     'tests/test_graffiti_art.nim',
 ]

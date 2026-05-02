@@ -99,6 +99,8 @@ proc getJsonResultStable*(
 
   elif uri == "/happy_worker/list":
     result = %*happy_worker_List(db)
+  elif uri == "/happy_worker/start":
+    result = %*happy_worker_Start(db, to(jsonReq, HappyWorkerStartRequest))
   
   elif uri == "/mail/list":
     result = %*mail_List(db)

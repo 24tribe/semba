@@ -11,6 +11,7 @@ import test_tip
 import test_mission
 import test_status
 import test_shop
+import test_happy_worker
 
 
 let saves_dir = paramStr(1)
@@ -25,3 +26,4 @@ testSuiteGraffitiArt()
 testSuiteMission()
 testSuiteStatus()
 testSuiteShop()
+testSuiteHappyWorker()
