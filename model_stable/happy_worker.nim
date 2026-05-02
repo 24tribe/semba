@@ -15,7 +15,7 @@ type HappyWorkerItem* = object
 
 proc getHappyWorkerItems*(db: DbConn, cityIds: openArray[int]): seq[HappyWorkerItem] =
   let rows = db.getAllRows(sql("""
-    SELECT id, isCleared, state FROM happyWorkerItems WHERE id IN """ & sqlIntTuple(cityIds) & """
+    SELECT id, isCleared, state FROM happyWorkerItems WHERE cityId IN """ & sqlIntTuple(cityIds) & """
   """))
 
   result = rows.mapIt(HappyWorkerItem(
