@@ -8,9 +8,9 @@ import timestamp
 
 
 type City* = object
-  cityId: int
-  isGearShopReleased: Option[bool]
-  releasedAt: Option[Timestamp]
+  cityId*: int
+  isGearShopReleased*: Option[bool]
+  releasedAt*: Timestamp
 
 type CityId* = enum
   cityIdShinagawa = 10
