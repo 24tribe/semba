@@ -10,6 +10,7 @@ import api_stable/dungeon
 import api_stable/event
 import api_stable/formation
 import api_stable/gacha
+import api_stable/happy_worker
 import api_stable/mail
 import api_stable/mission
 import api_stable/news
@@ -95,6 +96,9 @@ proc getJsonResultStable*(
     result = gacha_List(db)
   elif uri == "/gacha/execute":
     result = gacha_Execute(db, jsonReq)
+
+  elif uri == "/happy_worker/list":
+    result = %*happy_worker_List()
   
   elif uri == "/mail/list":
     result = %*mail_List(db)
