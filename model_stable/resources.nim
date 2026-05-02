@@ -31,6 +31,7 @@ import mission
 import nine_sequence
 import reward
 import status
+import shop
 import tutorial_state
 import tip
 import tension_card
@@ -85,7 +86,7 @@ type Resources* = object
   questStates: Option[seq[JsonNode]] # FIXME: QuestState
   seasonPasses: Option[seq[JsonNode]] # FIXME: SeasonPass
   seasonPassTierStates: Option[seq[JsonNode]] # FIXME: SeasonPassTierState
-  shopProductStates: Option[seq[JsonNode]] # FIXME: ShopProductState
+  shopProductStates*: Option[seq[ShopProductState]]
   status*: Option[Status]
   synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
   tensionCards: Option[seq[JsonNode]] # FIXME: TensionCard
@@ -319,6 +320,11 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
 
   for reward in rewards.mitems():
     case reward.`type`.RewardType:
+    of rewardFreeGem:
+      var wallet = result.wallet.get(getWallet(db))
+      wallet.free = some(wallet.free.get(0) + reward.quantity)
+      setWallet(db, wallet)
+      result.wallet = some(wallet)
     of rewardGearDrop:
       # FIXME: only golden chests should have a minRarity of gearRaritySsr
       let mdGears = getBalancedGears(db)
