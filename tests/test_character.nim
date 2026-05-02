@@ -199,7 +199,7 @@ proc testCharacterEnhance() =
   ]
 
   for item in consumedItems:
-    addItem(ctx.db, item)
+    upsertItem(ctx.db, item)
 
   var status = getUserStatusTypeSafe(ctx.db)
   status.gold = some(2*grossExp + 100)

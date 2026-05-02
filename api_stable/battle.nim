@@ -189,7 +189,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   let items = itemsTableToItemsSeq(changedItems)
 
   for item in items:
-    addItem(db, to(item, Item))
+    upsertItem(db, to(item, Item))
 
   let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
 

@@ -73,7 +73,7 @@ proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResour
     var dbItem = getItem(db, item.itemId).get()
     dbItem.quantity = some(dbItem.quantity.get(0) - item.quantity.get(0))
     items.add(dbItem)
-    addItem(db, dbItem)
+    upsertItem(db, dbItem)
 
   result.changedResources.items = some(items)
 

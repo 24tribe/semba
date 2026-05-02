@@ -24,7 +24,7 @@ const greatLifeDataExp* = 5000
 
 const selectItemsSql = "SELECT itemId, quantity FROM items"
 
-proc addItem*(db: DbConn, item: Item) =
+proc upsertItem*(db: DbConn, item: Item) =
   db.exec(sql"""
     INSERT INTO items (itemId, quantity) VALUES (?, ?)
     ON CONFLICT DO
@@ -33,7 +33,7 @@ proc addItem*(db: DbConn, item: Item) =
 
 proc updateItems*(db: DbConn, items: seq[Item]) =
   for item in items:
-    addItem(db, item)
+    upsertItem(db, item)
 
 proc parseItemRow(row: Row): JsonNode =
   let itemId = parseInt(row[0])
