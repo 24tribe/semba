@@ -112,6 +112,8 @@ proc getJsonResultStable*(
     result = %*shop_GemList()
   elif uri == "/shop/random_costume_list":
     result = %*shop_RandomCostumeList()
+  elif uri == "/shop/purchase":
+    result = %*shop_Purchase(db, to(jsonReq, ShopPurchaseRequest))
 
   elif uri == "/tension_card/limit_break_enhance":
     result = tensionCard_LimitBreakEnhance(db, jsonReq)
