@@ -13,6 +13,7 @@ import api_stable/gacha
 import api_stable/mail
 import api_stable/mission
 import api_stable/news
+import api_stable/purchase
 import api_stable/shop
 import api_stable/tension_card
 import api_stable/tip
@@ -107,6 +108,9 @@ proc getJsonResultStable*(
     result = news_UserList()
   elif uri == "/news/list":
     result = news_UserList()
+
+  elif uri == "/purchase/history":
+    result = %*purchase_History()
 
   elif uri == "/shop/gem_list":
     result = %*shop_GemList()
