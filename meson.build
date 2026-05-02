@@ -68,6 +68,7 @@ semba_core_files = [
     'model_stable/reward.nim',
     'model_stable/sequence_request.nim',
     'model_stable/status.nim',
+    'model_stable/shop.nim',
     'model_stable/tension_card.nim',
     'model_stable/timestamp.nim',
     'model_stable/tip.nim',
@@ -148,6 +149,7 @@ test_semba_depend_files = [
     'tests/test_tip.nim',
     'tests/test_mission.nim',
     'tests/test_status.nim',
+    'tests/test_shop.nim',
     'tests/utils.nim',
     'tests/test_graffiti_art.nim',
 ]

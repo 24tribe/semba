@@ -22,6 +22,7 @@ import ../model_stable/mission
 import ../model_stable/nine_sequence
 import ../model_stable/notification
 import ../model_stable/status
+import ../model_stable/shop
 import ../model_stable/tension_card
 import ../model_stable/timestamp
 import ../model_stable/tip

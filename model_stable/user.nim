@@ -19,10 +19,3 @@ proc updateUserData*(db: DbConn, keyName: string, val: string) =
     ON CONFLICT (keyName) DO
     UPDATE SET val = excluded.val
   """, keyName, val)
-
-
-proc getShopProducts*(db: DbConn): seq[JsonNode] =
-  let shopProductsRows = db.getAllRows(sql"SELECT val FROM shopProducts")
-
-  for shopProductRow in shopProductsRows:
-    result.add(parseJson(shopProductRow[0]))

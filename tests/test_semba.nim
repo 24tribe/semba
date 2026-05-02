@@ -10,6 +10,7 @@ import test_semba_private
 import test_tip
 import test_mission
 import test_status
+import test_shop
 
 
 let saves_dir = paramStr(1)
@@ -23,3 +24,4 @@ testSuiteTip()
 testSuiteGraffitiArt()
 testSuiteMission()
 testSuiteStatus()
+testSuiteShop()
