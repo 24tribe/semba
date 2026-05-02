@@ -48,6 +48,12 @@ type ResourceParams* = object
   gearSubStatusDraw*: Option[GearSubStatus]
   mysteryBoxDrawResults*: Option[JsonNode] # FIXME: use MysteryBoxDrawResults
 
+type Resource* = object
+  `type`*: int
+  id*: int
+  quantity*: int
+  resourceParams*: Option[ResourceParams]
+
 type Reward* = object
   `type`*: int
   id*: int

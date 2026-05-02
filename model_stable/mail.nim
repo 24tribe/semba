@@ -21,12 +21,6 @@ type MailParams* = object
   bulkMailId: Option[int]
   sender: Option[string]
 
-type Resource* = object
-  `type`*: int
-  id*: int
-  quantity*: int
-  resourceParams*: Option[ResourceParams]
-
 type BulkMail* = object
   id*: int
   subject*: string
