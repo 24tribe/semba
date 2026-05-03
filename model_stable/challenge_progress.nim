@@ -1,14 +1,17 @@
 import std/options
 import std/json
 import std/strutils
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
+import ../extsqlite
 import timestamp
 
 
 type ChallengeProgressState* = enum 
-  challengeProgressStateStarted = 2,
+  challengeProgressStateNotStarted = 1
+  challengeProgressStateStarted = 2
   challengeProgressStateCleared = 3
 
 type ChallengeProgress* = object
@@ -83,6 +86,20 @@ proc updateChallengeProgresses*(db: DbConn, challengeProgresses: JsonNode) =
       VALUES (?, ?, ?)
       ON CONFLICT (challengeProgressId) DO UPDATE SET clearedAt = ?, state = ?
     """, challengeProgressId, clearedAtStr, state, clearedAtStr, state)
+
+
+proc upsertChallengeProgresses*(db: DbConn, challengeProgresses: openArray[ChallengeProgress]) =
+  for chalProg in challengeProgresses:
+    db.exec(sql"""
+      INSERT INTO challengeProgresses (challengeProgressId, clearedAt, state)
+      VALUES (?, ?, ?)
+      ON CONFLICT (challengeProgressId) DO UPDATE SET clearedAt = excluded.clearedAt, state = excluded.state
+    """, chalProg.challengeProgressId, optionToSqlArg(chalProg.clearedAt), chalProg.state)
+
+
+proc getChallengeProgressIds*(db: DbConn, challengeId: int): seq[int] =
+  let rows = db.getAllRows(sql"SELECT id FROM mdChallengeProgress WHERE challengeId = ?", challengeId)
+  result = rows.mapIt(parseInt(it[0]))
 
 
 proc getChallengeProgress*(db: DbConn, challengeProgressId: int): JsonNode =

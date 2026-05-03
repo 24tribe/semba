@@ -5,6 +5,7 @@ import std/options
 import ../db_connector/db_sqlite
 
 import ../extsqlite
+import ../semba_error
 import timestamp
 
 
@@ -41,6 +42,15 @@ proc upsertChallenges*(db: DbConn, challenges: openArray[Challenge]) =
                  clearedAt = excluded.clearedAt,
                  expiresAt = excluded.expiresAt
     """, chal.challengeId, chal.state, optionToSqlArg(chal.clearedAt), optionToSqlArg(chal.expiresAt))
+
+
+proc getChallengeFirstProgressId*(db: DbConn, challengeId: int): int =
+  let row = db.getRow(sql"SELECT firstProgressId FROM mdChallenge WHERE id = ?", challengeId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't get firstProgressId for challengeId=" & $challengeId)
+
+  result = parseInt(row[0])
 
 
 proc getChallenges*(db: DbConn): seq[JsonNode] =

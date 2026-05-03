@@ -5,6 +5,9 @@ import std/sequtils
 
 import db_connector/sqlite3
 
+import model_stable/timestamp
+
+
 type ExtSqliteError = object of CatchableError
 
 
@@ -30,5 +33,7 @@ proc tryParseBool*(s: string): Option[bool] = (if s != "": some(parseBool(s)) el
 proc tryParseFloat*(s: string): Option[float] = (if s != "": some(parseFloat(s)) else: none(float))
 
 proc tryParseJson*(s: string): Option[JsonNode] = (if s != "": some(parseJson(s)) else: none(JsonNode))
+
+proc tryParseTimestamp*(s: string): Option[Timestamp] = (if s != "": some(s.Timestamp) else: none(Timestamp))
 
 proc sqlIntTuple*(values: openArray[int]): string = "(" & values.mapIt($it).join(",") & ")"

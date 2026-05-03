@@ -114,7 +114,7 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
 
   doAssert(challengeTasks[0].challengeTaskId == 10100421)
   doAssert(challengeTasks[0].clearedAt.isSome())
-  doAssert(challengeTasks[0].count == 1)
+  doAssert(challengeTasks[0].count.get(0) == 1)
 
   let adventureVariables = to(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10030)
@@ -195,7 +195,7 @@ proc test_talk_with_enoki_first(saves_dir: string) =
   doAssert(challengeTasks.len == 1)
   doAssert(challengeTasks[0].challengeTaskId == 10100431)
   doAssert(challengeTasks[0].clearedAt.isSome())
-  doAssert(challengeTasks[0].count == 1)
+  doAssert(challengeTasks[0].count.get(0) == 1)
 
   var expectedAreaObjects = to(%*[
     {
@@ -280,7 +280,7 @@ proc test_talk_to_miu_after_enonki_read_sequence(saves_dir: string) =
 
   doAssert(challengeTasks[0].challengeTaskId == 10100432)
   doAssert(challengeTasks[0].clearedAt.isSome())
-  doAssert(challengeTasks[0].count == 1)
+  doAssert(challengeTasks[0].count.get(0) == 1)
 
   var expectedAreaObjects = to(%*[
     {

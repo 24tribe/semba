@@ -35,7 +35,6 @@ import shop
 import tutorial_state
 import tip
 import tension_card
-import user
 import lux_phantasma
 import timestamp
 import wallet
@@ -244,7 +243,7 @@ proc getChangedResourcesForCompletedChallengeTask*(
   var challengeProgresses = newSeq[ChallengeProgress]()
 
   challengeTasks.add(ChallengeTask(
-    challengeTaskId: challengeTask.id, count: 1, clearedAt: some(getDateNow())
+    challengeTaskId: challengeTask.id, count: some(1), clearedAt: some(getTimestampNow())
   ))
 
   areaObjects = getAreaObjectsWithCondition(

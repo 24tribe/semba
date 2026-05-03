@@ -1,10 +1,12 @@
 import std/options
 import std/strutils
 import std/json
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
 import ../extsqlite
+import timestamp
 
 
 type TaskConditionType* = enum
@@ -26,8 +28,8 @@ type MdChallengeTask* = object
 
 type ChallengeTask* = object
   challengeTaskId*: int
-  count*: int
-  clearedAt*: Option[string]
+  count*: Option[int]
+  clearedAt*: Option[Timestamp]
 
 
 proc getOtherChallengeTasks*(db: DbConn, challengeTask: MdChallengeTask): seq[MdChallengeTask] =
@@ -77,30 +79,30 @@ proc updateChallengeTasks*(db: DbConn, challengeTasks: JsonNode) =
     """, challengeTaskId, clearedAt, count, clearedAt, count)
 
 
-proc addChallengeTask*(db: DbConn, challengeTask: JsonNode) =
-  let challengeTaskId = challengeTask["challengeTaskId"].getInt()
-  let clearedAt = challengeTask["clearedAt"].getStr()
-  let tmpCount = challengeTask.getOrDefault("count")
-  let count = if tmpCount != nil: $tmpCount.getInt() else: ""
-
-  db.exec(
-    sql"INSERT INTO challengeTasks (challengeTaskId, clearedAt, count) VALUES (?, ?, ?)",
-    challengeTaskId, clearedAt, count
-  )
+proc upsertChallengeTasks*(db: DbConn, challengeTasks: openArray[ChallengeTask]) =
+  for ct in challengeTasks:
+    db.exec(sql"""
+      INSERT INTO challengeTasks (challengeTaskId, clearedAt, count)
+      VALUES (?, ?, ?)
+      ON CONFLICT (challengeTaskId) DO UPDATE SET clearedAt = excluded.clearedAt, count = excluded.count
+    """, ct.challengeTaskId, optionToSqlArg(ct.clearedAt), optionToSqlArg(ct.count))
 
 
-proc getChallengeTasks*(db: DbConn): seq[JsonNode] =
-  for row in db.getAllRows(sql"SELECT challengeTaskId, clearedAt, count FROM challengeTasks"):
-    let challengeTaskId = parseInt(row[0])
-    let clearedAt = row[1]
-    
-    let challengeTask = %*{"challengeTaskId": challengeTaskId, "clearedAt": clearedAt}
+proc getChallengeTaskIdsForChallengeProgressIds*(db: DbConn, challengeProgressIds: openArray[int]): seq[int] =
+  let rows = db.getAllRows(sql("""
+    SELECT id FROM mdChallengeTask WHERE challengeProgressId IN """ & sqlIntTuple(challengeProgressIds)
+  ))
 
-    if row[2] != "":
-      let count = parseInt(row[2])
-      challengeTask["count"] = %*count
+  result = rows.mapIt(parseInt(it[0]))
 
-    result.add(challengeTask)
+
+proc getChallengeTasks*(db: DbConn): seq[ChallengeTask] =
+  let rows = db.getAllRows(sql"SELECT challengeTaskId, clearedAt, count FROM challengeTasks")
+  result = rows.mapIt(ChallengeTask(
+    challengeTaskId: parseInt(it[0]),
+    clearedAt: tryParseTimestamp(it[1]),
+    count: tryParseInt(it[2]),
+  ))
 
 
 proc getMdChallengeTaskWithCondition*(

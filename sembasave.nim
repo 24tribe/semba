@@ -192,8 +192,7 @@ proc loadSaveFileVer5(db: DbConn, jsonData: JsonNode, dontDeleteAllAreaObjects: 
 
   db.exec(sql"DELETE FROM challengeTasks")
 
-  for challengeTask in challengeTasks:
-    addChallengeTask(db, challengeTask)
+  upsertChallengeTasks(db, to(challengeTasks, seq[ChallengeTask]))
 
   let areaActionSequenceIds = jsonData["areaActionSequenceIds"]
 

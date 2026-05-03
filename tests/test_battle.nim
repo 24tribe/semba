@@ -89,7 +89,7 @@ proc test_battle_finish_challenge_data(saves_dir: string) =
   doAssert(challengeTasks.len == 1)
   doAssert(challengeTasks[0].challengeTaskId == 10001011)
   doAssert(challengeTasks[0].clearedAt.isSome())
-  doAssert(challengeTasks[0].count == 1)
+  doAssert(challengeTasks[0].count.get(0) == 1)
 
   var challengeProgresses = to(changedResources["challengeProgresses"], seq[ChallengeProgress])
 
