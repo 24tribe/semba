@@ -12,7 +12,6 @@ import ../model_stable/timestamp
 import ../model_stable/challenge_task
 import ../model_stable/area_object
 import ../model_stable/battle
-import ../model_stable/user
 import ../model_stable/status
 
 
