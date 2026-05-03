@@ -101,6 +101,9 @@ def main():
     with open(args.masterdata_dir/"reward_set.json", "r", encoding="utf-8") as f:
         md_reward_set_json = json.load(f)
 
+    with open(args.masterdata_dir/"happy_worker_item.json", "r", encoding="utf-8") as f:
+        md_happy_worker_item_json = json.load(f)
+
     with open(args.out_sql, "w", encoding="utf-8") as f:
         gen_md_tension_card(md_tension_card_json, f)
         gen_md_ability_tension_card(md_ability_tension_card_json, f)
@@ -131,6 +134,17 @@ def main():
         gen_md_warp_point(md_warp_point_json, f)
         gen_md_mission(md_mission_json, f)
         gen_md_reward_set(md_reward_set_json, f)
+        gen_md_happy_worker_item(md_happy_worker_item_json, f)
+
+
+def gen_md_happy_worker_item(md_happy_worker_item_json, f):
+    xprint = lambda *args: print(*args, file=f)
+
+    xprint("INSERT INTO mdHappyWorkerItem (id, challengeId) VALUES")
+
+    write_rows(xprint, f, [(hwi["id"], hwi["challenge_id"]) for hwi in md_happy_worker_item_json])
+
+    xprint(";")
 
 
 def gen_md_reward_set(md_reward_set_json, f):
