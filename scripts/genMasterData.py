@@ -107,6 +107,9 @@ def main():
     with open(args.masterdata_dir/"challenge.json", "r", encoding="utf-8") as f:
         md_challenge = json.load(f)
 
+    with open(args.masterdata_dir/"challenge_progress.json", "r", encoding="utf-8") as f:
+        md_challenge_progress_json = json.load(f)
+
     with open(args.out_sql, "w", encoding="utf-8") as f:
         gen_md_ability_efficacy(md_ability_efficacy_json, f)
         gen_md_ability_tension_card(md_ability_tension_card_json, f)
@@ -120,6 +123,7 @@ def main():
         gen_md_battle_parameter(md_battle_parameter_json, f)
         gen_md_battle_wave(md_battle_wave_json, f)
         gen_md_challenge(md_challenge, f)
+        gen_md_challenge_progress(md_challenge_progress_json, f)
         gen_md_challenge_route_json(md_challenge_route_json, f)
         gen_md_challenge_task(md_challenge_task_json, f)
         gen_md_character(md_character_json, f)
@@ -139,6 +143,18 @@ def main():
         gen_md_sequence_request_json(md_sequence_request_json, f)
         gen_md_tension_card(md_tension_card_json, f)
         gen_md_warp_point(md_warp_point_json, f)
+
+
+def gen_md_challenge_progress(md_challenge_progress, f):
+    xprint = lambda *args: print(*args, file=f)
+
+    xprint("INSERT INTO mdChallengeProgress (id, challengeId, rewardSetId) VALUES")
+
+    write_rows(xprint, f, [
+        (chalProg["id"], chalProg["challenge_id"], chalProg["reward_set_id"]) for chalProg in md_challenge_progress
+    ])
+
+    xprint(";")
 
 
 def gen_md_challenge(md_challenge, f):
