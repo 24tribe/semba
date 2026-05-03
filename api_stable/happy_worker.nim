@@ -1,11 +1,14 @@
 import std/sequtils
 import std/json
+import std/options
 
 import ../db_connector/db_sqlite
 
-import ../model_stable/resources
-import ../model_stable/happy_worker
+import ../model_stable/challenge
 import ../model_stable/city
+import ../model_stable/happy_worker
+import ../model_stable/resources
+import ../model_stable/timestamp
 
 
 type HappyWorkerListResponse* = object
@@ -31,3 +34,12 @@ proc happy_worker_Start*(db: DbConn, req: HappyWorkerStartRequest): HappyWorkerS
   result.happyWorkerItem.state = 5
 
   updateHappyWorkerItem(db, result.happyWorkerItem)
+
+  let challengeId = getHappyWorkerItemChallengeId(db, req.happyWorkerItemId)
+
+  let changedChallenges = @[Challenge(
+    challengeId: challengeId, state: 5, expiresAt: some(endOfToday())
+  )]
+
+  result.changedResources.challenges = some(changedChallenges)
+  upsertChallenges(db, changedChallenges)

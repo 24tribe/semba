@@ -4,6 +4,7 @@ import std/options
 
 import ../db_connector/db_sqlite
 
+import ../extsqlite
 import timestamp
 
 
@@ -28,6 +29,18 @@ proc updateChallenges*(db: DbConn, challenges: seq[JsonNode]) =
                  clearedAt = excluded.clearedAt,
                  expiresAt = excluded.expiresAt
     """, challengeId, state, clearedAt, expiresAt)
+
+
+proc upsertChallenges*(db: DbConn, challenges: openArray[Challenge]) =
+  for chal in challenges:
+    db.exec(sql"""
+      INSERT INTO challenges (challengeId, state, clearedAt, expiresAt)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT (challengeId) DO
+      UPDATE SET state = excluded.state,
+                 clearedAt = excluded.clearedAt,
+                 expiresAt = excluded.expiresAt
+    """, chal.challengeId, chal.state, optionToSqlArg(chal.clearedAt), optionToSqlArg(chal.expiresAt))
 
 
 proc getChallenges*(db: DbConn): seq[JsonNode] =

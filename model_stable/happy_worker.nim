@@ -5,6 +5,7 @@ import std/strutils
 import ../db_connector/db_sqlite
 
 import ../extsqlite
+import ../semba_error
 
 
 type HappyWorkerItem* = object
@@ -29,3 +30,12 @@ proc updateHappyWorkerItem*(db: DbConn, happyWorkerItem: HappyWorkerItem) =
   db.exec(sql"""
     UPDATE happyWorkerItems SET isCleared = ?, state = ? WHERE id = ?
   """, happyWorkerItem.isCleared.get(false), happyWorkerItem.state, happyWorkerItem.happyWorkerItemId)
+
+
+proc getHappyWorkerItemChallengeId*(db: DbConn, happyWorkerItemId: int): int =
+  let row = db.getRow(sql"SELECT challengeId FROM mdHappyWorkerItem WHERE id = ?", happyWorkerItemId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Failed to get challengeId for happyWorkerItemId=" & $happyWorkerItemId)
+
+  result = parseInt(row[0])
