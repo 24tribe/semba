@@ -23,3 +23,9 @@ proc getHappyWorkerItems*(db: DbConn, cityIds: openArray[int]): seq[HappyWorkerI
     isCleared: some(it[1] == "true"),
     state: parseInt(it[2]),
   ))
+
+
+proc updateHappyWorkerItem*(db: DbConn, happyWorkerItem: HappyWorkerItem) =
+  db.exec(sql"""
+    UPDATE happyWorkerItems SET isCleared = ?, state = ? WHERE id = ?
+  """, happyWorkerItem.isCleared.get(false), happyWorkerItem.state, happyWorkerItem.happyWorkerItemId)

@@ -8,10 +8,10 @@ import timestamp
 
 
 type Challenge* = object
-  challengeId: int
-  state: int
-  clearedAt: Option[Timestamp]
-  expiresAt: Option[Timestamp]
+  challengeId*: int
+  state*: int
+  clearedAt*: Option[Timestamp]
+  expiresAt*: Option[Timestamp]
 
 
 proc updateChallenges*(db: DbConn, challenges: seq[JsonNode]) =

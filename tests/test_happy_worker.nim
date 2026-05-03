@@ -1,14 +1,39 @@
 import std/json
+import std/options
 
 import utils
+import ../api_stable/happy_worker
+import ../model_stable/challenge_progress
+import ../model_stable/challenge_task
 
 
 proc testHappyWorkerStart() =
   var ctx = getInMemorySembaCtx()
 
-  let res = ctx.sembaCall("/happy_worker/start", %*{"happyWorkerItemId": 1000003})
+  let happyWorkerItemId = 1000003
 
-  doAssert(res != nil)
+  let resJson = ctx.sembaCall("/happy_worker/start", %*{"happyWorkerItemId": happyWorkerItemId})
+
+  doAssert(resJson != nil)
+
+  let res = to(resJson, HappyWorkerStartResponse)
+
+  doAssert(res.happyWorkerItem.happyWorkerItemId == happyWorkerItemId)
+  doAssert(res.happyWorkerItem.state == 5)
+
+  let challenges = res.changedResources.challenges.get()
+  doAssert(challenges.len == 1)
+  doAssert(challenges[0].challengeId == 105021)
+  doAssert(challenges[0].state == 5)
+  doAssert(challenges[0].expiresAt.isSome())
+
+  doAssert(res.changedResources.challengeProgresses.get(@[]) == @[ChallengeProgress(
+    challengeProgressId: 10502101, state: 2
+  )])
+
+  doAssert(res.changedResources.challengeTasks.get(@[]) == @[ChallengeTask(
+    challengeTaskId: 105021011
+  )])
 
 
 proc testSuiteHappyWorker*() =

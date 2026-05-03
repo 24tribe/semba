@@ -52,7 +52,7 @@ type Resources* = object
   areaChangeLocks: Option[seq[AreaChangeLock]]
   areaGroups: Option[seq[AreaGroup]]
   areaObjectLocks: Option[seq[AreaObjectLock]]
-  challenges: Option[seq[Challenge]]
+  challenges*: Option[seq[Challenge]]
   challengeProgresses*: Option[seq[ChallengeProgress]]
   challengeTasks*: Option[seq[ChallengeTask]]
   characters*: Option[seq[Character]]

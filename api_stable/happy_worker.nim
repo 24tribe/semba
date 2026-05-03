@@ -27,4 +27,7 @@ proc happy_worker_List*(db: DbConn): HappyWorkerListResponse =
 
 
 proc happy_worker_Start*(db: DbConn, req: HappyWorkerStartRequest): HappyWorkerStartResponse =
-  discard
+  result.happyWorkerItem.happyWorkerItemId = req.happyWorkerItemId
+  result.happyWorkerItem.state = 5
+
+  updateHappyWorkerItem(db, result.happyWorkerItem)
