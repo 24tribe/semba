@@ -5,6 +5,7 @@ and produces a sql script to import them in the semba db
 
 from argparse import ArgumentParser
 from pathlib import Path
+from enum import Enum
 import json
 
 
@@ -806,6 +807,8 @@ def convert_to_sql(val):
         return f"'{val}'"
     elif isinstance(val, (dict, list)):
         return f"'{json.dumps(val)}'"
+    elif isinstance(val, Enum):
+        return str(val.value)
     elif val is None:
         return "null"
     else:
