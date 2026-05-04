@@ -13,6 +13,7 @@ import model_stable/reward
 import model_stable/mail
 import model_stable/gear
 import model_stable/timestamp
+import model_stable/status
 import model_semba/gear
 
 const sembaSql = slurp("semba.sql")
@@ -63,6 +64,9 @@ type SembaMailGearRequest* = object
   substat1: int
   substat2: int
   substat3: int
+
+type SembaMoveToAreaRequest* = object
+  areaId: int
 
 
 proc semba_LoadSaveFile(jsonReq: JsonNode, db: DbConn): JsonNode =
@@ -209,6 +213,12 @@ proc semba_MailGear(db: DbConn, req: SembaMailGearRequest) =
   sendMail(db, "New patimon", "Your patimon is here!!!", "TNZ", rewards, getTimestampNow(), getFutureTimestamp())
 
 
+proc semba_MoveToArea*(db: DbConn, req: SembaMoveToAreaRequest) =
+  var status = getUserStatusTypeSafe(db)
+  status.currentAreaKeyId = some(req.areaId)
+  setUserStatusTypeSafe(db, status)
+
+
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =
   if uri == "/semba/echo":
     let dataUpper = jsonReq["data"].getStr().toUpperAscii()
@@ -239,3 +249,5 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
     result = %*semba_GetSkipTutorial(db)
   elif uri == "/semba/mail_gear":
     semba_MailGear(db, to(jsonReq, SembaMailGearRequest))
+  elif uri == "/semba/move_to_area":
+    semba_MoveToArea(db, to(jsonReq, SembaMoveToAreaRequest))
