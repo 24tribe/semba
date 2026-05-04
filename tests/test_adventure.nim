@@ -477,7 +477,7 @@ proc testHealRespiteUnitByAccess() =
   checkCharactersHpIsMax(ctx.db, charIds, changedResources)
 
 
-proc testAreaObjectLock() =
+proc testAreaObjectLockMinigame() =
   var ctx = getInMemorySembaCtx()
 
   let res = to(ctx.sembaCall("/adventure/read_sequence", %*{
@@ -507,4 +507,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testHealRespiteUnitByWarp()
   testHealRespiteUnitByAccess()
   testDummyAreaObjects()
-  testAreaObjectLock()
+  testAreaObjectLockMinigame()
