@@ -19,4 +19,8 @@ proc getKnownLocation*(db: DbConn, areaId: int): KnownLocation =
   if row[0] == "":
     raise newException(SembaError, "Couldn't get known location for areaId=" & $areaId)
 
-  result = KnownLocation(areaId: areaId, x: parseFloat(row[1]), y: parseFloat(row[2]), z: parseFloat(row[3]))
+  result = KnownLocation(
+    areaId: areaId,
+    x: parseFloat(row[1]), y: parseFloat(row[2]), z: parseFloat(row[3]),
+    direction: parseInt(row[4])
+  )
