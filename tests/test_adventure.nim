@@ -7,6 +7,8 @@ import std/sequtils
 import ../db_connector/db_sqlite
 
 import utils
+import ../api_stable/adventure
+import ../model_stable/area_object_lock
 import ../model_stable/adventure_variable
 import ../model_stable/area_object
 import ../model_stable/character
@@ -475,6 +477,25 @@ proc testHealRespiteUnitByAccess() =
   checkCharactersHpIsMax(ctx.db, charIds, changedResources)
 
 
+proc testAreaObjectLock() =
+  var ctx = getInMemorySembaCtx()
+
+  let res = to(ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 105045011, 108222011 ],
+    "currentLocation": {
+      "areaType": 1, "direction": 1, "areaKeyId": 101001,
+      "positionCoordinates": { "x": 1.714024, "y": 6.034101, "z": 14.162288 }
+    },
+    "miniGameId": 105016, "areaType": 1, "areaKeyId": 101001
+  }), AdventureReadSequenceResponse)
+
+  let areaObjectLocks = res.changedResources.areaObjectLocks.get(@[])
+
+  doAssert(areaObjectLocks == @[AreaObjectLock(areaObjectLockId: 10504502, count: some(1))])
+
+  # FIXME: check areaObjects
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -486,3 +507,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testHealRespiteUnitByWarp()
   testHealRespiteUnitByAccess()
   testDummyAreaObjects()
+  testAreaObjectLock()

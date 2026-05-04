@@ -51,6 +51,12 @@ type AdventureAcquireAreaItemRequest* = object
   areaItemId*: int
   currentLocation*: CurrentLocation
 
+type AdventureReadSequenceResponse* = object
+  areaObjects*: Option[seq[AreaObject]]
+  rewards*: Option[seq[Rewards]]
+  changedResources*: Resources
+  deletedCharacterIds*: Option[seq[int]]
+
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
   resetAreaEnemies(db)
