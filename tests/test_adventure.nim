@@ -477,7 +477,7 @@ proc testHealRespiteUnitByAccess() =
   checkCharactersHpIsMax(ctx.db, charIds, changedResources)
 
 
-proc testAreaObjectLockMinigame() =
+proc testMiniGameWithAreaObjectLock() =
   var ctx = getInMemorySembaCtx()
 
   let res = to(ctx.sembaCall("/adventure/read_sequence", %*{
@@ -496,6 +496,45 @@ proc testAreaObjectLockMinigame() =
   # FIXME: check areaObjects
 
 
+proc testMiniGameWithoutAreaObjectLock() =
+  var ctx = getInMemorySembaCtx()
+
+  let res = to(ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [308002021, 308003021, 308001021],
+    "currentLocation": {
+      "areaType": 1, "direction": 3, "areaKeyId": 300401,
+      "positionCoordinates": {"x": 72.45, "y": 19.6710052, "z": -34.8852272}
+    },
+    "miniGameId": 101029, "areaType": 1, "areaKeyId": 300401
+  }), AdventureReadSequenceResponse)
+
+  let expectedAreaObjects = to(%*[
+    {
+      "areaObjectId": 308003, "areaPointId": 300401804, "areaObjectBehaviorId": 30800302,
+      "action": {"type": 1, "id": 1}
+    },
+    {
+      "areaObjectId": 308002, "areaPointId": 300401802, "areaObjectBehaviorId": 30800202,
+      "action": {"type": 3, "id": 1, "sequenceId": 30800201}
+    },
+    {
+      "areaObjectId": 308001, "areaPointId": 300401801, "areaObjectBehaviorId": 30800102,
+      "action": {"type": 1, "id": 1}
+    },
+    {
+      "areaObjectId": 305009, "areaPointId": 300401507, "areaObjectBehaviorId": 30500902,
+      "action": {"type": 4, "areaItemId": 30500902, "id": 1, "label": "Valuable Chest"}
+    }
+  ], seq[AreaObject])
+
+  var areaObjects = res.areaObjects.get(@[])
+  areaObjects.sort(proc (ao1, ao2: AreaObject): int = cmp(ao2.areaPointId, ao1.areaPointId))
+
+  doAssert(expectedAreaObjects == areaObjects)
+
+  doAssert(res.changedResources.status.isSome())
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -507,4 +546,5 @@ proc testSuiteAdventure*(saves_dir: string) =
   testHealRespiteUnitByWarp()
   testHealRespiteUnitByAccess()
   testDummyAreaObjects()
-  testAreaObjectLockMinigame()
+  testMiniGameWithAreaObjectLock()
+  testMiniGameWithoutAreaObjectLock()
