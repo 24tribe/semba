@@ -15,6 +15,7 @@ import model_stable/gear
 import model_stable/timestamp
 import model_stable/status
 import model_semba/gear
+import model_semba/known_location
 
 const sembaSql = slurp("semba.sql")
 
@@ -215,7 +216,14 @@ proc semba_MailGear(db: DbConn, req: SembaMailGearRequest) =
 
 proc semba_MoveToArea*(db: DbConn, req: SembaMoveToAreaRequest) =
   var status = getUserStatusTypeSafe(db)
+
+  let loc = getKnownLocation(db, req.areaId)
+
   status.currentAreaKeyId = some(req.areaId)
+  status.currentAreaType = some(1)
+  status.currentPositionCoordinates = some(PositionCoordinates(x: some(loc.x), y: some(loc.y), z: some(loc.z)))
+  status.currentDirection = some(loc.direction)
+
   setUserStatusTypeSafe(db, status)
 
 

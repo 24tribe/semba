@@ -83,6 +83,7 @@ semba_core_files = [
     'model_stable/warp_point.nim',
     'model_stable/xb.nim',
     'model_semba/gear.nim',
+    'model_semba/known_location.nim',
 ]
 
 nim_release_args = ['--cc:gcc', '--gcc.exe=cc', '--gcc.linkerexe=cc']
