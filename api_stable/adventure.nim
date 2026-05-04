@@ -57,6 +57,14 @@ type AdventureReadSequenceResponse* = object
   changedResources*: Resources
   deletedCharacterIds*: Option[seq[int]]
 
+type AdventureReadSequenceRequest* = object
+  sequenceRequestIds*: Option[seq[int]]
+  nineSequences*: Option[seq[NineSequenceRequest]]
+  miniGameId*: Option[int]
+  areaType*: int
+  areaKeyId*: int
+  currentLocation*: CurrentLocation
+
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
   resetAreaEnemies(db)
@@ -158,16 +166,9 @@ proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
   }
 
 
-proc adventure_ReadSequence*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let sequenceRequestIds = to(
-    jsonReq.getOrDefault("sequenceRequestIds"), Option[seq[int]]
-  ).get(@[])
-
-  let nineSequences = to(
-    jsonReq.getOrDefault("nineSequences"), Option[seq[NineSequenceRequest]]
-  ).get(@[])
-
-  let areaKeyId = jsonReq["areaKeyId"].getInt()
+proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): JsonNode =
+  let sequenceRequestIds = req.sequenceRequestIds.get(@[])
+  let nineSequences = req.nineSequences.get(@[])
 
   if sequenceRequestIds.len > 0:
     let seqReqId = sequenceRequestIds[0]
