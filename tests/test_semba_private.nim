@@ -6,6 +6,7 @@ import ../db_connector/db_sqlite
 import ../semba
 import ../sembaprivate
 import ../model_stable/battle
+import ../model_stable/status
 import utils
 
 
@@ -81,7 +82,22 @@ proc test_update_hair_color() =
       doAssert(hairColor.b == 0.8)
 
 
+proc testSembaMoveToArea() =
+  var ctx = getInMemorySembaCtx()
+
+  discard ctx.sembaCall("/semba/move_to_area", %*{"areaId": 101383})
+
+  let status = getUserStatusTypeSafe(ctx.db)
+
+  doAssert(status.currentAreaKeyId == some(101383))
+  doAssert(status.currentPositionCoordinates.get().x == some(-3.0))
+  doAssert(status.currentPositionCoordinates.get().y == some(0.0))
+  doAssert(status.currentPositionCoordinates.get().z == some(-1.70999992))
+  doAssert(status.currentDirection == some(1))
+
+
 proc testSuiteSembaPrivate*() =
   test_reset_db()
 
   test_update_hair_color()
+  testSembaMoveToArea()
