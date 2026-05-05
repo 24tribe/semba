@@ -4,6 +4,7 @@ import std/options
 
 import ../db_connector/db_sqlite
 
+import ../model_stable/area_object
 import ../model_stable/challenge
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
@@ -72,7 +73,11 @@ proc happy_worker_Start*(db: DbConn, req: HappyWorkerStartRequest): HappyWorkerS
   upsertChallengeTasks(db, challengeTasks)
   result.changedResources.challengeTasks = some(challengeTasks)
 
-  # FIXME: update area objects with mdAreaBehavior conditions
+  let areaObjects = getAreaObjectsWithCondition(
+    db, areaObjectConditionTypeStartedChallengeProgress, firstProgressId
+  )
+
+  updateAreaObjectsEx(db, areaObjects)
 
 
 proc happy_worker_Cancel*(db: DbConn, req: HappyWorkerCancelRequest): HappyWorkerCancelResponse =
