@@ -4,6 +4,8 @@ import std/options
 import std/algorithm
 
 import utils
+import ../api_stable/battle
+import ../model_stable/area_object_lock
 import ../model_stable/battle
 import ../model_stable/challenge_task
 import ../model_stable/challenge_progress
@@ -173,8 +175,41 @@ proc testBattleRetire(saves_dir: string) =
   doAssert(res.getOrDefault("moveToAreaLocatorId").getInt() != 0)
 
 
+proc testBattleWithAreaObjectLock() =
+  var ctx = getInMemorySembaCtx()
+
+  doAssert(ctx.sembaCall("/battle/start", %*{
+    "battleEntryIds": [ 2000042 ], "lineCharacterIds": [ 100801, 100401, 100201 ],
+    "battleTriggers": [ { "triggerType": "area_object", "triggerIds": [ 30701301 ] } ],
+    "advantageType": "advantage", "isAttackHit": true,
+    "currentLocation": {
+      "areaType": 1, "direction": 3, "areaKeyId": 300401,
+      "positionCoordinates": { "x": 11.720624, "y": 46.28787, "z": -21.58886 }
+    },
+    "bloodStainLocation": {
+      "areaKeyId": 300401, "areaType": 1,
+      "positionCoordinates": { "x": 11.762229, "y": 46.28722, "z": -21.58886 }
+    }
+  }) != nil)
+
+  let res = to(ctx.sembaCall("/battle/finish", %*{
+    "characterUpdates": [
+      {"characterId": 100801, "hp": 453}, {"characterId": 100401, "hp": 500}, {"characterId": 100201, "hp": 470}
+    ],
+    "battleTaskTopics": [
+      {"type": "heal_hp", "count": 272}
+    ],
+    "encounteredEnemyIds": [224303],
+    "battleTimeSecond": 32,
+    "taskConditionResult": {}
+  }), BattleFinishResponse)
+
+  doAssert(res.changedResources.areaObjectLocks.get() == @[AreaObjectLock(areaObjectLockId: 30500702, count: some(1))])
+
+
 proc testSuiteBattle*(saves_dir: string) =
     test_endrone_battle_start(saves_dir)
     test_battle_finish_challenge_data(saves_dir)
     testLostBattleFinish()
     testBattleRetire(saves_dir)
+    testBattleWithAreaObjectLock()

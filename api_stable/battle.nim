@@ -27,6 +27,15 @@ type BattleFinishRequest = object
   characterUpdates: seq[CharacterUpdate]
   encounteredEnemyIds: seq[int]
 
+type BattleFinishResponse* = object
+  rewards*: Option[seq[Rewards]]
+  ignoredRewards*: Option[seq[Resource]]
+  changedResources*: Resources
+  characterExps*: Option[seq[JsonNode]] # FIXME: use CharacterExp
+  areaObjects*: Option[seq[AreaObject]]
+  moveToAreaLocatorId*: Option[int]
+  fractalViseUpdate*: Option[JsonNode] # FIXME: use FractalViseUpdate
+
 type BattleRestartRequest* = object
   lineCharacterIds: seq[int]
   encounteredEnemyIds: seq[int]
