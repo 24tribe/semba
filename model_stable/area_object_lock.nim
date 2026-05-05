@@ -1,5 +1,6 @@
 import std/options
 import std/strutils
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -22,6 +23,20 @@ proc getAreaObjectLock*(db: DbConn, areaObjectLockId: int): AreaObjectLock =
     raise newException(SembaError, "Couldn't get areaObjectLock for id=" & $areaObjectLockId)
 
   result = AreaObjectLock(areaObjectLockId: areaObjectLockId, count: some(parseInt(row[0])))
+
+
+proc upsertAreaObjectLocks*(db: DbConn, locks: openArray[AreaObjectLock]) =
+  for lock in locks:
+    db.exec(sql"""
+      INSERT INTO areaObjectLocks (areaObjectLockId, count) VALUES (?, ?)
+      ON CONFLICT (areaObjectLockId) DO
+      UPDATE SET count = excluded.count
+    """, lock.areaObjectLockId, lock.count.get(0))
+
+
+proc getAreaObjectLocks*(db: DbConn): seq[AreaObjectLock] =
+  let rows = db.getAllRows(sql"SELECT areaObjectLockId, count FROM areaObjectLocks")
+  result = rows.mapIt(AreaObjectLock(areaObjectLockId: parseInt(it[0]), count: some(parseInt(it[1]))))
 
 
 proc getAreaObjectLockId(db: DbConn, triggerType: AreaObjectLockTrigger, triggerId: int): Option[int] =

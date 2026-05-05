@@ -198,7 +198,9 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Jso
       @[AreaObjectLock(areaObjectLockId: areaObjectLockId, count: some(1))]
     )
 
-    # FIXME: save areaObjectLocks to db
+    res.changedResources.areaObjectLocks.map(proc (areaObjectLocks: seq[AreaObjectLock]) =
+      upsertAreaObjectLocks(db, areaObjectLocks)
+    )
 
     res.changedResources.status = some(getUserStatusTypeSafe(db))
 

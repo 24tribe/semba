@@ -4,6 +4,7 @@ import ../db_connector/db_sqlite
 
 import ../model_stable/adventure_variable
 import ../model_stable/area
+import ../model_stable/area_object_lock
 import ../model_stable/area_change_lock
 import ../model_stable/area_group
 import ../model_stable/challenge
@@ -62,6 +63,7 @@ proc user_LogIn*(db: DbConn): JsonNode =
     if not getSkipTutorial(db):
       resetToTutorial(db)
 
+  let areaObjectLocks = getAreaObjectLocks(db)
   let formations = getFormations(db)
   let adventureVariables = getAdventureVariables(db)
   let challengeTasks = getChallengeTasks(db)
@@ -86,6 +88,7 @@ proc user_LogIn*(db: DbConn): JsonNode =
       "adventureVariables": adventureVariables,
       "areaChangeLocks": areaChangeLocks,
       "areaGroups": areaGroups,
+      "areaObjectLocks": areaObjectLocks,
       "areas": areas,
       "challengeProgresses": getChallengeProgresses(db),
       "challengeTasks": challengeTasks,
