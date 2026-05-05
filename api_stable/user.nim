@@ -30,7 +30,6 @@ import ../model_stable/tip
 import ../model_stable/total_task
 import ../model_stable/tutorial_state
 import ../model_stable/tutorial
-import ../model_stable/user
 import ../model_stable/wallet
 import ../model_stable/warp_point
 

@@ -6,7 +6,6 @@ import ../db_connector/db_sqlite
 import ../semba_error
 import challenge_progress
 import challenge
-import user
 import gacha
 import status
 import timestamp
