@@ -4,6 +4,7 @@ import std/tables
 
 import ../db_connector/db_sqlite
 
+import ../model_stable/area_object_lock
 import ../model_stable/city
 import ../model_stable/character
 import ../model_stable/battle
@@ -143,6 +144,8 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
       "moveToAreaLocatorId": moveToAreaLocatorId
     }
 
+  var areaObjectLocks = newSeq[AreaObjectLock]()
+
   let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
   updateCharacterExps(db, characterExps, characters)
   let newCharacters = getCharactersWithId(db, characterIds)
@@ -159,9 +162,16 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
         else:
           let areaKeyId = status.currentAreaKeyId.get(0)
           if isAreaObject:
+            let areaObjectLockId = getAreaObjectLockIdForBattle(db, triggerId)
+
+            if areaObjectLockId.isSome():
+              areaObjectLocks.add(AreaObjectLock(areaObjectLockId: areaObjectLockId.get(), count: some(1)))
+
             removeAreaObject(db, areaKeyId, triggerId)
           else:
             removeAreaEnemy(db, areaKeyId, triggerId)
+
+  upsertAreaObjectLocks(db, areaObjectLocks)
 
   let areaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
 
@@ -213,6 +223,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
       }
     ],
     "changedResources": {
+      "areaObjectLocks": areaObjectLocks,
       "status": status,
       "characters": newCharacters,
       "items": items,

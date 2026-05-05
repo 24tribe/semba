@@ -48,6 +48,10 @@ proc getAreaObjectLockId(db: DbConn, triggerType: AreaObjectLockTrigger, trigger
     result = some(parseInt(row[0]))
 
 
+proc getAreaObjectLockIdForBattle*(db: DbConn, battleTriggerId: int): Option[int] =
+  getAreaObjectLockId(db, aolTriggerBattle, battleTriggerId)
+
+
 proc getAreaObjectLockIdForMiniGame*(db: DbConn, areaId: int, miniGameId: int): Option[int] =
   if miniGameId == 105055: # this one is non-unique...
     if areaId == 141001:
