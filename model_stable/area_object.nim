@@ -204,6 +204,27 @@ proc getAreaObjectAction*(db: DbConn, areaObjectBehaviorId: int): Option[AreaObj
     ))
 
 
+proc getAreaObjectsForState*(db: DbConn, areaObjectId: int, areaObjectState: int): seq[AreaObject] =
+  let rows = db.getAllRows(sql"""
+    SELECT mdAreaObjectBehavior.id, mdAreaObjectBehavior.areaObjectId, mdAreaObjectBehavior.areaPointId
+    FROM mdAreaObjectBehavior
+    INNER JOIN mdAreaObjectBehaviorCondition
+    ON mdAreaObjectBehavior.id = mdAreaObjectBehaviorCondition.areaObjectBehaviorId
+    WHERE mdAreaObjectBehaviorCondition.type = 4
+      AND mdAreaObjectBehaviorCondition.areaObjectId = ?
+      AND mdAreaObjectBehaviorCondition.areaObjectState = ?
+  """, areaObjectId, areaObjectState)
+
+  for row in rows:
+    let areaObjectBehaviorId = parseInt(row[0])
+    result.add(AreaObject(
+      areaObjectId: tryParseInt(row[1]),
+      areaPointId: parseInt(row[2]),
+      areaObjectBehaviorId: some(areaObjectBehaviorId),
+      action: getAreaObjectAction(db, areaObjectBehaviorId)
+    ))
+
+
 proc getAreaObjectsWithCondition*(
   db: DbConn, conditionType: AreaObjectBehaviorConditionType, id: int
 ): seq[AreaObject] =

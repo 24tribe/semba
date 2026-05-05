@@ -5,7 +5,7 @@ import std/strutils
 import ../db_connector/db_sqlite
 
 
-type VariableOperator = enum
+type VariableOperator* = enum
   variableOperatorAdd = 1
   variableOperatorUnknown = 2
 

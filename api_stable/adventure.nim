@@ -9,6 +9,7 @@ import ../model_stable/adventure_variable
 import ../model_stable/area
 import ../model_stable/area_item
 import ../model_stable/area_object
+import ../model_stable/area_object_lock
 import ../model_stable/character
 import ../model_stable/city
 import ../model_stable/graffiti_art
@@ -169,6 +170,41 @@ proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): JsonNode =
   let sequenceRequestIds = req.sequenceRequestIds.get(@[])
   let nineSequences = req.nineSequences.get(@[])
+
+  if req.miniGameId.isSome():
+    let miniGameId = req.miniGameId.get()
+
+    var res = AdventureReadSequenceResponse()
+
+    let sequenceRequests = getMdSequenceRequests(db, sequenceRequestIds)
+
+    var areaObjects = newSeq[AreaObject]()
+
+    for seqReq in sequenceRequests:
+      case seqReq.kind:
+      of seqReqAreaObjectState:
+        areaObjects.insert(
+          getAreaObjectsForState(db, seqReq.areaObjectId, seqReq.areaObjectState), areaObjects.len
+        )
+      else:
+        discard
+
+    res.areaObjects = some(areaObjects)
+    updateAreaObjectsEx(db, areaObjects)
+
+    let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, req.currentLocation.areaKeyId.get(), miniGameId)
+
+    res.changedResources.areaObjectLocks = areaObjectLockId.map(proc (areaObjectLockId: int): seq[AreaObjectLock] =
+      @[AreaObjectLock(areaObjectLockId: areaObjectLockId, count: some(1))]
+    )
+
+    # FIXME: save areaObjectLocks to db
+
+    res.changedResources.status = some(getUserStatusTypeSafe(db))
+
+    return %*res
+
+  # FIXME: use proper types, NOT JsonNode
 
   if sequenceRequestIds.len > 0:
     let seqReqId = sequenceRequestIds[0]
