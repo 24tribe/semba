@@ -186,12 +186,6 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
 
   updateMagicOrbs(db, magicOrbs)
 
-  let items = to(changedResources.getOrDefault("items"), Option[seq[Item]])
-  
-  if items.isSome():
-    handledKeys.incl("items")
-    updateItems(db, items.get())
-
   let areaChangeLocks = changedResources.getOrDefault("areaChangeLocks").getElems()
 
   if areaChangeLocks.len > 0:
@@ -223,6 +217,25 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
   if tensionCards.len > 0:
     updateTensionCards(db, tensionCards)
     handledKeys.incl("tensionCards")
+
+  # Remove wallet changes to avoid gems changing to random amounts in the client.
+  # The correct fix here would be to get the rewards from completing a challenge from
+  # the master data instead of the online logs, but for now it's okay
+  if changedResources.hasKey("wallet"):
+    changedResources.delete("wallet")
+    handledKeys.incl("wallet")
+
+  let items = to(changedResources.getOrDefault("items"), Option[seq[Item]]).get(@[])
+ 
+  if items.len > 0:
+    handledKeys.incl("items")
+
+    # Don't change the currency items to avoid them changing to random amounts in the client.
+    # The correct fix here would be to get the rewards from completing a challenge from
+    # the master data instead of the online logs, but for now it's okay
+    let seqItems = items.filterIt(not (it.itemId in [2, 14, 15])).toSeq() # tPoint, stamps, boosters
+    changedResources["items"] = %*seqItems
+    updateItems(db, seqItems)
 
   for key, _ in changedResources.pairs():
     if not (key in handledKeys):
