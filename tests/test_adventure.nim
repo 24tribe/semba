@@ -493,7 +493,13 @@ proc testMiniGameWithAreaObjectLock() =
 
   doAssert(areaObjectLocks == @[AreaObjectLock(areaObjectLockId: 10504502, count: some(1))])
 
-  # FIXME: check areaObjects
+  let areaObjects = res.areaObjects.get(@[])
+  doAssert(areaObjects == to(%*[
+    {
+      "areaObjectId": 108222, "areaPointId": 101001806, "areaObjectBehaviorId": 10822202,
+      "action": {"type": 3, "id": 1, "label": "Control Panel", "sequenceId": 10822201}
+    }
+  ], seq[AreaObject]))
 
 
 proc testMiniGameWithoutAreaObjectLock() =
