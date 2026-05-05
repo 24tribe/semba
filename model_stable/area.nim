@@ -57,10 +57,6 @@ proc addArea*(db: DbConn, areaId: int) =
   """, areaId)
 
 
-proc calcDistance(x1: float, y1: float, z1: float, x2: float, y2: float, z2: float): float =
-  return sqrt(pow(x2-x1, 2) + pow(y2-y1, 2) + pow(z2-z1, 2))
-
-
 proc getAreaBgm*(db: DbConn, areaId: int): AreaBgm =
   let areaBgmRow = db.getRow(sql"SELECT id, eventName FROM areaBgm WHERE areaId = ?", areaId)
 
