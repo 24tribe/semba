@@ -32,6 +32,11 @@ proc updateHappyWorkerItem*(db: DbConn, happyWorkerItem: HappyWorkerItem) =
   """, happyWorkerItem.isCleared.get(false), happyWorkerItem.state, happyWorkerItem.happyWorkerItemId)
 
 
+proc updateHappyWorkerItems*(db: DbConn, happyWorkerItems: openArray[HappyWorkerItem]) =
+  for it in happyWorkerItems:
+    updateHappyWorkerItem(db, it)
+
+
 proc getHappyWorkerItemChallengeId*(db: DbConn, happyWorkerItemId: int): int =
   let row = db.getRow(sql"SELECT challengeId FROM mdHappyWorkerItem WHERE id = ?", happyWorkerItemId)
 

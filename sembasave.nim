@@ -21,6 +21,7 @@ version 10: dungeons
 version 11: magicOrbs, items, areaChangeLocks
 version 12: gears
 version 13: graffitis
+version 14: areaObjectLocks, happyWorkerItems
 ]#
 
 import std/json
@@ -35,6 +36,7 @@ import model_stable/area
 import model_stable/area_change_lock
 import model_stable/area_group
 import model_stable/area_object
+import model_stable/area_object_lock
 import model_stable/challenge
 import model_stable/challenge_progress
 import model_stable/challenge_task
@@ -45,6 +47,7 @@ import model_stable/formation
 import model_stable/gacha
 import model_stable/gear
 import model_stable/graffiti_art
+import model_stable/happy_worker
 import model_stable/item
 import model_stable/lux_phantasma
 import model_stable/magic_orb
@@ -374,6 +377,14 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     addGraffitiArts(db, graffitiArts)
 
   db.exec(sql"DELETE FROM mails")
+  db.exec(sql"DELETE FROM areaObjectLocks")
+
+  if version >= 14:
+    let areaObjectLocks = to(jsonData["areaObjectLocks"], seq[AreaObjectLock])
+    upsertAreaObjectLocks(db, areaObjectLocks)
+
+    let happyWorkerItems = to(jsonData["happyWorkerItems"], seq[HappyWorkerItem])
+    updateHappyWorkerItems(db, happyWorkerItems)
 
 
 proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
@@ -413,9 +424,11 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   let items = getItems(db)
   let gears = getGears(db)
   let graffitiArts = getGraffitiArts(db)
+  let happyWorkerItems = getHappyWorkerItems(db, [10, 13, 14])
+  let areaObjectLocks = getAreaObjectLocks(db)
 
   var jsonData = %*{
-    "version": 13,
+    "version": 14,
     "formations": formations,
     "tips": tips,
     "areaObjects": areaObjects,
@@ -447,6 +460,8 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     "items": items,
     "gears": gears,
     "graffitiArts": graffitiArts,
+    "areaObjectLocks": areaObjectLocks,
+    "happyWorkerItems": happyWorkerItems,
   }
 
   writeFile(saves_dir & "/" & name & ".save", $jsonData)
