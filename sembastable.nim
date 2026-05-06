@@ -107,6 +107,10 @@ proc getJsonResultStable*(
 
   elif uri == "/item_request/get":
     result = %*item_request_Get()
+  elif uri == "/item_request/list":
+    result = %*item_request_List()
+  elif uri == "/item_request/publish":
+    result = %*item_request_Publish(to(jsonReq, ItemRequestPublishRequest))
 
   elif uri == "/mail/list":
     result = %*mail_List(db)
