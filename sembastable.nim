@@ -11,6 +11,7 @@ import api_stable/event
 import api_stable/formation
 import api_stable/gacha
 import api_stable/happy_worker
+import api_stable/item_request
 import api_stable/mail
 import api_stable/mission
 import api_stable/news
@@ -103,7 +104,10 @@ proc getJsonResultStable*(
     result = %*happy_worker_Start(db, to(jsonReq, HappyWorkerStartRequest))
   elif uri == "/happy_worker/cancel":
     result = %*happy_worker_Cancel(db, to(jsonReq, HappyWorkerCancelRequest))
-  
+
+  elif uri == "/item_request/get":
+    result = %*item_request_Get()
+
   elif uri == "/mail/list":
     result = %*mail_List(db)
   elif uri == "/mail/open":
