@@ -7,5 +7,5 @@ type ItemRequest* = object
   userId*: int64
   deliveryRequestItemId*: int
   publishedAt*: Timestamp
-  fullfilledAt*: Option[Timestamp]
+  fulfilledAt*: Option[Timestamp]
   isNew*: Option[bool]
