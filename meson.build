@@ -23,6 +23,7 @@ semba_core_files = [
     'api_stable/character.nim',
     'api_stable/dungeon.nim',
     'api_stable/event.nim',
+    'api_stable/follow.nim',
     'api_stable/formation.nim',
     'api_stable/gacha.nim',
     'api_stable/happy_worker.nim',

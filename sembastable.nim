@@ -8,6 +8,7 @@ import api_stable/battle
 import api_stable/character
 import api_stable/dungeon
 import api_stable/event
+import api_stable/follow
 import api_stable/formation
 import api_stable/gacha
 import api_stable/happy_worker
@@ -87,7 +88,10 @@ proc getJsonResultStable*(
     result = event_ListNode(db)
   elif uri == "/event/finish_node":
     result = event_FinishNode(db, jsonReq)
-  
+
+  elif uri == "/follow/list":
+    result = %*follow_List()
+
   elif uri == "/formation/update":
     result = formation_Update(db, jsonReq)
   elif uri == "/formation/switch":
