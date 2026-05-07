@@ -1,6 +1,7 @@
 import std/options
 import std/json
 
+import ../protojson
 import ../model_stable/item_request
 import ../model_stable/timestamp
 
@@ -31,7 +32,7 @@ proc item_request_List*(): ItemRequestListResponse =
 
 proc item_request_Publish*(req: ItemRequestPublishRequest): ItemRequestPublishResponse =
   result.itemRequest = ItemRequest(
-    userId: 1,
+    userId: 1.protoJsonInt64,
     deliveryRequestItemId: req.deliveryRequestItemId,
     publishedAt: now().timestamp,
   )

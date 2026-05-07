@@ -57,6 +57,7 @@ semba_core_files = [
     'model_stable/dungeon.nim',
     'model_stable/enemy.nim',
     'model_stable/entity.nim',
+    'model_stable/follow.nim',
     'model_stable/formation.nim',
     'model_stable/graffiti_art.nim',
     'model_stable/gacha.nim',

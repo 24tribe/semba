@@ -4,6 +4,17 @@ the functions in this file mimic the behaviour of the protobuf json dumper
 ]#
 
 import std/json
+import std/strutils
+
+
+type ProtoJsonInt64* = distinct string
+
+
+proc `$`*(i: ProtoJsonInt64): string {.borrow.}
+proc `%`*(i: ProtoJsonInt64): JsonNode {.borrow.}
+proc protoJsonInt64*(i: int64): ProtoJsonInt64 = ($i).ProtoJsonInt64
+proc int64*(i: ProtoJsonInt64): int64 = parseBiggestInt($i)
+
 
 proc protoJsonDeleteKey*(node: JsonNode, key: string) =
   if node.hasKey(key):

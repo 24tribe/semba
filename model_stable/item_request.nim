@@ -1,10 +1,11 @@
 import std/options
 
+import ../protojson
 import timestamp
 
 
 type ItemRequest* = object
-  userId*: int64
+  userId*: ProtoJsonInt64
   deliveryRequestItemId*: int
   publishedAt*: Timestamp
   fulfilledAt*: Option[Timestamp]

@@ -15,6 +15,11 @@ type FormationMembers* = object
   character2OwnershipType*: Option[int]
   character3OwnershipType*: Option[int]
 
+type Formation* = object
+  number*: Option[int]
+  members*: FormationMembers
+  cards*: Option[JsonNode] # FIXME: use FormationCards
+
 
 proc getFormationMembers*(db: DbConn, number: int): FormationMembers =
   let row = db.getRow(sql"SELECT members FROM formations WHERE number = ?", number)

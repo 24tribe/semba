@@ -23,6 +23,7 @@ import api_stable/tip
 import api_stable/user
 import api_stable/xb
 import model_stable/battle
+import protojson
 
 
 proc getJsonResultStable*(
