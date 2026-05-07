@@ -3,9 +3,10 @@ import std/options
 
 import ../protojson
 import ../model_stable/follow
+import ../model_stable/formation
+import ../model_stable/resources
 import ../model_stable/timestamp
 import ../model_stable/user
-import ../model_stable/formation
 
 
 type FollowListResponse* = object
@@ -16,6 +17,17 @@ type FollowSearchRequest* = object
 
 type FollowSearchResponse* = object
   user: FollowUser
+
+type FollowAddRequest* = object
+  userId*: ProtoJsonInt64
+
+type FollowAddResponse* = object
+  followedAt*: Timestamp
+  changedResources*: Resources
+
+
+proc follow_Add*(req: FollowAddRequest): FollowAddResponse =
+  FollowAddResponse(followedAt: now().timestamp)
 
 
 proc follow_List*(): FollowListResponse =

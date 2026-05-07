@@ -94,6 +94,8 @@ proc getJsonResultStable*(
     result = %*follow_List()
   elif uri == "/follow/search":
     result = %*follow_Search(to(jsonReq, FollowSearchRequest))
+  elif uri == "/follow/add":
+    result = %*follow_Add(to(jsonReq, FollowAddRequest))
 
   elif uri == "/formation/update":
     result = formation_Update(db, jsonReq)
