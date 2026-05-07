@@ -25,6 +25,12 @@ type FollowAddResponse* = object
   followedAt*: Timestamp
   changedResources*: Resources
 
+type FollowDetailRequest* = object
+  userId*: ProtoJsonInt64
+
+type FollowDetailResponse* = object
+  characterLikabilities*: seq[JsonNode] # FIXME: use CharacterLikability
+
 
 proc follow_Add*(req: FollowAddRequest): FollowAddResponse =
   FollowAddResponse(followedAt: now().timestamp)
@@ -42,3 +48,7 @@ proc follow_Search*(req: FollowSearchRequest): FollowSearchResponse =
     profile: Profile(name: "Yo Kuronaka9", profileBannerId: 2010011, characterLikabilityScale: 500),
     formation: Formation(number: some(1)),
   ))
+
+
+proc follow_Detail*(req: FollowDetailRequest): FollowDetailResponse =
+  discard
