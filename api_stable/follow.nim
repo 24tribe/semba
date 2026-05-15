@@ -16,7 +16,7 @@ type FollowSearchRequest* = object
   userId*: ProtoJsonInt64
 
 type FollowSearchResponse* = object
-  user: FollowUser
+  user*: FollowUser
 
 type FollowAddRequest* = object
   userId*: ProtoJsonInt64

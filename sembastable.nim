@@ -93,7 +93,7 @@ proc getJsonResultStable*(
   elif uri == "/follow/list":
     result = %*follow_List()
   elif uri == "/follow/search":
-    result = %*follow_Search(to(jsonReq, FollowSearchRequest))
+    result = toJson(follow_Search(protoJsonTo(jsonReq, FollowSearchRequest)))
   elif uri == "/follow/add":
     result = %*follow_Add(to(jsonReq, FollowAddRequest))
   elif uri == "/follow/detail":
@@ -117,11 +117,11 @@ proc getJsonResultStable*(
     result = %*happy_worker_Cancel(db, to(jsonReq, HappyWorkerCancelRequest))
 
   elif uri == "/item_request/get":
-    result = %*item_request_Get()
+    result = toJson(item_request_Get())
   elif uri == "/item_request/list":
-    result = %*item_request_List()
+    result = toJson(item_request_List())
   elif uri == "/item_request/publish":
-    result = %*item_request_Publish(to(jsonReq, ItemRequestPublishRequest))
+    result = toJson(item_request_Publish(protoJsonTo(jsonReq, ItemRequestPublishRequest)))
 
   elif uri == "/mail/list":
     result = %*mail_List(db)

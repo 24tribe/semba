@@ -4,6 +4,7 @@ import test_adventure
 import test_battle
 import test_character
 import test_extra
+import test_follow
 import test_graffiti_art
 import test_reward
 import test_semba_private
@@ -27,3 +28,4 @@ testSuiteMission()
 testSuiteStatus()
 testSuiteShop()
 testSuiteHappyWorker()
+testSuiteFollow()

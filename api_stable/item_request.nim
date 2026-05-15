@@ -32,7 +32,7 @@ proc item_request_List*(): ItemRequestListResponse =
 
 proc item_request_Publish*(req: ItemRequestPublishRequest): ItemRequestPublishResponse =
   result.itemRequest = ItemRequest(
-    userId: 1.protoJsonInt64,
+    userId: 1.ProtoJsonInt64,
     deliveryRequestItemId: req.deliveryRequestItemId,
     publishedAt: now().timestamp,
   )

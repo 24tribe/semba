@@ -16,12 +16,12 @@ type Profile* = object
 type FollowUser* = object
   userId*: ProtoJsonInt64
   followedAt*: Option[Timestamp]
-  flowerMark*: Option[int]
+  flowerMark*: int
   loggedInAt*: Timestamp
   cityId*: Option[int]
   profile*: Profile
   formation*: Formation
   characters*: seq[JsonNode] # FIXME: use FollowUserCharacter
   tensionCards*: seq[JsonNode] # FIXME: use FollowTensionCard
-  isXbPvpFormationInitialized*: Option[bool]
+  isXbPvpFormationInitialized*: bool
   profileBadgeIds*: Option[seq[int]]
