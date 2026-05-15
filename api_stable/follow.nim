@@ -6,7 +6,6 @@ import ../model_stable/follow
 import ../model_stable/formation
 import ../model_stable/resources
 import ../model_stable/timestamp
-import ../model_stable/user
 
 
 type FollowListResponse* = object
