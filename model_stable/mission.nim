@@ -3,11 +3,13 @@ import std/strutils
 import std/options
 import std/sequtils
 import std/tables
+import std/sets
 
 import ../db_connector/db_sqlite
 import ../extsqlite
 
 import timestamp
+import graffiti_art
 
 
 type FlowerMarkLevel* = object
@@ -46,6 +48,16 @@ proc getMissionsForCity*(db: DbConn, missionIds: openArray[int], cityId: int): s
 
 proc getOpenChestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   const missionIds = [1041062, 1041063, 1041064, 1041362, 1041363, 1041364, 1041462, 1041463, 1041464]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
+proc getTroubleshooterMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041065, 1041066, 1041365, 1041366, 1041465, 1041466]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
+proc getGraffitiMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041005, 1041006, 1041305, 1041306, 1041405, 1041406]
   return getMissionsForCity(db, missionIds, cityId)
 
 
@@ -171,4 +183,14 @@ proc getChangedOpenChestMissions*(db: DbConn, cityId: int): seq[Mission] =
   let openChestMissions = getOpenChestMissionsForCity(db, cityId)
   return getMissionsWithNewCount(db, openChestMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
     result = some(mission.count.get(0) + 1)
+  )
+
+
+proc getChangedGraffitiMissions*(db: DbConn, cityId: int): seq[Mission] =
+  let graffitiMissions = getGraffitiMissionsForCity(db, cityId)
+
+  let graffitiCount = getGraffitiArts(db).filterIt(graffitiArtIdToCityId(it.graffitiArtId) == cityId).toSeq().len
+
+  return getMissionsWithNewCount(db, graffitiMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
+    result = some(graffitiCount + 1)
   )

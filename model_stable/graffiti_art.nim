@@ -21,3 +21,6 @@ proc addGraffitiArt*(db: DbConn, graffitiArt: GraffitiArt) =
 proc addGraffitiArts*(db: DbConn, graffitiArts: openArray[GraffitiArt]) =
   for graffitiArt in graffitiArts:
     addGraffitiArt(db, graffitiArt)
+
+
+proc graffitiArtIdToCityId*(graffitiArtId: int): int = graffitiArtId div 1000000

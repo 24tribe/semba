@@ -326,6 +326,11 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
 
 
 proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): AdventureFindGraffitiResponse =
+  let cityId = graffitiArtIdToCityId(req.graffitiArtId)
+  let missions = getChangedGraffitiMissions(db, cityId)
+  result.changedResources.missions = some(missions)
+  updateMissions(db, missions)
+
   let graffitiArt = GraffitiArt(graffitiArtId: req.graffitiArtId)
   addGraffitiArt(db, graffitiArt)
   result.changedResources.graffitiArts = some(@[graffitiArt])
