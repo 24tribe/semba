@@ -6,6 +6,7 @@ import std/sequtils
 
 import ../db_connector/db_sqlite
 
+import ../enum_ex
 import ../extsqlite
 import ../semba_error
 import timestamp
@@ -348,7 +349,7 @@ proc getStatusEffect*(db: DbConn, gearStatusId: int): Option[MdStatusEffect] =
     raise newException(SembaError, "Failed to get status effect with gearStatusId=" & $gearStatusId)
 
   if row[1] != "":
-    result = some(MdStatusEffect(`type`: parseInt(row[1]).MdStatusEffectType, value: parseFloat(row[2])))
+    result = some(MdStatusEffect(`type`: parseInt(row[1]).intToEnum(MdStatusEffectType), value: parseFloat(row[2])))
 
 
 proc getMdGearId*(db: DbConn, mainStatusId: int, gearType: GearType, grade: int): int =

@@ -8,6 +8,7 @@ import ../db_connector/db_sqlite
 
 import ../semba_error
 import ../extsqlite
+import ../enum_ex
 import status
 import mission
 import timestamp
@@ -351,7 +352,7 @@ proc applyGearStats(db: DbConn, character: var Character, originalChar: Characte
 
 
 proc gearsPassesSetRequirements(gears: openArray[MdGear], gearSet: GearSet): bool =
-  result = gears.countIt(it.gearTypeId.GearType == gearSet.gearType) >= setRequiredCount
+  result = gears.countIt(intToEnum(it.gearTypeId, GearType) == gearSet.gearType) >= setRequiredCount
 
 
 proc applySetEffect(db: DbConn, character: var Character, originalChar: Character, gears: openArray[MdGear]) =

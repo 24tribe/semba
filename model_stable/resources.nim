@@ -6,6 +6,7 @@ import std/tables
 
 import ../db_connector/db_sqlite
 
+import ../enum_ex
 import adventure_variable
 import area
 import area_change_lock
@@ -331,7 +332,7 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
   var characters = newSeq[Character]()
 
   for reward in rewards.mitems():
-    case reward.`type`.RewardType:
+    case intToEnum(reward.`type`, RewardType):
     of rewardFreeGem:
       var wallet = result.wallet.get(getWallet(db))
       wallet.free = some(wallet.free.get(0) + reward.quantity)
