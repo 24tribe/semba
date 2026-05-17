@@ -3,7 +3,6 @@ import std/strutils
 import std/options
 import std/sequtils
 import std/tables
-import std/sets
 
 import ../db_connector/db_sqlite
 import ../extsqlite
