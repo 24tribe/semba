@@ -1,13 +1,13 @@
-import std/sugar
 import std/enumutils
 
 
+#[
+Converts an int to an enum with holes.
+Throws a ValueError if the integer is not in the enum
+]#
 proc intToEnum*(i: int, T: typedesc): T =
-  let res = collect:
-    for e in T.items():
-      if e.int == i: e
+  for e in T.items():
+    if e.int == i:
+      return e
 
-  if res.len == 0:
-    raise newException(ValueError, "Couldn't get enum of type " & $T & "for value: " & $i)
-
-  result = res[0]
+  raise newException(ValueError, "Couldn't get enum of type " & $T & " for value: " & $i)
