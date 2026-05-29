@@ -581,23 +581,7 @@ proc getCharacterCostumes*(db: DbConn): seq[JsonNode] =
     })
 
 
-#[
-Set the characters hp to max in the database and return the characters with
-changed hp.
-]#
-proc healCharacters*(db: DbConn): seq[JsonNode] {.deprecated: "use healCharactersTypeSafe instead".} =
-  let characters = getCharacters(db)
-
-  for character in characters:
-    let characterId = character["characterId"].getInt()
-    let hp = character["hp"].getInt()
-    let maxHp = character["maxHp"].getInt()
-    if hp != maxHp:
-      setCharacterHp(db, characterId, maxHp)
-      character["hp"] = %*maxHp
-      result.add(character)
-
-
+# Set the characters hp to max in the database and return the characters that changed hp.
 proc healCharactersTypeSafe*(db: DbConn): seq[Character] =
   var characters = getCharactersTypeSafe(db)
 

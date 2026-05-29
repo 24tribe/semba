@@ -278,7 +278,7 @@ proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest
 
 proc adventure_Hospital*(db: DbConn): JsonNode =
   let status = getUserStatusTypeSafe(db)
-  let changedCharacters = healCharacters(db)
+  let changedCharacters = healCharactersTypeSafe(db)
 
   return %*{
     "changedResources": {
