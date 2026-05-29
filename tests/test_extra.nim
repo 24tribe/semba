@@ -4,6 +4,7 @@ import std/json
 
 import ../db_connector/db_sqlite
 import ../extsqlite
+import ../enum_ex
 import utils
 
 proc test_null() =
@@ -47,8 +48,20 @@ proc testEnumToJson() =
   doAssert(foo["bar"].getStr() == "Bar2")
 
 
+proc testIntToEnum() =
+  type Asd = enum
+    asd1 = 10
+    asd2 = 14
+    asd3 = 20
+
+  doAssert(intToEnum(10, Asd) == asd1)
+  doAssert(intToEnum(14, Asd) == asd2)
+  doAssert(intToEnum(20, Asd) == asd3)
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
   testSqlIntTuple()
   testEnumToJson()
+  testIntToEnum()
