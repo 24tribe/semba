@@ -5,6 +5,7 @@ import std/strutils
 import ../db_connector/db_sqlite
 
 import ../extsqlite
+import ../enum_ex
 import adventure_variable
 import reward
 
@@ -68,7 +69,7 @@ proc getMdSequenceRequests*(db: DbConn, sequenceRequestIds: seq[int]): seq[MdSeq
       id: parseInt(row[0]),
       costs: to(parseJson(row[1]), seq[Resource]),
       rewards: to(parseJson(row[2]), seq[Resource]),
-      kind: parseInt(row[3]).MdSequenceRequestKind,
+      kind: parseInt(row[3]).intToEnum(MdSequenceRequestKind),
     )
 
     case seqReq.kind:
