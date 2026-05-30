@@ -4,6 +4,7 @@ import std/options
 
 import ../db_connector/db_sqlite
 import ../extsqlite
+import ../enum_ex
 import reward
 import timestamp
 import entity
@@ -132,5 +133,5 @@ proc mailRewardsToProperRewards*(db: DbConn, rewards: openArray[Resource]): seq[
       id: reward.id,
       quantity: reward.quantity,
       resourceParams: reward.resourceParams,
-      entityId: if shouldHaveEntityId(reward.`type`.RewardType): some(popEntityId(db)) else: none(int)
+      entityId: if shouldHaveEntityId(intToEnum(reward.`type`, RewardType)): some(popEntityId(db)) else: none(int)
     ))
