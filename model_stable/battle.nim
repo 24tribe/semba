@@ -253,3 +253,11 @@ proc getChangedAttackTestMissions*(db: DbConn, characters: seq[Character], cityI
     if charactersWithMoreAttack.len >= minChars:
       result = some(charactersWithMoreAttack.mapIt(it.attack.get(0)).min())
   )
+
+
+proc getChangedVictorsRightsMissions*(db: DbConn, totalItems: int, cityId: int): seq[Mission] =
+  let victorsRightsMissions = getVictorsRightsMissionsForCity(db, cityId)
+
+  return getMissionsWithNewCount(db, victorsRightsMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
+    result = some(mission.count.get(0) + totalItems)
+  )

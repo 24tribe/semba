@@ -1,6 +1,7 @@
 import std/json
 import std/options
 import std/tables
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -190,6 +191,8 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   var itemsTable = getItemsTable(db)
   var changedItems: Table[int, JsonNode]
 
+  var totalItems = 0
+
   for reward in allRewards:
     var item: JsonNode
     if reward.id in itemsTable:
@@ -200,6 +203,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
     var quantity = item.getOrDefault("quantity").getInt()
     quantity += reward.quantity
+    totalItems += quantity
     item["quantity"] = %*quantity
     if not (reward.id in changedItems):
       changedItems[reward.id] = item
@@ -211,7 +215,8 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
 
-  let missions = getChangedAttackTestMissions(db, newCharacters, cityId)
+  var missions: seq[Mission] = getChangedAttackTestMissions(db, newCharacters, cityId)
+  missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
   updateMissions(db, missions)
 
   result = %*{
