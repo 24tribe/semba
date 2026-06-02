@@ -217,6 +217,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   var missions: seq[Mission] = getChangedAttackTestMissions(db, newCharacters, cityId)
   missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
+  missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
   updateMissions(db, missions)
 
   result = %*{

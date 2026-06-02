@@ -3,6 +3,7 @@ import std/json
 import std/strutils
 import std/math
 import std/sequtils
+import std/sugar
 
 import ../db_connector/db_sqlite
 
@@ -261,3 +262,9 @@ proc getChangedVictorsRightsMissions*(db: DbConn, totalItems: int, cityId: int):
   return getMissionsWithNewCount(db, victorsRightsMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
     result = some(mission.count.get(0) + totalItems)
   )
+
+
+proc getChangedBeAForeverWinnerMissions*(db: DbConn, cityId: int): seq[Mission] =
+  let beAForeverWinnerMissions = getBeAForeverWinnerMissionsForCityId(db, cityId)
+
+  return getMissionsWithNewCount(db, beAForeverWinnerMissions, (mission, mdMission) => some(mission.count.get(0) + 1))

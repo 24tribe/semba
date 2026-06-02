@@ -70,6 +70,11 @@ proc getVictorsRightsMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   return getMissionsForCity(db, missionIds, cityId)
 
 
+proc getBeAForeverWinnerMissionsForCityId*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041034, 1041035, 1041036, 1041331, 1041332, 1041333, 1041349, 1041431, 1041432, 1041433]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
 proc getMdMissionsWithIds*(db: DbConn, ids: openArray[int]): seq[MdMission] = 
   let rows = db.getAllRows(sql("SELECT id, steps, cityId FROM mdMission WHERE id IN " & sqlIntTuple(ids)))
 
