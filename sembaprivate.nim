@@ -6,6 +6,7 @@ import std/options
 
 import db_connector/db_sqlite
 
+import protojson
 import sembasave
 import extsqlite
 import model_stable/tutorial
@@ -147,7 +148,7 @@ proc semba_ResetDb(db: DbConn) =
 
 
 proc semba_UpdateHairColor(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let req = to(jsonReq, HairColor)
+  let req = protoJsonTo(jsonReq, HairColor)
   db.exec(sql"""
     INSERT INTO hairColors (charId, r, g, b, enabled)
     VALUES (?, ?, ?, ?, ?)
@@ -238,7 +239,7 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
   elif uri == "/semba/delete_save_file":
     semba_DeleteSaveFile(jsonReq)
   elif uri == "/semba/list_save_files":
-    result = %*semba_ListSaveFiles(to(jsonReq, SembaListSaveFilesRequest))
+    result = %*semba_ListSaveFiles(protoJsonTo(jsonReq, SembaListSaveFilesRequest))
   elif uri == "/semba/get_std_gacha_rates":
     result = semba_GetStdGachaRates(db)
   elif uri == "/semba/set_std_gacha_rates":
@@ -250,12 +251,12 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
   elif uri == "/semba/get_hair_colors":
     result = %*semba_GetHairColors(db)
   elif uri == "/semba/new_game":
-    semba_NewGame(db, to(jsonReq, SembaNewGameRequest))
+    semba_NewGame(db, protoJsonTo(jsonReq, SembaNewGameRequest))
   elif uri == "/semba/set_skip_tutorial":
-    semba_SetSkipTutorial(db, to(jsonReq, SembaSetSkipTutorialRequest))
+    semba_SetSkipTutorial(db, protoJsonTo(jsonReq, SembaSetSkipTutorialRequest))
   elif uri == "/semba/get_skip_tutorial":
     result = %*semba_GetSkipTutorial(db)
   elif uri == "/semba/mail_gear":
-    semba_MailGear(db, to(jsonReq, SembaMailGearRequest))
+    semba_MailGear(db, protoJsonTo(jsonReq, SembaMailGearRequest))
   elif uri == "/semba/move_to_area":
-    semba_MoveToArea(db, to(jsonReq, SembaMoveToAreaRequest))
+    semba_MoveToArea(db, protoJsonTo(jsonReq, SembaMoveToAreaRequest))

@@ -31,6 +31,7 @@ import std/options
 
 import db_connector/db_sqlite
 
+import protojson
 import model_stable/adventure_variable
 import model_stable/area
 import model_stable/area_change_lock
@@ -195,7 +196,7 @@ proc loadSaveFileVer5(db: DbConn, jsonData: JsonNode, dontDeleteAllAreaObjects: 
 
   db.exec(sql"DELETE FROM challengeTasks")
 
-  upsertChallengeTasks(db, to(challengeTasks, seq[ChallengeTask]))
+  upsertChallengeTasks(db, protoJsonTo(challengeTasks, seq[ChallengeTask]))
 
   let areaActionSequenceIds = jsonData["areaActionSequenceIds"]
 
@@ -319,7 +320,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
 
   if version >= 4:
     let status = jsonData["status"]
-    setUserStatusTypeSafe(db, to(status, Status))
+    setUserStatusTypeSafe(db, protoJsonTo(status, Status))
 
   if version >= 5:
     loadSaveFileVer5(db, jsonData, dontDeleteAllAreaObjects)
@@ -348,7 +349,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     let areaChangeLocks = jsonData["areaChangeLocks"].getElems()
     updateAreaChangeLocks(db, areaChangeLocks)
 
-    let items = to(jsonData["items"], Option[seq[Item]])
+    let items = protoJsonTo(jsonData["items"], Option[seq[Item]])
     updateItems(db, items.get(@[]))
 
   db.exec(sql"DELETE FROM missions")
@@ -366,24 +367,24 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   db.exec(sql"DELETE FROM gears")
 
   if version >= 12:
-    let gears = to(jsonData["gears"], seq[Gear])
+    let gears = protoJsonTo(jsonData["gears"], seq[Gear])
     for gear in gears:
       addGear(db, gear)
 
   db.exec(sql"DELETE FROM graffitiArts")
 
   if version >= 13:
-    let graffitiArts = to(jsonData["graffitiArts"], seq[GraffitiArt])
+    let graffitiArts = protoJsonTo(jsonData["graffitiArts"], seq[GraffitiArt])
     addGraffitiArts(db, graffitiArts)
 
   db.exec(sql"DELETE FROM mails")
   db.exec(sql"DELETE FROM areaObjectLocks")
 
   if version >= 14:
-    let areaObjectLocks = to(jsonData["areaObjectLocks"], seq[AreaObjectLock])
+    let areaObjectLocks = protoJsonTo(jsonData["areaObjectLocks"], seq[AreaObjectLock])
     upsertAreaObjectLocks(db, areaObjectLocks)
 
-    let happyWorkerItems = to(jsonData["happyWorkerItems"], seq[HappyWorkerItem])
+    let happyWorkerItems = protoJsonTo(jsonData["happyWorkerItems"], seq[HappyWorkerItem])
     updateHappyWorkerItems(db, happyWorkerItems)
 
 
