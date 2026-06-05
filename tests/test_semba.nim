@@ -16,10 +16,10 @@ import test_happy_worker
 
 
 let saves_dir = paramStr(1)
+testSuiteExtra()
 testSuiteAdventure(saves_dir)
 testSuiteBattle(saves_dir)
 testSuiteCharacter()
-testSuiteExtra()
 testSuiteReward()
 testSuiteSembaPrivate()
 testSuiteTip()

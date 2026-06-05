@@ -2,6 +2,7 @@ import std/json
 import std/options
 
 import utils
+import ../protojson
 import ../api_stable/adventure
 import ../model_stable/reward
 import ../model_stable/graffiti_art
@@ -12,7 +13,7 @@ proc testFindGraffiti() =
 
   let graffitiArtId = 10100201
 
-  let res = to(sembaCall(ctx, "/adventure/find_graffiti", %*{
+  let res = protoJsonTo(sembaCall(ctx, "/adventure/find_graffiti", %*{
     "graffitiArtId": graffitiArtId,
     "currentLocation": {
       "areaType": 1, "direction": 1, "positionCoordinates": {"x": -9.4, "y": 0.5, "z": 0.2}, "areaKeyId": 101002

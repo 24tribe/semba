@@ -4,6 +4,7 @@ import std/sequtils
 import std/tables
 
 import utils
+import ../protojson
 import ../api_stable/mission
 import ../model_stable/mission
 import ../model_stable/timestamp
@@ -29,7 +30,7 @@ proc testMissionReceive() =
 
     doAssert(resJson != nil)
 
-    let res = to(resJson, MissionReceiveResponse)
+    let res = protoJsonTo(resJson, MissionReceiveResponse)
 
     doAssert(res.changedResources.missions.isSome())
 
@@ -51,7 +52,7 @@ proc testUnlockFullMarkGates() =
     let ctx = getInMemorySembaCtx()
 
     proc getGate(): AreaObject =
-        let areaObjects = to(%*getAreaObjectsInArea(ctx.db, 101103), seq[AreaObject])
+        let areaObjects = protoJsonTo(%*getAreaObjectsInArea(ctx.db, 101103), seq[AreaObject])
         result = areaObjects.filterIt(it.areaPointId == 101103801).toSeq()[0]
 
     let gateBefore = getGate()

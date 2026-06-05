@@ -7,6 +7,7 @@ import std/sequtils
 import ../db_connector/db_sqlite
 
 import utils
+import ../protojson
 import ../api_stable/adventure
 import ../model_stable/area_object_lock
 import ../model_stable/adventure_variable
@@ -42,10 +43,10 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
 
   doAssert(res != nil)
 
-  var areaObjects = to(res["areaObjects"], seq[AreaObject])
+  var areaObjects = protoJsonTo(res["areaObjects"], seq[AreaObject])
   areaObjects.sort(sortByAreaPointId)
 
-  var expectedAreaObjects = to(%*[
+  var expectedAreaObjects = protoJsonTo(%*[
     {
       "areaObjectId": 801056, "areaPointId": 109903001, "areaObjectBehaviorId": 8011611,
       "action": {"type": 3, "id": 1, "sequenceId": 8011591}
@@ -98,7 +99,7 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
 
   let changedResources = res["changedResources"]
 
-  let challengeProgresses = to(changedResources["challengeProgresses"], seq[ChallengeProgress])
+  let challengeProgresses = protoJsonTo(changedResources["challengeProgresses"], seq[ChallengeProgress])
   
   doAssert(challengeProgresses.len == 2)
 
@@ -110,7 +111,7 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
   doAssert(challengeProgresses[1].clearedAt.isNone())
   doAssert(challengeProgresses[1].state == challengeProgressStateStarted.int)
 
-  let challengeTasks = to(changedResources["challengeTasks"], seq[ChallengeTask])
+  let challengeTasks = protoJsonTo(changedResources["challengeTasks"], seq[ChallengeTask])
 
   doAssert(challengeTasks.len == 1)
 
@@ -118,7 +119,7 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
   doAssert(challengeTasks[0].clearedAt.isSome())
   doAssert(challengeTasks[0].count.get(0) == 1)
 
-  let adventureVariables = to(changedResources["adventureVariables"], seq[AdventureVariable])
+  let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10030)
   doAssert(adventureVariables[0].value.get(0) == 2)
 
@@ -142,9 +143,9 @@ proc test_talk_hoimi_read_sequence(saves_dir: string) =
 
   doAssert(res != nil)
 
-  let areaObjects = to(res["areaObjects"], seq[AreaObject])
+  let areaObjects = protoJsonTo(res["areaObjects"], seq[AreaObject])
   doAssert(areaObjects.len == 1)
-  let expected = to(%*{
+  let expected = protoJsonTo(%*{
     "areaObjectId": 109005,
     "areaPointId": 109903902,
     "areaObjectBehaviorId": 10900501,
@@ -155,7 +156,7 @@ proc test_talk_hoimi_read_sequence(saves_dir: string) =
 
   let changedResources = res["changedResources"]
 
-  let challengeProgresses = to(changedResources["challengeProgresses"], seq[ChallengeProgress])
+  let challengeProgresses = protoJsonTo(changedResources["challengeProgresses"], seq[ChallengeProgress])
   doAssert(challengeProgresses.len == 1)
   doAssert(challengeProgresses[0] == ChallengeProgress(challengeProgressId: 1010042, state: 2))
 
@@ -165,7 +166,7 @@ proc test_talk_hoimi_read_sequence(saves_dir: string) =
   doAssert(challengeTask.hasKey("clearedAt"))
   doAssert(challengeTask["count"].getInt() == 1)
 
-  let adventureVariables = to(changedResources["adventureVariables"], seq[AdventureVariable])
+  let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10030)
   doAssert(adventureVariables[0].value.get(0) == 1)
 
@@ -188,18 +189,18 @@ proc test_talk_with_enoki_first(saves_dir: string) =
 
   let changedResources = res["changedResources"]
 
-  let challengeProgresses = to(changedResources["challengeProgresses"], seq[ChallengeProgress])
+  let challengeProgresses = protoJsonTo(changedResources["challengeProgresses"], seq[ChallengeProgress])
   doAssert(challengeProgresses.len == 1)
   doAssert(challengeProgresses[0].challengeProgressId == 1010043)
   doAssert(challengeProgresses[0].state == challengeProgressStateStarted.int)
 
-  let challengeTasks = to(changedResources["challengeTasks"], seq[ChallengeTask])
+  let challengeTasks = protoJsonTo(changedResources["challengeTasks"], seq[ChallengeTask])
   doAssert(challengeTasks.len == 1)
   doAssert(challengeTasks[0].challengeTaskId == 10100431)
   doAssert(challengeTasks[0].clearedAt.isSome())
   doAssert(challengeTasks[0].count.get(0) == 1)
 
-  var expectedAreaObjects = to(%*[
+  var expectedAreaObjects = protoJsonTo(%*[
     {
       "areaObjectId": 801009,
       "areaPointId": 101301002,
@@ -224,7 +225,7 @@ proc test_talk_with_enoki_first(saves_dir: string) =
     }
   ], seq[AreaObject])
 
-  var areaObjects = to(res["areaObjects"], seq[AreaObject])
+  var areaObjects = protoJsonTo(res["areaObjects"], seq[AreaObject])
   areaObjects.sort(sortByAreaPointId)
 
   #[
@@ -240,7 +241,7 @@ proc test_talk_with_enoki_first(saves_dir: string) =
     (areaObjects.len == 1 and areaObjects[0] == expectedAreaObjects[0])
   )
 
-  let adventureVariables = to(changedResources["adventureVariables"], seq[AdventureVariable])
+  let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10031)
   doAssert(adventureVariables[0].value.get(0) == 1)
 
@@ -267,7 +268,7 @@ proc test_talk_to_miu_after_enonki_read_sequence(saves_dir: string) =
 
   let changedResources = res["changedResources"]
   
-  let challengeProgresses = to(changedResources["challengeProgresses"], seq[ChallengeProgress])
+  let challengeProgresses = protoJsonTo(changedResources["challengeProgresses"], seq[ChallengeProgress])
   doAssert(challengeProgresses.len == 2)
 
   for challengeProgress in challengeProgresses:
@@ -277,14 +278,14 @@ proc test_talk_to_miu_after_enonki_read_sequence(saves_dir: string) =
     else:
       doAssert(challengeProgress.state == challengeProgressStateStarted.int)
 
-  let challengeTasks = to(changedResources["challengeTasks"], seq[ChallengeTask])
+  let challengeTasks = protoJsonTo(changedResources["challengeTasks"], seq[ChallengeTask])
   doAssert(challengeTasks.len == 1)
 
   doAssert(challengeTasks[0].challengeTaskId == 10100432)
   doAssert(challengeTasks[0].clearedAt.isSome())
   doAssert(challengeTasks[0].count.get(0) == 1)
 
-  var expectedAreaObjects = to(%*[
+  var expectedAreaObjects = protoJsonTo(%*[
     {
       "areaObjectId": 801011, "areaPointId": 100101006, "areaObjectBehaviorId": 8010053,
       "action": {"type": 3, "id": 1, "sequenceId": 8010051, "label": "Q"}
@@ -301,19 +302,19 @@ proc test_talk_to_miu_after_enonki_read_sequence(saves_dir: string) =
 
   expectedAreaObjects.sort(sortByAreaPointId)
 
-  var areaObjects = to(res["areaObjects"], seq[AreaObject])
+  var areaObjects = protoJsonTo(res["areaObjects"], seq[AreaObject])
   areaObjects.sort(sortByAreaPointId)
 
   doAssert(expectedAreaObjects == areaObjects)
 
-  let nineSequences = to(changedResources["nineSequences"], seq[NineSequence])
+  let nineSequences = protoJsonTo(changedResources["nineSequences"], seq[NineSequence])
 
   doAssert(nineSequences.len == 1)
   doAssert(nineSequences[0].nineSequenceId == 10000002)
   doAssert(nineSequences[0].choices == "{\"Selections\":[]}")
   doAssert(nineSequences[0].lastReadAt.isSome())
 
-  let adventureVariables = to(changedResources["adventureVariables"], seq[AdventureVariable])
+  let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10031)
   doAssert(adventureVariables[0].value.get(0) == 2)
 
@@ -341,7 +342,7 @@ proc testAcquireAreaItemInLogs() =
 
   doAssert(res != nil)
 
-  let rewards = to(res["rewards"], seq[Rewards])
+  let rewards = protoJsonTo(res["rewards"], seq[Rewards])
 
   doAssert(rewards.len == 1)
 
@@ -405,7 +406,7 @@ proc testDummyAreaObjects() =
 
   doAssert(res != nil)
 
-  let dummyAreaObject = to(%*{
+  let dummyAreaObject = protoJsonTo(%*{
     "areaPointId": 300401601,
     "areaObjectBehaviorId": 30600501,
     "action": {
@@ -415,7 +416,7 @@ proc testDummyAreaObjects() =
     }
   }, AreaObject)
 
-  let areaObjects = to(res["areaObjects"], seq[AreaObject])
+  let areaObjects = protoJsonTo(res["areaObjects"], seq[AreaObject])
 
   doAssert(areaObjects.any(proc (x: AreaObject): bool = x == dummyAreaObject))
 
@@ -450,7 +451,7 @@ proc testHealRespiteUnitByWarp() =
 
   doAssert(res != nil)
 
-  let changedResources = to(res["changedResources"], Resources)
+  let changedResources = protoJsonTo(res["changedResources"], Resources)
 
   checkCharactersHpIsMax(ctx.db, charIds, changedResources)
 
@@ -472,7 +473,7 @@ proc testHealRespiteUnitByAccess() =
 
   doAssert(res != nil)
 
-  let changedResources = to(res["changedResources"], Resources)
+  let changedResources = protoJsonTo(res["changedResources"], Resources)
 
   checkCharactersHpIsMax(ctx.db, charIds, changedResources)
 
@@ -480,7 +481,7 @@ proc testHealRespiteUnitByAccess() =
 proc testMiniGameWithAreaObjectLock() =
   var ctx = getInMemorySembaCtx()
 
-  let res = to(ctx.sembaCall("/adventure/read_sequence", %*{
+  let res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
     "sequenceRequestIds": [ 105045011, 108222011 ],
     "currentLocation": {
       "areaType": 1, "direction": 1, "areaKeyId": 101001,
@@ -494,7 +495,7 @@ proc testMiniGameWithAreaObjectLock() =
   doAssert(areaObjectLocks == @[AreaObjectLock(areaObjectLockId: 10504502, count: some(1))])
 
   let areaObjects = res.areaObjects.get(@[])
-  doAssert(areaObjects == to(%*[
+  doAssert(areaObjects == protoJsonTo(%*[
     {
       "areaObjectId": 108222, "areaPointId": 101001806, "areaObjectBehaviorId": 10822202,
       "action": {"type": 3, "id": 1, "label": "Control Panel", "sequenceId": 10822201}
@@ -505,7 +506,7 @@ proc testMiniGameWithAreaObjectLock() =
 proc testMiniGameWithoutAreaObjectLock() =
   var ctx = getInMemorySembaCtx()
 
-  let res = to(ctx.sembaCall("/adventure/read_sequence", %*{
+  let res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
     "sequenceRequestIds": [308002021, 308003021, 308001021],
     "currentLocation": {
       "areaType": 1, "direction": 3, "areaKeyId": 300401,
@@ -514,7 +515,7 @@ proc testMiniGameWithoutAreaObjectLock() =
     "miniGameId": 101029, "areaType": 1, "areaKeyId": 300401
   }), AdventureReadSequenceResponse)
 
-  let expectedAreaObjects = to(%*[
+  let expectedAreaObjects = protoJsonTo(%*[
     {
       "areaObjectId": 308003, "areaPointId": 300401804, "areaObjectBehaviorId": 30800302,
       "action": {"type": 1, "id": 1}

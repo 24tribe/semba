@@ -2,6 +2,7 @@ import std/json
 import std/options
 
 import utils
+import ../protojson
 import ../api_stable/happy_worker
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
@@ -16,7 +17,7 @@ proc testHappyWorkerStart() =
 
   doAssert(resJson != nil)
 
-  let res = to(resJson, HappyWorkerStartResponse)
+  let res = protoJsonTo(resJson, HappyWorkerStartResponse)
 
   doAssert(res.happyWorkerItem.happyWorkerItemId == happyWorkerItemId)
   doAssert(res.happyWorkerItem.state == 5)

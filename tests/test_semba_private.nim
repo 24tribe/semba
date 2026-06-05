@@ -5,6 +5,7 @@ import ../db_connector/db_sqlite
 
 import ../semba
 import ../sembaprivate
+import ../protojson
 import ../model_stable/battle
 import ../model_stable/status
 import utils
@@ -64,7 +65,7 @@ proc test_update_hair_color() =
 
   doAssert res3 != nil
 
-  let hairColors = to(res3, seq[HairColor])
+  let hairColors = protoJsonTo(res3, seq[HairColor])
 
   doAssert(hairColors.len == 2)
 

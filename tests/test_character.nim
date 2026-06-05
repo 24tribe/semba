@@ -4,6 +4,7 @@ import std/json
 import std/options
 import std/sequtils
 
+import ../protojson
 import ../model_stable/resources
 import ../model_stable/character
 import ../model_stable/gear
@@ -53,7 +54,7 @@ proc testCharacterStatsDependOnLevel() =
   let irohaChar = getCharacter(ctx.db, irohaCharId)
   doAssert(checkIroha(irohaChar))
 
-  let characters = to(%*getCharacters(ctx.db), seq[Character])
+  let characters = protoJsonTo(%*getCharacters(ctx.db), seq[Character])
   doAssert(characters.any(checkYo))
   doAssert(characters.any(checkIroha))
 
@@ -75,9 +76,9 @@ proc testCharacterEquip() =
 
   doAssert(res != nil)
 
-  let crRes = to(res, ChangedResourcesResponse)
+  let crRes = protoJsonTo(res, ChangedResourcesResponse)
 
-  let characters = to(%*(crRes.changedResources.characters.get()), seq[Character])
+  let characters = protoJsonTo(%*(crRes.changedResources.characters.get()), seq[Character])
 
   doAssert(characters.len == 1)
   doAssert(characters[0].gearSlot1.isNone())
@@ -86,9 +87,9 @@ proc testCharacterEquip() =
 
   let res2 = ctx.sembaCall("/character/equip", %*{ "characterId": 101101 })
 
-  let crRes2 = to(res2, ChangedResourcesResponse)
+  let crRes2 = protoJsonTo(res2, ChangedResourcesResponse)
 
-  let characters2 = to(%*(crRes2.changedResources.characters.get()), seq[Character])
+  let characters2 = protoJsonTo(%*(crRes2.changedResources.characters.get()), seq[Character])
 
   doAssert(characters2.len == 1)
   doAssert(characters2[0].gearSlot1.isNone())
@@ -110,7 +111,7 @@ proc checkStats(original: Character, newChar: Character) =
 proc testCharacterGearStats() =
   var ctx = getInMemorySembaCtx()
 
-  let gears = to(%*[{
+  let gears = protoJsonTo(%*[{
     "entityId": 1, "gearId": 10001101, "receivedAt": "2025-10-13T20:51:23Z",
     "subStatus1Id": 10041001, "subStatus2Id": 10020002,
     "trainingScoreLevelScore": 1, "rarity": 3
@@ -205,7 +206,7 @@ proc testCharacterEnhance() =
   status.gold = some(2*grossExp + 100)
   setUserStatusTypeSafe(ctx.db, status)
 
-  let res = to(sembaCall(ctx, "/character/enhance", %*{
+  let res = protoJsonTo(sembaCall(ctx, "/character/enhance", %*{
     "characterId": irohaCharId,
     "consumedItems": consumedItems
   }), Option[ChangedResourcesResponse])

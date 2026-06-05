@@ -2,6 +2,7 @@ import std/json
 import std/options
 
 import utils
+import ../protojson
 import ../model_stable/resources
 import ../model_stable/shop
 import ../model_stable/item
@@ -24,7 +25,7 @@ proc testShopPurchase() =
 
   upsertItem(ctx.db, Item(itemId: enigmaticPieceId, quantity: some(120)))
 
-  let res = to(
+  let res = protoJsonTo(
     ctx.sembaCall("/shop/purchase", %*{"shopProductId": 4012001, "quantity": 2}),
     Option[ChangedResourcesResponse]
   )

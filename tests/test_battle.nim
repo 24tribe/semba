@@ -4,6 +4,7 @@ import std/options
 import std/algorithm
 
 import utils
+import ../protojson
 import ../api_stable/battle
 import ../model_stable/area_object_lock
 import ../model_stable/battle
@@ -35,9 +36,9 @@ proc test_endrone_battle_start(saves_dir: string) =
 
   doAssert(res != nil)
 
-  let battleParameters = to(res["battleParameters"], seq[BattleParameter])
+  let battleParameters = protoJsonTo(res["battleParameters"], seq[BattleParameter])
 
-  doAssert(battleParameters == to(%*[{
+  doAssert(battleParameters == protoJsonTo(%*[{
     "id": 1000004,
     "enemies": [
       {
@@ -86,14 +87,14 @@ proc test_battle_finish_challenge_data(saves_dir: string) =
 
   let changedResources = res["changedResources"]
 
-  let challengeTasks = to(changedResources["challengeTasks"], seq[ChallengeTask])
+  let challengeTasks = protoJsonTo(changedResources["challengeTasks"], seq[ChallengeTask])
 
   doAssert(challengeTasks.len == 1)
   doAssert(challengeTasks[0].challengeTaskId == 10001011)
   doAssert(challengeTasks[0].clearedAt.isSome())
   doAssert(challengeTasks[0].count.get(0) == 1)
 
-  var challengeProgresses = to(changedResources["challengeProgresses"], seq[ChallengeProgress])
+  var challengeProgresses = protoJsonTo(changedResources["challengeProgresses"], seq[ChallengeProgress])
 
   doAssert(challengeProgresses.len == 2)
   challengeProgresses.sort(
@@ -192,7 +193,7 @@ proc testBattleWithAreaObjectLock() =
     }
   }) != nil)
 
-  let res = to(ctx.sembaCall("/battle/finish", %*{
+  let res = protoJsonTo(ctx.sembaCall("/battle/finish", %*{
     "characterUpdates": [
       {"characterId": 100801, "hp": 453}, {"characterId": 100401, "hp": 500}, {"characterId": 100201, "hp": 470}
     ],
