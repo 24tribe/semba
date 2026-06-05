@@ -188,30 +188,8 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
     for reward in rewards:
       allRewards.add(reward)
 
-  var itemsTable = getItemsTable(db)
-  var changedItems: Table[int, JsonNode]
-
-  var totalItems = 0
-
-  for reward in allRewards:
-    var item: JsonNode
-    if reward.id in itemsTable:
-      item = itemsTable[reward.id]
-    else:
-      item = %*{"itemId": reward.id, "quantity": 0}
-      itemsTable[reward.id] = item
-
-    var quantity = item.getOrDefault("quantity").getInt()
-    quantity += reward.quantity
-    totalItems += quantity
-    item["quantity"] = %*quantity
-    if not (reward.id in changedItems):
-      changedItems[reward.id] = item
-
-  let items = itemsTableToItemsSeq(changedItems)
-
-  for item in items:
-    upsertItem(db, to(item, Item))
+  let (items, totalItems) = rewardsToChangedItems(db, allRewards)
+  updateItems(db, items)
 
   let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
 

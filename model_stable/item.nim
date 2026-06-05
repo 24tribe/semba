@@ -51,16 +51,13 @@ proc getItems*(db: DbConn): seq[JsonNode] =
     let item = parseItemRow(row)
     result.add(item)
 
-proc getItemsTable*(db: DbConn): Table[int, JsonNode] =
+
+proc getItemsTable*(db: DbConn): Table[int, Item] =
   let rows = db.getAllRows(sql(selectItemsSql))
 
   for row in rows:
-    let item = parseItemRow(row)
-    result[item["itemId"].getInt()] = item
-
-proc itemsTableToItemsSeq*(itemsTable: Table[int, JsonNode]): seq[JsonNode] =
-  for item in itemsTable.values():
-    result.add(item)
+    let item = Item(itemId: parseInt(row[0]), quantity: some(parseInt(row[1])))
+    result[item.itemId] = item
 
 
 proc getItem*(db: DbConn, itemId: int): Option[Item] =

@@ -402,3 +402,28 @@ proc updateStatusFromCurrentLocation*(status: var Status, currentLocation: Curre
   status.currentDirection = currentLocation.direction
   status.currentPositionCoordinates = currentLocation.positionCoordinates
   status.currentAreaKeyId = currentLocation.areaKeyId
+
+
+proc rewardsToChangedItems*(db: DbConn, rewards: seq[Reward]): (seq[Item], int) =
+  var itemsTable = getItemsTable(db)
+
+  var changedItems: Table[int, Item]
+
+  var totalItems = 0
+
+  for reward in rewards:
+    var item: Item =
+      if reward.id in itemsTable:
+        itemsTable[reward.id]
+      else:
+        Item(itemId: reward.id, quantity: some(0))
+
+    item.quantity = some(reward.quantity + item.quantity.get(0))
+    totalItems += reward.quantity
+
+    changedItems[reward.id] = item
+    itemsTable[reward.id] = item
+
+  let items = changedItems.values().toSeq()
+
+  return (items, totalItems)
