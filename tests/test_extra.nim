@@ -1,7 +1,9 @@
 import std/assertions
 import std/sequtils
 import std/json
+import std/options
 
+import ../protojson
 import ../db_connector/db_sqlite
 import ../extsqlite
 import ../enum_ex
@@ -59,9 +61,24 @@ proc testIntToEnum() =
   doAssert(intToEnum(20, Asd) == asd3)
 
 
+proc testOptionToJson() =
+  let x = some(10)
+  let y = none(int)
+
+  let xJson = %*x
+  let yJson = %*y
+
+  let xAgain = protoJsonTo(xJson, Option[int])
+  let yAgain = protoJsonTo(yJson, Option[int])
+
+  doAssert(x == xAgain)
+  doAssert(y == yAgain)
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
   testSqlIntTuple()
   testEnumToJson()
   testIntToEnum()
+  testOptionToJson()
