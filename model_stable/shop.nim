@@ -5,6 +5,7 @@ import std/sequtils
 import ../db_connector/db_sqlite
 
 import ../semba_error
+import ../protojson
 import timestamp
 import reward
 
@@ -36,7 +37,7 @@ type ShopProductState* = object
 
 
 proc getShopProducts*(db: DbConn): seq[ShopProduct] =
-  db.getAllRows(sql"SELECT val FROM shopProducts").mapIt(to(parseJson(it[0]), ShopProduct))
+  db.getAllRows(sql"SELECT val FROM shopProducts").mapIt(protoJsonTo(parseJson(it[0]), ShopProduct))
 
 
 proc getShopProduct*(db: DbConn, id: int): ShopProduct =
@@ -45,4 +46,4 @@ proc getShopProduct*(db: DbConn, id: int): ShopProduct =
   if row[0] == "":
     raise newException(SembaError, "Couldn't get shopProduct with id=" & $id)
 
-  result = to(parseJson(row[0]), ShopProduct)
+  result = protoJsonTo(parseJson(row[0]), ShopProduct)

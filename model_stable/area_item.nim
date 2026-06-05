@@ -6,6 +6,7 @@ import std/strutils
 import ../db_connector/db_sqlite
 
 import ../semba_error
+import ../protojson
 import ../model_stable/reward
 
 
@@ -49,7 +50,7 @@ proc getMdAreaItem*(db: DbConn, areaItemId: int): MdAreaItem =
 
   result = MdAreaItem(
     id: areaItemId,
-    areaItemRewardIds: to(parseJson(row[0]), seq[int]),
+    areaItemRewardIds: protoJsonTo(parseJson(row[0]), seq[int]),
     areaItemBaseId: parseInt(row[1]),
     cityId: parseInt(row[2]),
   )
@@ -64,7 +65,7 @@ proc getMdAreaItemReward(db: DbConn, areaItemRewardId: int): MdAreaItemReward =
   result.id = areaItemRewardId
 
   if row[1] != "":
-    result.quantityLotteryReward = some(to(parseJson(row[1]), MdQuantityLotteryReward))
+    result.quantityLotteryReward = some(protoJsonTo(parseJson(row[1]), MdQuantityLotteryReward))
 
 
 proc isChestAreaItem*(areaItemBaseId: int): bool =

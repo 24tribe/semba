@@ -5,6 +5,7 @@ import std/options
 import ../db_connector/db_sqlite
 
 import ../semba_error
+import ../protojson
 
 
 type FormationMembers* = object
@@ -27,7 +28,7 @@ proc getFormationMembers*(db: DbConn, number: int): FormationMembers =
   if row[0] == "":
     raise newException(SembaError, "Failed to get members of formation " & $number)
 
-  result = to(parseJson(row[0]), FormationMembers)
+  result = protoJsonTo(parseJson(row[0]), FormationMembers)
 
 
 proc getFormations*(db: DbConn): seq[JsonNode] =

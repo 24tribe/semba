@@ -5,6 +5,7 @@ import std/json
 
 import ../db_connector/db_sqlite
 import ../semba_error
+import ../protojson
 
 
 type RewardType* = enum
@@ -91,7 +92,7 @@ proc getMdRewardSet*(db: DbConn, rewardSetId: int): MdRewardSet =
   if row[0] == "":
     raise newException(SembaError, "Couldn't get reward set for id=" & $rewardSetId)
 
-  result = MdRewardSet(`id`: rewardSetId, rewards: to(parseJson(row[0]), seq[MdReward]))
+  result = MdRewardSet(`id`: rewardSetId, rewards: protoJsonTo(parseJson(row[0]), seq[MdReward]))
 
 
 proc getRewardGroupIdFromEnemyGroupId*(db: DbConn, enemyGroupId: int): Option[int] =

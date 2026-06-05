@@ -6,6 +6,7 @@ import std/sequtils
 
 import ../db_connector/db_sqlite
 
+import ../protojson
 import ../extsqlite
 
 
@@ -123,7 +124,7 @@ proc getAreaEnemiesInArea*(db: DbConn, areaId: int): seq[AreaObject] =
     result.add(AreaObject(
       areaPointId: parseInt(row[0]),
       areaEnemyRateSetId: some(parseInt(row[1])),
-      action: some(to(parseJson(row[2]), AreaObjectAction)),
+      action: some(protoJsonTo(parseJson(row[2]), AreaObjectAction)),
     ))
 
 
@@ -137,7 +138,7 @@ proc getOriginalAreaEnemies*(db: DbConn, areaId: int): seq[AreaObject] =
     result.add(AreaObject(
       areaPointId: parseInt(row[0]),
       areaEnemyRateSetId: some(parseInt(row[1])),
-      action: some(to(parseJson(row[2]), AreaObjectAction)),
+      action: some(protoJsonTo(parseJson(row[2]), AreaObjectAction)),
     ))
 
 
@@ -317,7 +318,7 @@ proc getDummyAreaObjects*(db: DbConn, areaId: int): seq[AreaObject] =
     result.add(AreaObject(
       areaPointId: parseInt(row[0]),
       areaObjectBehaviorId: some(parseInt(row[1])),
-      action: some(to(parseJson(row[2]), AreaObjectAction))
+      action: some(protoJsonTo(parseJson(row[2]), AreaObjectAction))
     ))
 
 

@@ -6,6 +6,7 @@ import std/tables
 
 import ../db_connector/db_sqlite
 import ../extsqlite
+import ../protojson
 
 import timestamp
 import graffiti_art
@@ -41,7 +42,7 @@ proc getMissionsForCity*(db: DbConn, missionIds: openArray[int], cityId: int): s
     result.add(MdMission(
       id: parseInt(row[0]),
       cityId: some(cityId),
-      steps: to(parseJson(row[1]), seq[MdMissionStep])
+      steps: protoJsonTo(parseJson(row[1]), seq[MdMissionStep])
     ))
 
 
@@ -80,7 +81,7 @@ proc getMdMissionsWithIds*(db: DbConn, ids: openArray[int]): seq[MdMission] =
 
   result = rows.mapIt(MdMission(
     id: parseInt(it[0]),
-    steps: to(parseJson(it[1]), seq[MdMissionStep]),
+    steps: protoJsonTo(parseJson(it[1]), seq[MdMissionStep]),
     cityId: tryParseInt(it[2]),
   )).toSeq()
 

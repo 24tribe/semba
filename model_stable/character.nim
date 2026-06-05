@@ -9,6 +9,7 @@ import ../db_connector/db_sqlite
 import ../semba_error
 import ../extsqlite
 import ../enum_ex
+import ../protojson
 import status
 import mission
 import timestamp
@@ -156,9 +157,9 @@ proc addCharacter*(db: DbConn, character: JsonNode) =
   let damageTakenRate = character["damageTakenRate"].getInt()
   let limitBreak = character.getOrDefault("limitBreak").getInt()
 
-  let gearSlot1 = to(character.getOrDefault("gearSlot1"), Option[int])
-  let gearSlot2 = to(character.getOrDefault("gearSlot2"), Option[int])
-  let gearSlot3 = to(character.getOrDefault("gearSlot3"), Option[int])
+  let gearSlot1 = protoJsonTo(character.getOrDefault("gearSlot1"), Option[int])
+  let gearSlot2 = protoJsonTo(character.getOrDefault("gearSlot2"), Option[int])
+  let gearSlot3 = protoJsonTo(character.getOrDefault("gearSlot3"), Option[int])
 
   db.exec(sql"""
     INSERT INTO characters

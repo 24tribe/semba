@@ -4,6 +4,7 @@ import std/strutils
 
 import ../db_connector/db_sqlite
 
+import ../protojson
 import timestamp
 
 type NineSequence* = object
@@ -38,7 +39,7 @@ proc getNineSequence(db: DbConn, nineSequenceId: int): Option[NineSequence] =
   if row[0] != "":
     let jsonData = parseJson(row[0])
     jsonData["nineSequenceId"] = %*nineSequenceId
-    result = some(to(jsonData, NineSequence))
+    result = some(protoJsonTo(jsonData, NineSequence))
 
 
 proc updateNineSequence(db: DbConn, nineSequence: NineSequence) =

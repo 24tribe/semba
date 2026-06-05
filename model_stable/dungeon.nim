@@ -7,6 +7,7 @@ import ../db_connector/db_sqlite
 
 import ../dungeongen
 import ../semba_error
+import ../protojson
 import timestamp
 import city
 
@@ -147,8 +148,8 @@ proc getDungeonDifficulty(db: DbConn, dungeonDifficultyId: int): MdDungeonDiffic
 
   result = MdDungeonDifficulty(
     id: dungeonDifficultyId,
-    bonusRatedRewardSetIds: to(parseJson(row[0]), seq[int]),
-    bossRatedRewardSetIds: to(parseJson(row[1]), seq[int]),
+    bonusRatedRewardSetIds: protoJsonTo(parseJson(row[0]), seq[int]),
+    bossRatedRewardSetIds: protoJsonTo(parseJson(row[1]), seq[int]),
     enemyLevel: parseInt(row[2]),
     enemyTrainingScoreId: parseInt(row[3]),
     goalEnemyRateSetId: parseInt(row[4]),

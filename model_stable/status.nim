@@ -2,6 +2,7 @@ import std/options
 import std/json
 
 import ../db_connector/db_sqlite
+import ../protojson
 
 import timestamp
 
@@ -46,7 +47,7 @@ type Status* = object
 
 proc getUserStatusTypeSafe*(db: DbConn): Status =
   let statusRow = db.getRow(sql"SELECT val FROM userData WHERE keyName = ?", "status")
-  return to(parseJson(statusRow[0]), Status)
+  return protoJsonTo(parseJson(statusRow[0]), Status)
 
 
 proc setUserStatusTypeSafe*(db: DbConn, status: Status) =

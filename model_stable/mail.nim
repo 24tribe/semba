@@ -5,6 +5,7 @@ import std/options
 import ../db_connector/db_sqlite
 import ../extsqlite
 import ../enum_ex
+import ../protojson
 import reward
 import timestamp
 import entity
@@ -72,7 +73,7 @@ proc getMails*(db: DbConn): MailList =
       mailParams: MailParams(
         bulkMailId: some(bulkMailId),
       ),
-      rewards: to(parseJson(row[5]), seq[Resource]),
+      rewards: protoJsonTo(parseJson(row[5]), seq[Resource]),
       createdAt: row[6].Timestamp,
       endAt: row[7].Timestamp,
     )
@@ -104,7 +105,7 @@ proc getMailsWithIds*(db: DbConn, entityIds: openArray[int]): seq[Mail] =
   for row in rows:
     let entityId = parseInt(row[0])
     let mailType = parseInt(row[1])
-    let rewards = to(parseJson(row[2]), seq[Resource])
+    let rewards = protoJsonTo(parseJson(row[2]), seq[Resource])
     let createdAt = row[3].Timestamp
     let endAt = row[4].Timestamp
 

@@ -7,6 +7,7 @@ import std/tables
 import ../db_connector/db_sqlite
 
 import ../enum_ex
+import ../protojson
 import adventure_variable
 import area
 import area_change_lock
@@ -119,7 +120,7 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
       let formationNumber = changedResources["status"].getOrDefault("formationNumber").getInt()
       status.formationNumber = some(formationNumber)
 
-    updateStatusFromStatusLocation(status, to(changedResources["status"], Status))
+    updateStatusFromStatusLocation(status, protoJsonTo(changedResources["status"], Status))
     changedResources["status"] = %*status
     setUserStatusTypeSafe(db, status);
 
@@ -207,7 +208,7 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
     updateCharacters(db, characters)
     handledKeys.incl("characters")
 
-  let characterCostumes = to(changedResources.getOrDefault("characterCostumes"), Option[seq[CharacterCostume]])
+  let characterCostumes = protoJsonTo(changedResources.getOrDefault("characterCostumes"), Option[seq[CharacterCostume]])
 
   if characterCostumes.isSome and characterCostumes.get().len > 0:
     updateCharacterCostumes(db, characterCostumes.get())
@@ -226,7 +227,7 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
     changedResources.delete("wallet")
     handledKeys.incl("wallet")
 
-  let items = to(changedResources.getOrDefault("items"), Option[seq[Item]]).get(@[])
+  let items = protoJsonTo(changedResources.getOrDefault("items"), Option[seq[Item]]).get(@[])
  
   if items.len > 0:
     handledKeys.incl("items")
