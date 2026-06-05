@@ -4,6 +4,7 @@ import std/options
 
 import ../db_connector/db_sqlite
 
+import ../protojson
 import ../model_stable/area_object
 import ../model_stable/challenge
 import ../model_stable/challenge_progress
@@ -34,7 +35,7 @@ type HappyWorkerCancelResponse* = object
 
 
 proc happy_worker_List*(db: DbConn): HappyWorkerListResponse =
-  let cityIds = getCities(db).mapIt(to(it, City).cityId).toSeq()
+  let cityIds = getCities(db).mapIt(protoJsonTo(it, City).cityId).toSeq()
 
   result.happyWorkerItems = getHappyWorkerItems(db, cityIds)
 

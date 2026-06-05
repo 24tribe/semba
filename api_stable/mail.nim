@@ -4,6 +4,7 @@ import std/sequtils
 
 import ../db_connector/db_sqlite
 
+import ../protojson
 import ../model_stable/mail
 import ../model_stable/resources
 import ../model_stable/reward
@@ -42,5 +43,5 @@ proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
 
   result.list = mailList
   result.rewards = rewards
-  result.changedResources = to(changedResources, Resources)
+  result.changedResources = protoJsonTo(changedResources, Resources)
   result.changedResources.notifications = some(Notifications(mail: some(mailList.hasUnopenedMails())))

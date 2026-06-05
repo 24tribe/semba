@@ -4,6 +4,7 @@ import std/options
 import ../db_connector/db_sqlite
 
 import ../dungeongen
+import ../protojson
 import ../model_stable/character
 import ../model_stable/tension_card
 import ../model_stable/dungeon
@@ -74,7 +75,7 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
 
 proc dungeon_BattleStart*(db: DbConn, jsonReq: JsonNode, lastBattleInfo: var Option[BattleInfo]): JsonNode =
-  let req = to(jsonReq, DungeonBattleStartRequest)
+  let req = protoJsonTo(jsonReq, DungeonBattleStartRequest)
   let dungeonId = dungeonDifficultyIdToDungeonId(req.dungeonDifficultyId)
 
   let characters = getCharactersWithId(db, req.lineCharacterIds)
@@ -102,7 +103,7 @@ proc dungeon_BattleStart*(db: DbConn, jsonReq: JsonNode, lastBattleInfo: var Opt
 
 
 proc dungeon_Resume*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let req = to(jsonReq, DungeonResumeRequest)
+  let req = protoJsonTo(jsonReq, DungeonResumeRequest)
   let dungeonId = dungeonDifficultyIdToDungeonId(req.dungeonDifficultyId)
 
   let res = DungeonResumeResponse(

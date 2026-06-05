@@ -22,6 +22,7 @@ import ../model_stable/status
 import ../model_stable/warp_point
 import ../model_stable/mission
 import ../semba_error
+import ../protojson
 
 
 type BattleFinishRequest = object
@@ -58,18 +59,18 @@ type BattleRestartResponse = object
 
 
 proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): JsonNode =
-  let lineCharacterIds = to(jsonReq["lineCharacterIds"], seq[int])
+  let lineCharacterIds = protoJsonTo(jsonReq["lineCharacterIds"], seq[int])
   let characters = getCharactersWithId(db, lineCharacterIds)
 
   var status = getUserStatusTypeSafe(db)
 
-  let currentLocation = to(jsonReq["currentLocation"], CurrentLocation)
+  let currentLocation = protoJsonTo(jsonReq["currentLocation"], CurrentLocation)
 
   updateStatusFromCurrentLocation(status, currentLocation)
 
   setUserStatusTypeSafe(db, status)
 
-  let battleEntryIds = to(jsonReq["battleEntryIds"], seq[int])
+  let battleEntryIds = protoJsonTo(jsonReq["battleEntryIds"], seq[int])
 
   let battleParameters = getBattleParametersFromBattleEntryIds(db, battleEntryIds)
 
@@ -88,8 +89,8 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
   lastBattleInfo = some(BattleInfo(
     battleEntryIds: battleEntryIds,
     lineCharacterIds: lineCharacterIds,
-    battleTriggers: to(jsonReq["battleTriggers"], seq[BattleTrigger]),
-    advantageType: to(advantageType, Option[string]),
+    battleTriggers: protoJsonTo(jsonReq["battleTriggers"], seq[BattleTrigger]),
+    advantageType: protoJsonTo(advantageType, Option[string]),
   ))
 
   if advantageType != nil:
@@ -123,7 +124,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   lastBattleInfo = none(BattleInfo)
 
-  let req = to(jsonReq, BattleFinishRequest)
+  let req = protoJsonTo(jsonReq, BattleFinishRequest)
 
   let status = getUserStatusTypeSafe(db)
 
@@ -229,6 +230,6 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   if areaObjects != nil:
     result["areaObjects"] = areaObjects
     if battleEntryIds == @[1000002]:
-      updateAreaObjectsEx(db, to(areaObjects, seq[AreaObject]))
+      updateAreaObjectsEx(db, protoJsonTo(areaObjects, seq[AreaObject]))
     else:
       updateAreaObjects(db, areaObjects)
