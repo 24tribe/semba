@@ -57,4 +57,4 @@ proc toJsonHook*(a: ProtoJsonInt64): JsonNode = toJson($(a.int64))
 
 
 proc protoJsonTo*(b: JsonNode, T: typedesc): T =
-  jsonTo(b, T, Joptions(allowExtraKeys: true, allowMissingKeys: false))
+  jsonTo(b, T, Joptions(allowExtraKeys: true, allowMissingKeys: true))
