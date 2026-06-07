@@ -1,4 +1,3 @@
-import std/json
 import std/strutils
 import std/tables
 import std/options
@@ -35,21 +34,14 @@ proc updateItems*(db: DbConn, items: seq[Item]) =
   for item in items:
     upsertItem(db, item)
 
-proc parseItemRow(row: Row): JsonNode =
-  let itemId = parseInt(row[0])
-  let quantity = parseInt(row[1])
 
-  result = %*{
-    "itemId": itemId,
-    "quantity": quantity,
-  }
-
-proc getItems*(db: DbConn): seq[JsonNode] =
+proc getItems*(db: DbConn): seq[Item] =
   let rows = db.getAllRows(sql(selectItemsSql))
 
   for row in rows:
-    let item = parseItemRow(row)
-    result.add(item)
+    result.add(Item(
+      itemId: parseInt(row[0]), quantity: some(parseInt(row[1]))
+    ))
 
 
 proc getItemsTable*(db: DbConn): Table[int, Item] =
