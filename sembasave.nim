@@ -350,82 +350,52 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     updateHappyWorkerItems(db, save.happyWorkerItems)
 
 
+proc getSaveFile*(db: DbConn): SembaSave =
+  result = SembaSave(
+    version: 14,
+    formations: getFormations(db),
+    tips: getTips(db),
+    areaObjects: getAreaObjects(db),
+    areaEnemies: getAreaEnemies(db),
+    status: getUserStatusTypeSafe(db),
+    offlineLogs: getOfflineLogs(db),
+    areaBgms: getAreaBgms(db),
+    characters: getCharactersTypeSafe(db),
+    tensionCards: getTensionCards(db),
+    challengeProgresses: getChallengeProgresses(db),
+    nineSequences: getNineSequences(db),
+    totalTasks: getTotalTasks(db),
+    tutorialStates: getTutorialStates(db),
+    adventureVariables: getAdventureVariables(db),
+    challengeTasks: getChallengeTasks(db),
+    areaActionSequenceIds: getAreaActionSequenceIds(db),
+    questStates: getQuestStates(db),
+    clearedAchievements: getClearedAchievements(db),
+    challenges: getChallenges(db),
+    warpPoints: getWarpPoints(db),
+    areas: getAreas(db),
+    areaGroups: getAreaGroups(db),
+    cities: getCities(db),
+    characterPieces: getCharacterPieces(db),
+    userData: getUserData(db),
+    dungeons: getDungeons(db),
+    magicOrbs: getMagicOrbs(db),
+    areaChangeLocks: getAreaChangeLocks(db),
+    items: getItems(db),
+    gears: getGears(db),
+    graffitiArts: getGraffitiArts(db),
+    areaObjectLocks: getAreaObjectLocks(db),
+    happyWorkerItems: getHappyWorkerItems(db, [10, 13, 14]),
+  )
+
+
 proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   const baseError = "Couldn't create save file"
 
   if db == nil:
       return baseError & ", db is not initialized"
 
-  let formations = getFormations(db)
-  let tips = getTips(db)
-  let areaObjects = getAreaObjects(db)
-  let areaEnemies = getAreaEnemies(db)
-  let status = getUserStatusTypeSafe(db)
-  let offlineLogs = getOfflineLogs(db)
-  let areaBgms = getAreaBgms(db)
-  let characters = getCharactersTypeSafe(db)
-  let tensionCards = getTensionCards(db)
-  let challengeProgresses = getChallengeProgresses(db)
-  let nineSequences = getNineSequences(db)
-  let totalTasks = getTotalTasks(db)
-  let tutorialStates = getTutorialStates(db)
-  let adventureVariables = getAdventureVariables(db)
-  let challengeTasks = getChallengeTasks(db)
-  let areaActionSequenceIds = getAreaActionSequenceIds(db)
-  let questStates = getQuestStates(db)
-  let clearedAchievements = getClearedAchievements(db)
-  let challenges = getChallenges(db)
-  let warpPoints = getWarpPoints(db)
-  let areas = getAreas(db)
-  let areaGroups = getAreaGroups(db)
-  let cities = getCities(db)
-  let characterPieces = getCharacterPieces(db)
-  let userData = getUserData(db)
-  let dungeons = getDungeons(db)
-  let magicOrbs = getMagicOrbs(db)
-  let areaChangeLocks = getAreaChangeLocks(db)
-  let items = getItems(db)
-  let gears = getGears(db)
-  let graffitiArts = getGraffitiArts(db)
-  let happyWorkerItems = getHappyWorkerItems(db, [10, 13, 14])
-  let areaObjectLocks = getAreaObjectLocks(db)
-
-  let jsonData = toJson(SembaSave(
-    version: 14,
-    formations: formations,
-    tips: tips,
-    areaObjects: areaObjects,
-    areaEnemies: areaEnemies,
-    status: status,
-    offlineLogs: offlineLogs,
-    areaBgms: areaBgms,
-    characters: characters,
-    tensionCards: tensionCards,
-    challengeProgresses: challengeProgresses,
-    nineSequences: nineSequences,
-    totalTasks: totalTasks,
-    tutorialStates: tutorialStates,
-    adventureVariables: adventureVariables,
-    challengeTasks: challengeTasks,
-    areaActionSequenceIds: areaActionSequenceIds,
-    questStates: questStates,
-    clearedAchievements: clearedAchievements,
-    challenges: challenges,
-    warpPoints: warpPoints,
-    areas: areas,
-    areaGroups: areaGroups,
-    cities: cities,
-    characterPieces: characterPieces,
-    userData: userData,
-    dungeons: dungeons,
-    magicOrbs: magicOrbs,
-    areaChangeLocks: areaChangeLocks,
-    items: items,
-    gears: gears,
-    graffitiArts: graffitiArts,
-    areaObjectLocks: areaObjectLocks,
-    happyWorkerItems: happyWorkerItems,
-  ))
+  let jsonData = toJson(getSaveFile(db))
 
   writeFile(saves_dir & "/" & name & ".save", $jsonData)
 
