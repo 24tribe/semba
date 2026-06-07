@@ -62,6 +62,43 @@ import model_stable/user
 import model_stable/warp_point
 
 
+type SembaSave* = object
+  version: int
+  formations: seq[JsonNode]
+  tips: seq[JsonNode]
+  areaObjects: seq[JsonNode]
+  areaEnemies: seq[JsonNode]
+  status: Status
+  offlineLogs: seq[JsonNode]
+  areaBgms: seq[JsonNode]
+  characters: seq[JsonNode]
+  tensionCards: seq[JsonNode]
+  challengeProgresses: seq[JsonNode]
+  nineSequences: seq[JsonNode]
+  totalTasks: seq[JsonNode]
+  tutorialStates: seq[JsonNode]
+  adventureVariables: seq[JsonNode]
+  challengeTasks: seq[ChallengeTask]
+  areaActionSequenceIds: seq[JsonNode]
+  questStates: seq[JsonNode]
+  clearedAchievements: seq[JsonNode]
+  challenges: seq[JsonNode]
+  warpPoints: seq[JsonNode]
+  areas: seq[JsonNode]
+  areaGroups: seq[JsonNode]
+  cities: seq[JsonNode]
+  characterPieces: seq[JsonNode]
+  userData: seq[JsonNode]
+  dungeons: seq[JsonNode]
+  magicOrbs: seq[JsonNode]
+  areaChangeLocks: seq[JsonNode]
+  items: seq[JsonNode]
+  gears: seq[Gear]
+  graffitiArts: seq[GraffitiArt]
+  areaObjectLocks: seq[AreaObjectLock]
+  happyWorkerItems: seq[HappyWorkerItem]
+
+
 proc resetAreaObjects*(db: DbConn) =
   db.exec(sql"DELETE FROM areaObjects")
   db.exec(sql"INSERT INTO areaObjects SELECT * FROM areaObjectsOriginal")
@@ -428,42 +465,42 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   let happyWorkerItems = getHappyWorkerItems(db, [10, 13, 14])
   let areaObjectLocks = getAreaObjectLocks(db)
 
-  var jsonData = %*{
-    "version": 14,
-    "formations": formations,
-    "tips": tips,
-    "areaObjects": areaObjects,
-    "areaEnemies": areaEnemies,
-    "status": status,
-    "offlineLogs": offlineLogs,
-    "areaBgms": areaBgms,
-    "characters": characters,
-    "tensionCards": tensionCards,
-    "challengeProgresses": challengeProgresses,
-    "nineSequences": nineSequences,
-    "totalTasks": totalTasks,
-    "tutorialStates": tutorialStates,
-    "adventureVariables": adventureVariables,
-    "challengeTasks": challengeTasks,
-    "areaActionSequenceIds": areaActionSequenceIds,
-    "questStates": questStates,
-    "clearedAchievements": clearedAchievements,
-    "challenges": challenges,
-    "warpPoints": warpPoints,
-    "areas": areas,
-    "areaGroups": areaGroups,
-    "cities": cities,
-    "characterPieces": characterPieces,
-    "userData": userData,
-    "dungeons": dungeons,
-    "magicOrbs": magicOrbs,
-    "areaChangeLocks": areaChangeLocks,
-    "items": items,
-    "gears": gears,
-    "graffitiArts": graffitiArts,
-    "areaObjectLocks": areaObjectLocks,
-    "happyWorkerItems": happyWorkerItems,
-  }
+  let jsonData = %*SembaSave(
+    version: 14,
+    formations: formations,
+    tips: tips,
+    areaObjects: areaObjects,
+    areaEnemies: areaEnemies,
+    status: status,
+    offlineLogs: offlineLogs,
+    areaBgms: areaBgms,
+    characters: characters,
+    tensionCards: tensionCards,
+    challengeProgresses: challengeProgresses,
+    nineSequences: nineSequences,
+    totalTasks: totalTasks,
+    tutorialStates: tutorialStates,
+    adventureVariables: adventureVariables,
+    challengeTasks: challengeTasks,
+    areaActionSequenceIds: areaActionSequenceIds,
+    questStates: questStates,
+    clearedAchievements: clearedAchievements,
+    challenges: challenges,
+    warpPoints: warpPoints,
+    areas: areas,
+    areaGroups: areaGroups,
+    cities: cities,
+    characterPieces: characterPieces,
+    userData: userData,
+    dungeons: dungeons,
+    magicOrbs: magicOrbs,
+    areaChangeLocks: areaChangeLocks,
+    items: items,
+    gears: gears,
+    graffitiArts: graffitiArts,
+    areaObjectLocks: areaObjectLocks,
+    happyWorkerItems: happyWorkerItems,
+  )
 
   writeFile(saves_dir & "/" & name & ".save", $jsonData)
 
