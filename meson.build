@@ -89,6 +89,7 @@ semba_core_files = [
     'model_stable/xb.nim',
     'model_semba/gear.nim',
     'model_semba/known_location.nim',
+    'model_semba/offline_log.nim',
 ]
 
 nim_release_args = ['--cc:gcc', '--gcc.exe=cc', '--gcc.linkerexe=cc']

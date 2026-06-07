@@ -32,6 +32,7 @@ import std/options
 import db_connector/db_sqlite
 
 import protojson
+import model_semba/offline_log
 import model_stable/adventure_variable
 import model_stable/area
 import model_stable/area_change_lock
@@ -69,7 +70,7 @@ type SembaSave* = object
   areaObjects: seq[JsonNode]
   areaEnemies: seq[JsonNode]
   status: Status
-  offlineLogs: seq[JsonNode]
+  offlineLogs: seq[OfflineLog]
   areaBgms: seq[JsonNode]
   characters: seq[Character]
   tensionCards: seq[JsonNode]
@@ -106,35 +107,6 @@ proc resetAreaObjects*(db: DbConn) =
   db.exec(sql"INSERT INTO areaEnemies SELECT * FROM areaEnemiesOriginal")
   db.exec(sql"DELETE FROM areaBgm")
   db.exec(sql"INSERT INTO areaBgm SELECT * FROM areaBgmOriginal")
-
-
-proc addOfflineLog*(db: DbConn, offlineLog: JsonNode) =
-  let receivedAt = offlineLog["receivedAt"].getStr()
-  let uri = offlineLog["uri"].getStr()
-  let req = offlineLog["req"].getStr()
-  let res = offlineLog["res"].getStr()
-
-  db.exec(
-    sql"INSERT INTO debugLogsOffline (receivedAt, uri, req, res) VALUES (?, ?, ?, ?)",
-    receivedAt, uri, req, res
-  )
-
-
-proc getOfflineLogs*(db: DbConn): seq[JsonNode] =
-  let rows = db.getAllRows(sql"SELECT receivedAt, uri, req, res FROM debugLogsOffline")
-
-  for row in rows:
-    let receivedAt = row[0]
-    let uri = row[1]
-    let req = row[2]
-    let res = row[3]
-
-    result.add(%*{
-      "receivedAt": receivedAt,
-      "uri": uri,
-      "req": req,
-      "res": res
-    })
 
 
 proc loadSaveFileVer3(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: bool) =
