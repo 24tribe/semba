@@ -32,6 +32,7 @@ import std/options
 import db_connector/db_sqlite
 
 import protojson
+import semba_error
 import model_semba/offline_log
 import model_stable/adventure_variable
 import model_stable/area
@@ -64,7 +65,7 @@ import model_stable/warp_point
 
 
 type SembaSave* = object
-  version: int
+  version*: int
   formations: seq[JsonNode]
   tips: seq[JsonNode]
   areaObjects: seq[JsonNode]
@@ -251,19 +252,11 @@ proc sanityChecks(db: DbConn) =
     ])
 
 
-proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
-  const baseError = "Couldn't load save file"
-
-  if db == nil:
-    return baseError & ", db is not initialized"
-
-  let content = readFile(saves_dir & "/" & name & ".save")
-  let save = protoJsonTo(parseJson(content), SembaSave)
-
+proc loadSembaSave*(db: DbConn, save: SembaSave) =
   resetAreaObjects(db)
 
   if save.version < 2:
-    return baseError & ", invalid version: should be >= 2"
+    raise newException(SembaError, "invalid save file version: should be >= 2")
 
   for formation in save.formations:
     updateFormation(db, formation)
@@ -348,6 +341,18 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   if save.version >= 14:
     upsertAreaObjectLocks(db, save.areaObjectLocks)
     updateHappyWorkerItems(db, save.happyWorkerItems)
+
+
+proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
+  const baseError = "Couldn't load save file"
+
+  if db == nil:
+    return baseError & ", db is not initialized"
+
+  let content = readFile(saves_dir & "/" & name & ".save")
+  let save = protoJsonTo(parseJson(content), SembaSave)
+
+  loadSembaSave(db, save)
 
 
 proc getSaveFile*(db: DbConn): SembaSave =
