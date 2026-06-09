@@ -31,11 +31,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
 
     let stepsWithIndex = zip((0 .. mdMission.steps.high).toSeq(), mdMission.steps)
 
-    let steps =
-      if mission.receivedStepCount.isNone():
-        stepsWithIndex
-      else:
-        stepsWithIndex[mission.receivedStepCount.get() .. stepsWithIndex.high]
+    let steps = stepsWithIndex[mission.receivedStepCount .. stepsWithIndex.high]
 
     let completedSteps = steps.filterIt(mission.count.get(0) >= it[1].count)
 
@@ -47,7 +43,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
 
     let receivedStepCount = completedSteps[completedSteps.high][0] + 1
 
-    mission.receivedStepCount = some(receivedStepCount)
+    mission.receivedStepCount = receivedStepCount
     changedMissions.add(mission)
 
   updateMissions(db, changedMissions)

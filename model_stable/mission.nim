@@ -19,7 +19,7 @@ type FlowerMarkLevel* = object
 type Mission* = object
   missionId*: int
   count*: Option[int]
-  receivedStepCount*: Option[int]
+  receivedStepCount*: int
   resetAt*: Option[Timestamp]
   clearedAt*: Option[Timestamp]
 
@@ -103,7 +103,7 @@ proc getMissionsWithIds*(db: DbConn, missionIds: openArray[int]): seq[Mission] =
     result.add(Mission(
       missionId: parseInt(row[0]),
       count: tryParseInt(row[1]),
-      receivedStepCount: tryParseInt(row[2]),
+      receivedStepCount: parseInt(row[2]),
       resetAt: if row[3] != "": some(row[3].Timestamp) else: none(Timestamp),
       clearedAt: if row[4] != "": some(row[4].Timestamp) else: none(Timestamp),
     ))
@@ -120,7 +120,7 @@ proc updateMissions*(db: DbConn, missions: openArray[Mission]) =
           count = excluded.count, receivedStepCount = excluded.receivedStepCount,
           resetAt = excluded.resetAt, clearedAt = excluded.clearedAt
       """,
-      mission.missionId, mission.count.get(0), mission.receivedStepCount.get(0),
+      mission.missionId, mission.count.get(0), mission.receivedStepCount,
       mission.resetAt.get("".Timestamp), mission.clearedAt.get("".Timestamp)
     )
 
@@ -133,7 +133,7 @@ proc getMissions*(db: DbConn): seq[Mission] =
   result = rows.mapIt(Mission(
     missionId: parseInt(it[0]),
     count: some(parseInt(it[1])),
-    receivedStepCount: some(parseInt(it[2])),
+    receivedStepCount: parseInt(it[2]),
     resetAt: tryParseTimestamp(it[3]),
     clearedAt: tryParseTimestamp(it[4]),
   ))
