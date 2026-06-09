@@ -78,6 +78,13 @@ proc testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir: string) =
 
     doAssert(locks.findIt(it.areaObjectLockId == 10504002) != -1)
 
+    let shinagawaTroubleshooterMissionIds = [1041065, 1041066]
+
+    let missions = getMissionsWithIds(ctx.db, shinagawaTroubleshooterMissionIds)
+
+    doAssert(missions.len == shinagawaTroubleshooterMissionIds.len)
+    doAssert(missions.allIt(it.count == some(1)))
+
 
 proc testSuiteMission*(saves_dir: string) =
     testMissionReceive()
