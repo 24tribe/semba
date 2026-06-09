@@ -1,5 +1,4 @@
 import std/json
-import std/options
 import std/strutils
 
 import ../db_connector/db_sqlite
