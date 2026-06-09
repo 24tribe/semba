@@ -28,11 +28,14 @@ import std/json
 import std/files
 import std/paths
 import std/options
+import std/sets
+import std/sequtils
 
 import db_connector/db_sqlite
 
 import protojson
 import semba_error
+import api_stable/adventure
 import model_semba/offline_log
 import model_stable/adventure_variable
 import model_stable/area
@@ -221,7 +224,27 @@ proc loadSaveFileVer8(db: DbConn, save: SembaSave) =
     addCity(db, city)
 
 
-proc sanityChecks(db: DbConn) =
+proc ensureAlreadyDoneMiniGameChestsAreUnlocked(
+  db: DbConn, save: var SembaSave
+): (seq[int], seq[int]) =
+  var areaObjectLockIds = save.areaObjectLocks.mapIt(it.areaObjectLockId).toHashSet()
+
+  for log in save.offlineLogs:
+    if log.uri == "/adventure/read_sequence":
+      let req = protoJsonTo(parseJson(log.req), AdventureReadSequenceRequest)
+      if req.miniGameId.isSome():
+        let miniGameId = req.miniGameId.get()
+        let areaId = req.currentLocation.areaKeyId.get()
+        let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
+        if areaObjectLockId.isSome():
+          result[0].add(areaObjectLockId.get())
+          result[1].add(areaId)
+          areaObjectLockIds.incl(areaObjectLockId.get())
+
+  save.areaObjectLocks = areaObjectLockIds.mapIt(AreaObjectLock(areaObjectLockId: it, count: some(1)))
+
+
+proc sanityChecks(db: DbConn, save: var SembaSave) =
   # https://github.com/24tribe/zero/issues/24
   if (
     isChallengeProgressComplete(getChallengeProgress(db, 1010071)) and
@@ -251,8 +274,10 @@ proc sanityChecks(db: DbConn) =
       }
     ])
 
+  discard ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
 
-proc loadSembaSave*(db: DbConn, save: SembaSave) =
+
+proc loadSembaSave*(db: DbConn, save: var SembaSave) =
   resetAreaObjects(db)
 
   if save.version < 2:
@@ -317,7 +342,7 @@ proc loadSembaSave*(db: DbConn, save: SembaSave) =
 
   db.exec(sql"UPDATE userData SET val = 'false' WHERE keyName = 'firstLogin'")
 
-  sanityChecks(db)
+  sanityChecks(db, save)
 
   if isChallengeProgressComplete(getChallengeProgress(db, lastTutorialChallengeProgressId)):
     setAfterTutorialGacha(db)
@@ -338,8 +363,9 @@ proc loadSembaSave*(db: DbConn, save: SembaSave) =
   db.exec(sql"DELETE FROM mails")
   db.exec(sql"DELETE FROM areaObjectLocks")
 
+  upsertAreaObjectLocks(db, save.areaObjectLocks)
+
   if save.version >= 14:
-    upsertAreaObjectLocks(db, save.areaObjectLocks)
     updateHappyWorkerItems(db, save.happyWorkerItems)
 
 
@@ -350,7 +376,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     return baseError & ", db is not initialized"
 
   let content = readFile(saves_dir & "/" & name & ".save")
-  let save = protoJsonTo(parseJson(content), SembaSave)
+  var save = protoJsonTo(parseJson(content), SembaSave)
 
   loadSembaSave(db, save)
 
