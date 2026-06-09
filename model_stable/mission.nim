@@ -125,31 +125,18 @@ proc updateMissions*(db: DbConn, missions: openArray[Mission]) =
     )
 
 
-proc getMissions*(db: DbConn): seq[JsonNode] =
+proc getMissions*(db: DbConn): seq[Mission] =
   let rows = db.getAllRows(sql"""
     SELECT missionId, count, receivedStepCount, resetAt, clearedAt FROM missions
   """)
 
-  for row in rows:
-    let missionId = parseInt(row[0])
-    let count = parseInt(row[1])
-    let receivedStepCount = parseInt(row[2])
-    let resetAt = row[3]
-    let clearedAt = row[4]
-
-    let mission = %*{
-      "missionId": missionId,
-      "count": count,
-      "receivedStepCount": receivedStepCount,
-    }
-
-    if resetAt != "":
-      mission["resetAt"] = %*resetAt
-
-    if clearedAt != "":
-      mission["clearedAt"] = %*clearedAt
-
-    result.add(mission)
+  result = rows.mapIt(Mission(
+    missionId: parseInt(it[0]),
+    count: some(parseInt(it[1])),
+    receivedStepCount: some(parseInt(it[2])),
+    resetAt: tryParseTimestamp(it[3]),
+    clearedAt: tryParseTimestamp(it[4]),
+  ))
 
 
 proc getFlowerMarkLevels*(db: DbConn): seq[FlowerMarkLevel] =
