@@ -1,5 +1,7 @@
 import std/json
 import std/strutils
+import std/sequtils
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -7,7 +9,11 @@ import ../extsqlite
 import ../enum_ex
 import ../protojson
 import adventure_variable
+import area_object
+import area_object_lock
+import resources
 import reward
+import status
 
 
 type MdSequenceRequestKind* = enum
@@ -54,7 +60,7 @@ type MdSequenceRequest* = object
     discard
 
 
-proc getMdSequenceRequests*(db: DbConn, sequenceRequestIds: seq[int]): seq[MdSequenceRequest] =
+proc getMdSequenceRequests*(db: DbConn, sequenceRequestIds: openArray[int]): seq[MdSequenceRequest] =
   let rows = db.getAllRows(sql("""
     SELECT id, costs, rewards, type,
       areaObjectId, areaObjectState,
@@ -107,3 +113,35 @@ proc parseReadSequenceRow*(row: Row): JsonNode =
 
   if row[1] != "":
     result["changedResources"] = parseJson(row[1])
+
+
+proc readSequenceMiniGame*(
+  db: DbConn, miniGameId: int, sequenceRequestIds: openArray[int], areaId: int
+): (Resources, seq[AreaObject]) =
+  ## Handles /adventure/read_sequence for a minigame.
+  ## Returns the changed resources and area objects in the db.
+
+  let sequenceRequests = getMdSequenceRequests(db, sequenceRequestIds)
+
+  for seqReq in sequenceRequests:
+    case seqReq.kind:
+    of seqReqAreaObjectState:
+      result[1].insert(
+        getAreaObjectsForState(db, seqReq.areaObjectId, seqReq.areaObjectState), result[1].len
+      )
+    else:
+      discard
+
+  updateAreaObjectsEx(db, result[1])
+
+  let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
+
+  result[0].areaObjectLocks = areaObjectLockId.map(proc (areaObjectLockId: int): seq[AreaObjectLock] =
+    @[AreaObjectLock(areaObjectLockId: areaObjectLockId, count: some(1))]
+  )
+
+  result[0].areaObjectLocks.map(proc (areaObjectLocks: seq[AreaObjectLock]) =
+    upsertAreaObjectLocks(db, areaObjectLocks)
+  )
+
+  result[0].status = some(getUserStatusTypeSafe(db))

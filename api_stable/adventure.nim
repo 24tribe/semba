@@ -5,6 +5,7 @@ import std/strutils
 
 import ../db_connector/db_sqlite
 
+import ../protojson
 import ../model_stable/adventure_variable
 import ../model_stable/area
 import ../model_stable/area_item
@@ -173,38 +174,10 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Jso
 
   if req.miniGameId.isSome():
     let miniGameId = req.miniGameId.get()
+    let areaId = req.currentLocation.areaKeyId.get()
+    let (changedResources, areaObjects) = readSequenceMiniGame(db, miniGameId, sequenceRequestIds, areaId)
 
-    var res = AdventureReadSequenceResponse()
-
-    let sequenceRequests = getMdSequenceRequests(db, sequenceRequestIds)
-
-    var areaObjects = newSeq[AreaObject]()
-
-    for seqReq in sequenceRequests:
-      case seqReq.kind:
-      of seqReqAreaObjectState:
-        areaObjects.insert(
-          getAreaObjectsForState(db, seqReq.areaObjectId, seqReq.areaObjectState), areaObjects.len
-        )
-      else:
-        discard
-
-    res.areaObjects = some(areaObjects)
-    updateAreaObjectsEx(db, areaObjects)
-
-    let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, req.currentLocation.areaKeyId.get(), miniGameId)
-
-    res.changedResources.areaObjectLocks = areaObjectLockId.map(proc (areaObjectLockId: int): seq[AreaObjectLock] =
-      @[AreaObjectLock(areaObjectLockId: areaObjectLockId, count: some(1))]
-    )
-
-    res.changedResources.areaObjectLocks.map(proc (areaObjectLocks: seq[AreaObjectLock]) =
-      upsertAreaObjectLocks(db, areaObjectLocks)
-    )
-
-    res.changedResources.status = some(getUserStatusTypeSafe(db))
-
-    return %*res
+    return toJson(AdventureReadSequenceResponse(changedResources: changedResources, areaObjects: some(areaObjects)))
 
   # FIXME: use proper types, NOT JsonNode
 
