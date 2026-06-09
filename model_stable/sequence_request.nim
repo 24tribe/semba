@@ -1,6 +1,7 @@
 import std/json
 import std/strutils
 import std/sequtils
+import std/sugar
 import std/options
 
 import ../db_connector/db_sqlite
@@ -11,6 +12,8 @@ import ../protojson
 import adventure_variable
 import area_object
 import area_object_lock
+import city
+import mission
 import resources
 import reward
 import status
@@ -145,3 +148,13 @@ proc readSequenceMiniGame*(
   )
 
   result[0].status = some(getUserStatusTypeSafe(db))
+
+  let missions = getTroubleshooterMissionsForCity(db, areaIdToCityId(areaId))
+
+  let changedMissions = getMissionsWithNewCount(
+    db, missions, (mission, mdMission) => some(mission.count.get(0) + 1)
+  )
+
+  result[0].missions = some(changedMissions)
+
+  updateMissions(db, changedMissions)

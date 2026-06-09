@@ -157,6 +157,9 @@ proc getFlowerMarkLevels*(db: DbConn): seq[FlowerMarkLevel] =
 proc getMissionsWithNewCount*(
   db: DbConn, mdMissions: openArray[MdMission], getNewCount: proc (mission: Mission, mdMission: MdMission): Option[int]
 ): seq[Mission] =
+  ## Get the current missions in `mdMissions` from db and uses the return value of `getNewCount`
+  ## to create a seq[Mission] with changed counts. Doesn't update the db.
+
   var missions = getMissionsWithIds(db, mdMissions.mapIt(it.id)).mapIt((it.missionId, it)).toTable()
 
   for mdMission in mdMissions:
