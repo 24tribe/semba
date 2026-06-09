@@ -1,3 +1,4 @@
+import std/algorithm
 import std/json
 import std/options
 import std/sequtils
@@ -7,6 +8,7 @@ import utils
 import ../protojson
 import ../api_stable/mission
 import ../model_stable/area_object_lock
+import ../model_stable/city
 import ../model_stable/mission
 import ../model_stable/timestamp
 import ../model_stable/area_object
@@ -80,7 +82,24 @@ proc testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir: string) =
   doAssert(missions.allIt(it.count == some(1)))
 
 
+proc testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "meiou isle after graffiti")
+
+  var mdMissions = getGraffitiMissionsForCity(ctx.db, cityIdShinagawa.int)
+  var missions = getMissionsWithIds(ctx.db, mdMissions.mapIt(it.id))
+
+  missions.sort(proc (a, b: Mission): int = cmp(a.missionId, b.missionId))
+  mdMissions.sort(proc (a, b: MdMission): int = cmp(a.id, b.id))
+
+  let expected = mdMissions.mapIt(Mission(missionId: it.id, count: some(1)))
+
+  doAssert(missions == expected)
+
+
 proc testSuiteMission*(saves_dir: string) =
   testMissionReceive()
   testUnlockFullMarkGates()
   testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir)
+  testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir)

@@ -252,9 +252,9 @@ proc ensureAlreadyDoneMiniGameChestsAreUnlocked(db: DbConn, save: var SembaSave)
   save.areaObjectLocks = areaObjectLockIds.mapIt(AreaObjectLock(areaObjectLockId: it, count: some(1)))
 
 
-proc fixTroubleshooterMissions(save: var SembaSave, db: DbConn, cityAreaObjectLockIds: Table[CityId, HashSet[int]]) =
-  var missions = save.missions.mapIt((it.missionId, it)).toTable()
-
+proc fixTroubleshooterMissions(
+  missions: var Table[int, Mission], db: DbConn, cityAreaObjectLockIds: Table[CityId, HashSet[int]]
+) =
   for cityId, areaObjectLockIds in cityAreaObjectLockIds.pairs():
     let mdMissions = getTroubleshooterMissionsForCity(db, cityId.int)
     for mission in mdMissions:
@@ -262,6 +262,27 @@ proc fixTroubleshooterMissions(save: var SembaSave, db: DbConn, cityAreaObjectLo
         missions[mission.id] = Mission(missionId: mission.id)
 
       missions[mission.id].count = some(areaObjectLockIds.len)
+
+
+proc fixGraffitiMissions(missions: var Table[int, Mission], db: DbConn, graffitiArtCounts: CountTable[CityId]) =
+  for cityId, count in graffitiArtCounts.pairs():
+    let mdMissions = getGraffitiMissionsForCity(db, cityId.int)
+    for mission in mdMissions:
+      if not missions.hasKey(mission.id):
+        missions[mission.id] = Mission(missionId: mission.id)
+
+      missions[mission.id].count = some(count)
+
+
+proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[CityId, HashSet[int]]) =
+  var missions = save.missions.mapIt((it.missionId, it)).toTable()
+
+  let graffitiArtCounts = save.graffitiArts.mapIt(
+    graffitiArtIdToCityId(it.graffitiArtId).intToEnum(CityId)
+  ).toCountTable
+
+  fixTroubleshooterMissions(missions, db, cityAreaObjectLockIds)
+  fixGraffitiMissions(missions, db, graffitiArtCounts)
 
   save.missions = missions.values().toSeq()
 
@@ -297,7 +318,8 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
     ])
 
   let cityAreaObjectLockIds = ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
-  fixTroubleshooterMissions(save, db, cityAreaObjectLockIds)
+
+  fixMissions(db, save, cityAreaObjectLockIds)
 
 
 proc loadSembaSave*(db: DbConn, save: var SembaSave) =
