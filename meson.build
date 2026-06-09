@@ -3,6 +3,17 @@ project('semba', 'c', default_options : 'warning_level=3', meson_version : '>=1.
 fs = import('fs')
 
 nim = find_program('nim', required : true)
+
+python = find_program('python', required: true)
+
+target_nim_version = '2.2.6'
+
+r = run_command(python, ['scripts/checkNimVersion.py', target_nim_version], check: false)
+
+if r.returncode() == 1
+    error('Invalid Nim version, this project requires >=' + target_nim_version + ' for sequtils.findIt')
+endif
+
 sqlite3_c = fs.copyfile('sqlite3.c')
 
 cc = meson.get_compiler('c')
