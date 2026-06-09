@@ -6,6 +6,7 @@ import std/tables
 import utils
 import ../protojson
 import ../api_stable/mission
+import ../model_stable/area_object_lock
 import ../model_stable/mission
 import ../model_stable/timestamp
 import ../model_stable/area_object
@@ -68,6 +69,17 @@ proc testUnlockFullMarkGates() =
     doAssert(gateAfter.action.get() == AreaObjectAction(`type`: 7, id: some(1)))
 
 
-proc testSuiteMission*() =
+proc testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir: string) =
+    var ctx = getInMemorySembaCtx()
+
+    ctx.loadSaveFile(saves_dir, "after puzzle")
+
+    let locks = getAreaObjectLocks(ctx.db)
+
+    doAssert(locks.findIt(it.areaObjectLockId == 10504002) != -1)
+
+
+proc testSuiteMission*(saves_dir: string) =
     testMissionReceive()
     testUnlockFullMarkGates()
+    testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir)
