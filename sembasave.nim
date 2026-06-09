@@ -22,6 +22,7 @@ version 11: magicOrbs, items, areaChangeLocks
 version 12: gears
 version 13: graffitis
 version 14: areaObjectLocks, happyWorkerItems
+version 15: missions
 ]#
 
 import std/json
@@ -57,6 +58,7 @@ import model_stable/happy_worker
 import model_stable/item
 import model_stable/lux_phantasma
 import model_stable/magic_orb
+import model_stable/mission
 import model_stable/nine_sequence
 import model_stable/status
 import model_stable/tension_card
@@ -102,6 +104,7 @@ type SembaSave* = object
   graffitiArts: seq[GraffitiArt]
   areaObjectLocks: seq[AreaObjectLock]
   happyWorkerItems: seq[HappyWorkerItem]
+  missions: seq[Mission]
 
 
 proc resetAreaObjects*(db: DbConn) =
@@ -337,12 +340,12 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
 
     updateItems(db, save.items)
 
-  db.exec(sql"DELETE FROM missions")
-  # load missions from savefile
-
   db.exec(sql"UPDATE userData SET val = 'false' WHERE keyName = 'firstLogin'")
 
   sanityChecks(db, save)
+
+  db.exec(sql"DELETE FROM missions")
+  updateMissions(db, save.missions)
 
   if isChallengeProgressComplete(getChallengeProgress(db, lastTutorialChallengeProgressId)):
     setAfterTutorialGacha(db)
@@ -383,7 +386,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
 
 proc getSaveFile*(db: DbConn): SembaSave =
   result = SembaSave(
-    version: 14,
+    version: 15,
     formations: getFormations(db),
     tips: getTips(db),
     areaObjects: getAreaObjects(db),
@@ -417,6 +420,7 @@ proc getSaveFile*(db: DbConn): SembaSave =
     graffitiArts: getGraffitiArts(db),
     areaObjectLocks: getAreaObjectLocks(db),
     happyWorkerItems: getHappyWorkerItems(db, [10, 13, 14]),
+    missions: getMissions(db),
   )
 
 
