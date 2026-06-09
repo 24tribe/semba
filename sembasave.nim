@@ -31,11 +31,13 @@ import std/paths
 import std/options
 import std/sets
 import std/sequtils
+import std/tables
 
 import db_connector/db_sqlite
 
 import protojson
 import semba_error
+import enum_ex
 import api_stable/adventure
 import model_semba/offline_log
 import model_stable/adventure_variable
@@ -227,9 +229,7 @@ proc loadSaveFileVer8(db: DbConn, save: SembaSave) =
     addCity(db, city)
 
 
-proc ensureAlreadyDoneMiniGameChestsAreUnlocked(
-  db: DbConn, save: var SembaSave
-): (seq[int], seq[int]) =
+proc ensureAlreadyDoneMiniGameChestsAreUnlocked(db: DbConn, save: var SembaSave): Table[CityId, HashSet[int]] =
   var areaObjectLockIds = save.areaObjectLocks.mapIt(it.areaObjectLockId).toHashSet()
 
   for log in save.offlineLogs:
@@ -240,11 +240,30 @@ proc ensureAlreadyDoneMiniGameChestsAreUnlocked(
         let areaId = req.currentLocation.areaKeyId.get()
         let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
         if areaObjectLockId.isSome():
-          result[0].add(areaObjectLockId.get())
-          result[1].add(areaId)
+          let cityId = areaIdToCityId(areaId).intToEnum(CityId)
+
+          if not result.hasKey(cityId):
+            result[cityId] = initHashSet[int]()
+
+          result[cityId].incl(areaObjectLockId.get())
+
           areaObjectLockIds.incl(areaObjectLockId.get())
 
   save.areaObjectLocks = areaObjectLockIds.mapIt(AreaObjectLock(areaObjectLockId: it, count: some(1)))
+
+
+proc fixTroubleshooterMissions(save: var SembaSave, db: DbConn, cityAreaObjectLockIds: Table[CityId, HashSet[int]]) =
+  var missions = save.missions.mapIt((it.missionId, it)).toTable()
+
+  for cityId, areaObjectLockIds in cityAreaObjectLockIds.pairs():
+    let mdMissions = getTroubleshooterMissionsForCity(db, cityId.int)
+    for mission in mdMissions:
+      if not missions.hasKey(mission.id):
+        missions[mission.id] = Mission(missionId: mission.id)
+
+      missions[mission.id].count = some(areaObjectLockIds.len)
+
+  save.missions = missions.values().toSeq()
 
 
 proc sanityChecks(db: DbConn, save: var SembaSave) =
@@ -277,7 +296,8 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
       }
     ])
 
-  discard ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
+  let cityAreaObjectLockIds = ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
+  fixTroubleshooterMissions(save, db, cityAreaObjectLockIds)
 
 
 proc loadSembaSave*(db: DbConn, save: var SembaSave) =
