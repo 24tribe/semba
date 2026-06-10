@@ -181,7 +181,7 @@ proc updateResources*(db: DbConn, changedResources: var JsonNode) =
   for city in cities:
     addCity(db, city)
 
-  let magicOrbs = changedResources.getOrDefault("magicOrbs").getElems()
+  let magicOrbs = protoJsonTo(changedResources.getOrDefault("magicOrbs"), seq[MagicOrb])
 
   if magicOrbs.len > 0:
     handledKeys.incl("magicOrbs")

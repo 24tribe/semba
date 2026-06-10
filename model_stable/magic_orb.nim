@@ -1,5 +1,5 @@
-import std/json
 import std/strutils
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -9,14 +9,14 @@ const minatoMagicOrbIds* = 100020..100026
 const chiyodaMagicOrbIds* = 114011..114071
 
 
-proc getMagicOrbs*(db: DbConn): seq[JsonNode] =
+type MagicOrb* = object
+  magicOrbId*: int
+
+
+proc getMagicOrbs*(db: DbConn): seq[MagicOrb] =
   let rows = db.getAllRows(sql"SELECT magicOrbId FROM magicOrbs")
 
-  for row in rows:
-    let magicOrbId = parseInt(row[0])
-    result.add(%*{
-      "magicOrbId": magicOrbId,
-    })
+  result = rows.mapIt(MagicOrb(magicOrbId: parseInt(it[0])))
 
 
 proc addMagicOrb*(db: DbConn, magicOrbId: int) =
@@ -26,7 +26,6 @@ proc addMagicOrb*(db: DbConn, magicOrbId: int) =
   """, magicOrbId)
 
 
-proc updateMagicOrbs*(db: DbConn, magicOrbs: seq[JsonNode]) =
+proc updateMagicOrbs*(db: DbConn, magicOrbs: openArray[MagicOrb]) =
   for magicOrb in magicOrbs:
-    let magicOrbId = magicOrb["magicOrbId"].getInt()
-    addMagicOrb(db, magicOrbId)
+    addMagicOrb(db, magicOrb.magicOrbId)

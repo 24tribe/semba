@@ -99,7 +99,7 @@ type SembaSave* = object
   characterPieces: seq[JsonNode]
   userData: seq[JsonNode]
   dungeons: seq[JsonNode]
-  magicOrbs: seq[JsonNode]
+  magicOrbs: seq[MagicOrb]
   areaChangeLocks: seq[JsonNode]
   items: seq[Item]
   gears: seq[Gear]
