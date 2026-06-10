@@ -2,6 +2,7 @@ import std/json
 import std/options
 
 import utils
+import ../enum_ex
 import ../protojson
 import ../api_stable/adventure
 import ../model_stable/reward
@@ -25,7 +26,7 @@ proc testFindGraffiti() =
   let response = res.get()
 
   doAssert(response.rewards.len == 1)
-  doAssert(response.rewards[0].`type`.RewardType == rewardFreeGem)
+  doAssert(response.rewards[0].`type`.intToEnum(RewardType) == rewardFreeGem)
   doAssert(response.rewards[0].quantity == 5)
   doAssert(response.rewards[0].id == 1)
 
