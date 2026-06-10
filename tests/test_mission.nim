@@ -90,12 +90,26 @@ proc testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir: string) =
   var mdMissions = getGraffitiMissionsForCity(ctx.db, cityIdShinagawa.int)
   var missions = getMissionsWithIds(ctx.db, mdMissions.mapIt(it.id))
 
-  missions.sort(proc (a, b: Mission): int = cmp(a.missionId, b.missionId))
-  mdMissions.sort(proc (a, b: MdMission): int = cmp(a.id, b.id))
+  missions.sort(cmpMissionsById)
+  mdMissions.sort(cmpMdMissionsById)
 
   let expected = mdMissions.mapIt(Mission(missionId: it.id, count: some(1)))
 
   doAssert(missions == expected)
+
+
+proc testSaveFileWithBuggerMagicOrbsMissionsIsFixed(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "skybridge marine biology research center door")
+
+  var mdMissions = getMagicOrbMissionsForCity(ctx.db, cityIdShinagawa.int)
+  var missions = getMissionsWithIds(ctx.db, mdMissions.mapIt(it.id))
+
+  missions.sort(cmpMissionsById)
+  mdMissions.sort(cmpMdMissionsById)
+
+  doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: some(1))))
 
 
 proc testSuiteMission*(saves_dir: string) =
@@ -103,3 +117,4 @@ proc testSuiteMission*(saves_dir: string) =
   testUnlockFullMarkGates()
   testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir)
   testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir)
+  testSaveFileWithBuggerMagicOrbsMissionsIsFixed(saves_dir)

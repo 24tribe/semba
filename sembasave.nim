@@ -264,14 +264,26 @@ proc fixTroubleshooterMissions(
       missions[mission.id].count = some(areaObjectLockIds.len)
 
 
-proc fixGraffitiMissions(missions: var Table[int, Mission], db: DbConn, graffitiArtCounts: CountTable[CityId]) =
-  for cityId, count in graffitiArtCounts.pairs():
-    let mdMissions = getGraffitiMissionsForCity(db, cityId.int)
+proc fixMissionCounts(
+  missions: var Table[int, Mission],
+  db: DbConn, counts: CountTable[CityId],
+  getMissionsOfTypeForCity: proc (db: DbConn, cityId: int): seq[MdMission]
+) =
+  for cityId, count in counts.pairs():
+    let mdMissions = getMissionsOfTypeForCity(db, cityId.int)
     for mission in mdMissions:
       if not missions.hasKey(mission.id):
         missions[mission.id] = Mission(missionId: mission.id)
 
       missions[mission.id].count = some(count)
+
+
+proc fixGraffitiMissions(missions: var Table[int, Mission], db: DbConn, graffitiArtCounts: CountTable[CityId]) =
+  fixMissionCounts(missions, db, graffitiArtCounts, getGraffitiMissionsForCity)
+
+
+proc fixMagicOrbMissions(missions: var Table[int, Mission], db: DbConn, magicOrbCounts: CountTable[CityId]) =
+  fixMissionCounts(missions, db, magicOrbCounts, getMagicOrbMissionsForCity)
 
 
 proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[CityId, HashSet[int]]) =
@@ -281,8 +293,11 @@ proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[C
     graffitiArtIdToCityId(it.graffitiArtId).intToEnum(CityId)
   ).toCountTable
 
+  let magicOrbCounts = save.magicOrbs.mapIt(magicOrbIdToCityId(it.magicOrbId)).toCountTable
+
   fixTroubleshooterMissions(missions, db, cityAreaObjectLockIds)
   fixGraffitiMissions(missions, db, graffitiArtCounts)
+  fixMagicOrbMissions(missions, db, magicOrbCounts)
 
   save.missions = missions.values().toSeq()
 

@@ -4,7 +4,9 @@ import std/options
 
 import ../db_connector/db_sqlite
 
+import ../semba_error
 import timestamp
+import magic_orb
 
 
 type City* = object
@@ -47,3 +49,14 @@ proc getCities*(db: DbConn): seq[JsonNode] =
 
 
 func areaIdToCityId*(areaId: int): int = areaId div 10000
+
+
+proc magicOrbIdToCityId*(magicOrbId: int): CityId =
+  if magicOrbId in shinagawaMagicOrbIds:
+    cityIdShinagawa
+  elif magicOrbId in minatoMagicOrbIds:
+    cityIdMinato
+  elif magicOrbId in chiyodaMagicOrbIds:
+    cityIdChiyoda
+  else:
+    raise newException(SembaError, "Magic orb doesn't belong to any city?")

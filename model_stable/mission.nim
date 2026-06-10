@@ -61,6 +61,11 @@ proc getGraffitiMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   return getMissionsForCity(db, missionIds, cityId)
 
 
+proc getMagicOrbMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041007, 1041008, 1041009, 1041307, 1041308, 1041309, 1041409]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
 proc getAttackTestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   const missionIds = [1041041, 1041042, 1041043, 1041044, 1041335, 1041345, 1041346, 1041438, 1041439, 1041440]
   return getMissionsForCity(db, missionIds, cityId)
@@ -194,3 +199,8 @@ proc getChangedGraffitiMissions*(db: DbConn, cityId: int): seq[Mission] =
   return getMissionsWithNewCount(db, graffitiMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
     result = some(graffitiCount + 1)
   )
+
+
+proc cmpMissionsById*(a, b: Mission): int = cmp(a.missionId, b.missionId)
+
+proc cmpMdMissionsById*(a, b: MdMission): int = cmp(a.id, b.id)
