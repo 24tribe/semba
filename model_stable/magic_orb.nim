@@ -2,7 +2,12 @@ import std/json
 import std/strutils
 
 import ../db_connector/db_sqlite
- 
+
+
+const shinagawaMagicOrbIds* = 100000..100005
+const minatoMagicOrbIds* = 100020..100026
+const chiyodaMagicOrbIds* = 114011..114071
+
 
 proc getMagicOrbs*(db: DbConn): seq[JsonNode] =
   let rows = db.getAllRows(sql"SELECT magicOrbId FROM magicOrbs")
