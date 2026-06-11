@@ -1,7 +1,10 @@
 import std/strutils
 import std/sequtils
+import std/options
 
 import ../db_connector/db_sqlite
+
+import mission
 
 
 const shinagawaMagicOrbIds* = 100000..100005
@@ -29,3 +32,14 @@ proc addMagicOrb*(db: DbConn, magicOrbId: int) =
 proc updateMagicOrbs*(db: DbConn, magicOrbs: openArray[MagicOrb]) =
   for magicOrb in magicOrbs:
     addMagicOrb(db, magicOrb.magicOrbId)
+
+
+proc getChangedMagicOrbMissions*(db: DbConn, magicOrbsCount: int, cityId: int): seq[Mission] =
+  if magicOrbsCount == 0:
+    return
+
+  let mdMissions = getMagicOrbMissionsForCity(db, cityId)
+
+  return getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
+    some(mi.count.get(0) + magicOrbsCount)
+  )

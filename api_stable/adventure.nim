@@ -14,6 +14,7 @@ import ../model_stable/city
 import ../model_stable/graffiti_art
 import ../model_stable/lux_phantasma
 import ../model_stable/mission
+import ../model_stable/magic_orb
 import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
@@ -169,6 +170,7 @@ proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
 proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): AdventureReadSequenceResponse =
   let sequenceRequestIds = req.sequenceRequestIds.get(@[])
   let nineSequenceRequests = req.nineSequences.get(@[])
+  let cityId = areaIdToCityId(req.areaKeyId)
 
   if req.miniGameId.isSome():
     let miniGameId = req.miniGameId.get()
@@ -196,6 +198,8 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
       result.changedResources.nineSequences = processNineSequenceRequests(db, nineSequenceRequests)
       result.changedResources.adventureVariables = getSequenceAdventureVariables(db, sequenceRequestIds)
 
+    result.changedResources.missions = getChangedMagicOrbMissions(db, result.changedResources.magicOrbs.len, cityId)
+
     updateAreaObjectsEx(db, result.areaObjects)
     updateResources(db, result.changedResources) 
 
@@ -214,6 +218,8 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
 
     result.changedResources = changedResources.get(Resources())
     result.areaObjects = areaObjects.get(newSeq[AreaObject]())
+
+    result.changedResources.missions = getChangedMagicOrbMissions(db, result.changedResources.magicOrbs.len, cityId)
 
     updateAreaObjectsEx(db, result.areaObjects)
     updateResources(db, result.changedResources) 
