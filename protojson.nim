@@ -71,6 +71,21 @@ proc protoJsonTo*(b: JsonNode, T: typedesc): T =
   jsonTo(val, T, Joptions(allowExtraKeys: true, allowMissingKeys: true))
 
 
+proc fromJsonHook*(res: var JsonNode, n: JsonNode) =
+  res =
+    if n.isNil:
+      JsonNode(kind: JNull)
+    else:
+      n
+
+
+proc toJsonHook*(n: JsonNode): JsonNode =
+  if n.isNil:
+    JsonNode(kind: JNull)
+  else:
+    n
+
+
 macro genStringEnumHooks*(e: untyped): untyped =
   ## Macro that receives an enum type and generates a fromJsonHook and a toJsonHook that parses a JString.
   ## The fromJsonHook sets the result to the first value of the enum when receives an empty string.

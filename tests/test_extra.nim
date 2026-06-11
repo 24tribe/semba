@@ -9,6 +9,7 @@ import ../db_connector/db_sqlite
 import ../extsqlite
 import ../enum_ex
 import ../model_stable/battle_enum
+import ../model_stable/area
 import utils
 
 proc test_null() =
@@ -114,6 +115,14 @@ proc testSqliteMin() =
   doAssert(amount == 20)
 
 
+proc testJsonNodeFields() =
+  let nodes = @[%*{"areaChangeLockId": 1234}] # seq[JsonNode]
+
+  let jsonData = toProtoJson(nodes)
+
+  doAssert(jsonData[0].keys().toSeq() == @["areaChangeLockId"])
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
@@ -124,3 +133,4 @@ proc testSuiteExtra*() =
   testNilJsonField()
   testGenStringEnumHooks()
   testSqliteMin()
+  testJsonNodeFields()
