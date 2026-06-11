@@ -129,18 +129,14 @@ proc testLostBattleFinish() =
     }
   })
 
-  let res = sembaCall(ctx, "/battle/finish", %*{
+  let res = protoJsonTo(sembaCall(ctx, "/battle/finish", %*{
     "battleResult": "lost",
     "characterUpdates": [ { "characterId": 100101 } ],
     "encounteredEnemyIds": [ 224303 ], "battleTimeSecond": 24, "taskConditionResult": { }
-  })
+  }), Option[BattleFinishResponse])
 
-  doAssert(res != nil)
-
-  for key in res["changedResources"].keys():
-    if key != "status":
-      let resource = res["changedResources"][key]
-      doAssert(resource.kind == JNull)
+  doAssert(res.isSome())
+  doAssert(res.get().changedResources.status.isSome())
 
 
 proc testBattleRetire(saves_dir: string) =

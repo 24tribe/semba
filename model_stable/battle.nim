@@ -145,7 +145,7 @@ proc getBattleParameters*(db: DbConn, battleEntryIds: JsonNode): seq[JsonNode] =
     })
 
 
-proc getBattleExp*(db: DbConn, battleEntryIds: seq[int]): float =
+proc getBattleExp*(db: DbConn, battleEntryIds: openArray[int]): float =
   for battleEntryId in battleEntryIds:
     var dropExp = 0.0
 
@@ -163,15 +163,14 @@ proc getBattleExp*(db: DbConn, battleEntryIds: seq[int]): float =
     result += dropExp
 
 
-proc getCharacterExps*(db: DbConn, characterIds: seq[int], battleEntryIds: seq[int]): seq[JsonNode] =
+proc getCharacterExps*(db: DbConn, characterIds: openArray[int], battleEntryIds: openArray[int]): seq[CharacterExp] =
   let dropExp = round(getBattleExp(db, battleEntryIds)).int
 
-  for characterId in characterIds:
-    result.add(%*{
-      "characterId": characterId,
-      "exp": dropExp,
-      "dropExp": dropExp
-    })
+  characterIds.mapIt(CharacterExp(
+    characterId: it,
+    exp: dropExp,
+    dropExp: dropExp,
+  ))
 
 
 proc getMdBattleEnemy(db: DbConn, battleEnemyId: int): MdBattleEnemy =

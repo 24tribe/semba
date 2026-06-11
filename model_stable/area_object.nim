@@ -294,12 +294,16 @@ proc removeAreaObject*(db: DbConn, areaKeyId: int, triggerId: int) =
 proc removeAreaEnemy*(db: DbConn, areaKeyId: int, triggerId: int) =
   db.exec(sql"DELETE FROM areaEnemies WHERE areaId=? AND areaPointId=?", areaKeyId, triggerId);
 
-proc getBattleFinishAreaObjects*(db: DbConn, battleEntryId: int): JsonNode =
+
+proc getBattleFinishAreaObjects*(db: DbConn, battleEntryId: int): seq[AreaObject] =
   let row = db.getRow(
     sql"SELECT areaObjects FROM battleFinishAreaObjects WHERE battleEntryId = ?", battleEntryId
   )
 
-  return if row[0] != "": parseJson(row[0]) else: nil
+  if row[0] != "":
+    protoJsonTo(parseJson(row[0]), seq[AreaObject])
+  else:
+    newSeq[AreaObject]()
 
 
 proc getDummyAreaObjects*(db: DbConn, areaId: int): seq[AreaObject] =

@@ -33,6 +33,11 @@ const saizoCharId = 102901
 const saizoBaseMovementSpeed = 8.0
 
 
+type CharacterExp* = object
+  characterId*: int
+  exp*: int
+  dropExp*: int
+
 type MdCharacter* = object
   id*: int
   baseAttack*: int
@@ -528,13 +533,13 @@ proc getCharacterMaxExp*(db: DbConn): int =
   return mdCharLevel.exp
 
 
-proc updateCharacterExps*(db: DbConn, characterExps: seq[JsonNode], characters: seq[Character]) =
+proc updateCharacterExps*(db: DbConn, characterExps: openArray[CharacterExp], characters: openArray[Character]) =
   let maxExp = getCharacterMaxExp(db)
 
   for character in characters:
     for characterExp in characterExps:
-      if characterExp.getOrDefault("characterId").getInt(0) == character.characterId:
-        updateCharacterExp(db, characterExp["dropExp"].getInt(), character, maxExp)
+      if characterExp.characterId == character.characterId:
+        updateCharacterExp(db, characterExp.dropExp, character, maxExp)
         break
 
 

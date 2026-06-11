@@ -30,11 +30,11 @@ type BattleFinishRequest = object
   encounteredEnemyIds: seq[int]
 
 type BattleFinishResponse* = object
-  rewards*: Option[seq[Rewards]]
-  ignoredRewards*: Option[seq[Resource]]
+  rewards*: seq[Rewards]
+  ignoredRewards*: seq[Resource]
   changedResources*: Resources
-  characterExps*: Option[seq[JsonNode]] # FIXME: use CharacterExp
-  areaObjects*: Option[seq[AreaObject]]
+  characterExps*: seq[CharacterExp]
+  areaObjects*: seq[AreaObject]
   moveToAreaLocatorId*: Option[int]
   fractalViseUpdate*: Option[JsonNode] # FIXME: use FractalViseUpdate
 
@@ -115,7 +115,7 @@ proc battle_Restart*(
   result.advantageType = lastBattleInfo.get().advantageType
 
 
-proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): JsonNode =
+proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): BattleFinishResponse =
   if lastBattleInfo.isNone():
     raise newException(SembaError, "lastBattleInfo.isNone()")
 
@@ -131,7 +131,9 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   let status = getUserStatusTypeSafe(db)
 
   if req.battleResult.get("") == "lost":
-    return %*{"changedResources": {"status": status}}
+    return BattleFinishResponse(changedResources: Resources(
+      status: some(status)
+    ))
 
   for characterUpdate in req.characterUpdates:
     setCharacterHp(db, characterUpdate.characterId, characterUpdate.hp.get(0))
@@ -139,12 +141,10 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   let characters = getCharactersWithId(db, characterIds)
 
   if req.battleResult.get("") == "retire":
-    let moveToAreaLocatorId = getLastWarpPoint(db).areaLocatorId
-    let changedResources = toProtoJson(Resources(status: some(status), characters: characters))
-    return %*{
-      "changedResources": changedResources,
-      "moveToAreaLocatorId": moveToAreaLocatorId
-    }
+    return BattleFinishResponse(
+      changedResources: Resources(status: some(status), characters: characters),
+      moveToAreaLocatorId: some(getLastWarpPoint(db).areaLocatorId),
+    )
 
   var areaObjectLocks = newSeq[AreaObjectLock]()
 
@@ -175,8 +175,6 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   upsertAreaObjectLocks(db, areaObjectLocks)
 
-  let areaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
-
   var allRewards = newSeq[Reward]()
 
   for enemyId in req.encounteredEnemyIds:
@@ -199,39 +197,28 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
   updateMissions(db, missions)
 
-  let changedResources = toProtoJson(Resources(
-    areaObjectLocks: some(areaObjectLocks),
-    status: some(status),
-    characters: newCharacters,
-    items: items,
-    missions: missions,
-  ))
-
-  result = %*{
-    "characterExps": characterExps,
-    "rewards": [
-      {
-        "type": 6,
-        "contents": allRewards
-      }
-    ],
-    "changedResources": changedResources
-  }
+  result = BattleFinishResponse(
+    changedResources: Resources(
+      areaObjectLocks: some(areaObjectLocks),
+      status: some(status),
+      characters: newCharacters,
+      items: items,
+      missions: missions,
+    ),
+    rewards: @[Rewards(`type`: some(6), contents: allRewards)],
+    characterExps: characterExps,
+    areaObjects: getBattleFinishAreaObjects(db, battleEntryIds[0]),
+  )
 
   let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
 
   if challengeTask.isSome():
     let (_, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
 
-    result["changedResources"]["challengeTasks"] = %*resources.challengeTasks
-    updateChallengeTasks(db, result["changedResources"]["challengeTasks"])
+    result.changedResources.challengeTasks = resources.challengeTasks
+    upsertChallengeTasks(db, resources.challengeTasks)
 
-    result["changedResources"]["challengeProgresses"] = %*resources.challengeProgresses
-    updateChallengeProgresses(db, resources.challengeProgresses)
+    result.changedResources.challengeProgresses = resources.challengeProgresses
+    upsertChallengeProgresses(db, resources.challengeProgresses)
 
-  if areaObjects != nil:
-    result["areaObjects"] = areaObjects
-    if battleEntryIds == @[1000002]:
-      updateAreaObjectsEx(db, protoJsonTo(areaObjects, seq[AreaObject]))
-    else:
-      updateAreaObjects(db, areaObjects)
+  updateAreaObjectsEx(db, result.areaObjects)
