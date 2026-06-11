@@ -25,6 +25,12 @@ import ../model_stable/wallet
 import ../model_stable/warp_point
 
 
+type AdventureAcquireAreaItemResponse* = object
+  areaItem*: AreaItem
+  rewards*: seq[Rewards]
+  changedResources*: Resources
+  areaObjects*: seq[AreaObject]
+
 type AdventureFindGraffitiRequest* = object
   graffitiArtId: int
   currentLocation: Option[JsonNode] # FIXME: use CurrentLocation
@@ -67,17 +73,13 @@ type AdventureReadSequenceRequest* = object
   currentLocation*: CurrentLocation
 
 
-proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
+proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   resetAreaEnemies(db)
 
-  let changedResources = Resources(
+  result.changedResources = Resources(
     status: some(getUserStatusTypeSafe(db)),
     characters: healCharactersTypeSafe(db),
   )
-
-  return %*{
-    "changedResources": changedResources
-  }
 
 
 proc adventure_ReleaseEventLift*(jsonReq: JsonNode): JsonNode =
@@ -227,28 +229,21 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
     # TODO: does a nineSequence change an area action like in the other branch of the if?
 
 
-proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest): JsonNode =
+proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest): AdventureAcquireAreaItemResponse =
   let areaItem = getMdAreaItem(db, req.areaItemId)
 
-  var rewards = getAreaItemRewards(db, areaItem.areaItemRewardIds)
+  result.rewards = getAreaItemRewards(db, areaItem.areaItemRewardIds)
 
-  var changedResources = updateResourcesFromRewardsTypeSafe(db, rewards[0].contents)
+  result.changedResources = updateResourcesFromRewardsTypeSafe(db, result.rewards[0].contents)
 
   if isChestAreaItem(areaItem.areaItemBaseId):
     let cityId = areaIdToCityId(req.currentLocation.areaKeyId.get())
     let missions = getChangedOpenChestMissions(db, cityId)
 
-    changedResources.missions = missions
+    result.changedResources.missions = missions
     updateMissions(db, missions)
 
-  return %*{
-    "areaItem": {
-      "areaItemId": req.areaItemId,
-      "acquired": true
-    },
-    "rewards": rewards,
-    "changedResources": changedResources
-  }
+  result.areaItem = AreaItem(areaItemId: req.areaItemId, acquired: true)
 
 
 proc adventure_Hospital*(db: DbConn): JsonNode =

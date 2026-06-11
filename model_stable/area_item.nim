@@ -39,6 +39,10 @@ type MdAreaItem* = object
   areaItemBaseId*: int
   cityId*: int
 
+type AreaItem* = object
+  areaItemId*: int
+  acquired*: bool
+
 
 proc getMdAreaItem*(db: DbConn, areaItemId: int): MdAreaItem =
   let row = db.getRow(

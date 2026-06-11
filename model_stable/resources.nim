@@ -285,12 +285,6 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
   result.characters = characters
 
 
-proc updateResourcesFromRewards*(
-  db: DbConn, rewards: var seq[Reward]
-): JsonNode {.deprecated: "use updateResourcesFromRewardsTypeSafe instead".} =
-  result = %*updateResourcesFromRewardsTypeSafe(db, rewards)
-
-
 proc updateStatusFromCurrentLocation*(status: var Status, currentLocation: CurrentLocation) =
   status.currentAreaType = currentLocation.areaType
   status.currentDirection = currentLocation.direction

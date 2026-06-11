@@ -41,11 +41,11 @@ proc getJsonResultStable*(
   elif uri == "/adventure/read_sequence":
     result = toJson(adventure_ReadSequence(db, protoJsonTo(jsonReq, AdventureReadSequenceRequest)))
   elif uri == "/adventure/acquire_area_item":
-    result = adventure_AcquireAreaItem(db, protoJsonTo(jsonReq, AdventureAcquireAreaItemRequest))
+    result = toJson(adventure_AcquireAreaItem(db, protoJsonTo(jsonReq, AdventureAcquireAreaItemRequest)))
   elif uri == "/adventure/release_event_lift":
     result = adventure_ReleaseEventLift(jsonReq)
   elif uri == "/adventure/warp_area_locator":
-    result = adventure_WarpAreaLocator(db, jsonReq)
+    result = toJson(adventure_WarpAreaLocator(db, jsonReq))
   elif uri == "/adventure/hospital":
     result = adventure_Hospital(db)
   elif uri == "/adventure/access_warp_point":
