@@ -540,6 +540,22 @@ proc testMiniGameWithoutAreaObjectLock() =
   doAssert(res.changedResources.status.isSome())
 
 
+proc testReplaySequenceBug(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "before elevator 20f unlock 2")
+
+  let res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 109502011 ],
+    "currentLocation": {
+      "areaType": 1, "direction": 5, "areaType": 1, "areaKeyId": 101313,
+      "positionCoordinates": { "y": 0.0192914, "z": 2.75 }, "areaKeyId": 101313
+    }
+  }), Option[AdventureReadSequenceResponse])
+
+  doAssert(res.isSome())
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -553,3 +569,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testDummyAreaObjects()
   testMiniGameWithAreaObjectLock()
   testMiniGameWithoutAreaObjectLock()
+  testReplaySequenceBug(saves_dir)

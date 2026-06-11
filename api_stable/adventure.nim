@@ -179,7 +179,10 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
   if sequenceRequestIds.len > 0:
     let seqReqId = sequenceRequestIds[0]
 
-    (result.changedResources, result.areaObjects) = getReplaySequenceFromSequenceRequestId(db, seqReqId)
+    let (changedResources, areaObjects) = getReplaySequenceFromSequenceRequestId(db, seqReqId)
+
+    result.changedResources = changedResources.get(Resources())
+    result.areaObjects = areaObjects.get(newSeq[AreaObject]())
 
     if seqReqId == 80001521:
       result.deletedCharacterIds = @[100201, 101701]
@@ -207,7 +210,11 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
       updateAreaBgm(db, readSequenceAreaBgm.areaId, readSequenceAreaBgm.id, readSequenceAreaBgm.eventName)
   else:
     let nineSeqReqId = nineSequenceRequests[0].id
-    (result.changedResources, result.areaObjects) = getReplaySequenceFromNineSequenceId(db, nineSeqReqId)
+    let (changedResources, areaObjects) = getReplaySequenceFromNineSequenceId(db, nineSeqReqId)
+
+    result.changedResources = changedResources.get(Resources())
+    result.areaObjects = areaObjects.get(newSeq[AreaObject]())
+
     updateAreaObjectsEx(db, result.areaObjects)
     updateResources(db, result.changedResources) 
 

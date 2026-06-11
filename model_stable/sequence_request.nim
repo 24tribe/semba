@@ -168,27 +168,29 @@ proc removeProblematicResources(changedResources: var Resources) =
   changedResources.items = changedResources.items.filterIt(not (it.itemId in problematicItemIds))
 
 
-proc getReplaySequenceFromSequenceRequestId*(db: DbConn, seqReqId: int): (Resources, seq[AreaObject]) =
+proc getReplaySequenceFromSequenceRequestId*(db: DbConn, seqReqId: int): (Option[Resources], Option[seq[AreaObject]]) =
   let row = db.getRow(sql"""
     SELECT changedResources, areaObjects FROM readSequence WHERE sequenceRequestId=?
   """, seqReqId)
 
-  var changedResources = protoJsonTo(parseJson(row[0]), Resources)
-  let areaObjects = protoJsonTo(parseJson(row[1]), seq[AreaObject])
+  var changedResources = tryParseJson(row[0]).map(proc (n: JsonNode): Resources = protoJsonTo(n, Resources))
+  let areaObjects = tryParseJson(row[1]).map(proc (n: JsonNode): seq[AreaObject] = protoJsonTo(n, seq[AreaObject]))
 
-  removeProblematicResources(changedResources)
+  if changedResources.isSome():
+    removeProblematicResources(changedResources.get())
 
   result = (changedResources, areaObjects)
 
 
-proc getReplaySequenceFromNineSequenceId*(db: DbConn, nineSequenceId: int): (Resources, seq[AreaObject]) =
+proc getReplaySequenceFromNineSequenceId*(db: DbConn, nineSequenceId: int): (Option[Resources], Option[seq[AreaObject]]) =
   let row = db.getRow(sql"""
     SELECT changedResources, areaObjects FROM readSequence WHERE nineSequenceId=?
   """, nineSequenceId)
 
-  var changedResources = protoJsonTo(parseJson(row[0]), Resources)
-  let areaObjects = protoJsonTo(parseJson(row[1]), seq[AreaObject])
+  var changedResources = tryParseJson(row[0]).map(proc (n: JsonNode): Resources = protoJsonTo(n, Resources))
+  let areaObjects = tryParseJson(row[1]).map(proc (n: JsonNode): seq[AreaObject] = protoJsonTo(n, seq[AreaObject]))
 
-  removeProblematicResources(changedResources)
+  if changedResources.isSome():
+    removeProblematicResources(changedResources.get())
 
   result = (changedResources, areaObjects)
