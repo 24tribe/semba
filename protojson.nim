@@ -91,7 +91,6 @@ proc toProtoJson*[T](o: T): JsonNode =
   ## toJson wrapper to match protoJsonTo
 
   var opts = initToJsonOptions()
-  opts.jsonNodeMode = joptJsonNodeAsObject # https://github.com/nim-lang/Nim/issues/11894
   toJson(o, opts)
 
 
