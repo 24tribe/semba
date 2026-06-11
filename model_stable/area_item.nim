@@ -2,6 +2,7 @@ import std/json
 import std/options
 import std/random
 import std/strutils
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -97,3 +98,8 @@ proc getAreaItemRewards*(db: DbConn, areaItemRewardIds: seq[int]): seq[Rewards] 
         ))
 
   result.add(Rewards(`type`: some(5), contents: rewards))
+
+
+proc getAreaItems*(db: DbConn, areaId: int): seq[AreaItem] =
+  let rows = db.getAllRows(sql"SELECT areaItemId FROM areaItems WHERE areaId = ?", areaId)
+  rows.mapIt(AreaItem(areaItemId: parseInt(it[0])))

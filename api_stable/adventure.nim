@@ -25,6 +25,11 @@ import ../model_stable/wallet
 import ../model_stable/warp_point
 
 
+type AdventureAreaObjectResponse* = object
+  areaObjects*: seq[AreaObject]
+  areaItems*: seq[AreaItem]
+  bloodStains*: seq[JsonNode] # FIXME: use BloodStain
+
 type AdventureAcquireAreaItemResponse* = object
   areaItem*: AreaItem
   rewards*: seq[Rewards]
@@ -88,36 +93,18 @@ proc adventure_ReleaseEventLift*(jsonReq: JsonNode): JsonNode =
   }
 
 
-proc adventure_AreaObject*(db: DbConn, jsonReq: JsonNode): JsonNode =
+proc adventure_AreaObject*(db: DbConn, jsonReq: JsonNode): AdventureAreaObjectResponse =
   let areaId = jsonReq["areaId"].getInt()
 
-  var areaObjects = getAreaObjectsInArea(db, areaId);
+  result.areaObjects = getAreaObjectsInArea(db, areaId);
 
   if areaId == 130801: # Mita's Hideout
-    areaObjects.insert(getLuxPhantasmaAreaObjects(), areaObjects.len)
+    result.areaObjects.insert(getLuxPhantasmaAreaObjects(), result.areaObjects.len)
 
-  let enemyRows = db.getAllRows(sql"""
-    SELECT areaPointId, areaEnemyRateSetId, action
-    FROM areaEnemies
-    WHERE areaId = ?
-  """, areaId)
+  result.areaObjects.insert(getAreaEnemiesInArea(db, areaId), result.areaObjects.len)
+  result.areaObjects.insert(getDummyAreaObjects(db, areaId), result.areaObjects.len)
 
-  for row in enemyRows:
-    let areaEnemy = parseAreaEnemyRow(row)
-    areaObjects.add(areaEnemy)
-
-  var areaItemsRes = newSeq[JsonNode]()
-
-  let areaItems = db.getAllRows(sql"SELECT areaItemId FROM areaItems WHERE areaId = ?", areaId)
-
-  for areaItem in areaItems:
-    areaItemsRes.add(%*{"areaItemId": parseInt(areaItem[0])})
-
-  let dummyAreaObjects = getDummyAreaObjects(db, areaId)
-
-  areaObjects.insert((%*dummyAreaObjects).getElems(), areaObjects.len)
-
-  return %*{"areaObjects": areaObjects, "areaItems": areaItemsRes}
+  result.areaItems = getAreaItems(db, areaId)
 
 
 proc adventure_MoveToArea*(db: DbConn, req: AdventureMoveToAreaRequest): AdventureMoveToAreaResponse =

@@ -50,7 +50,7 @@ proc xb_Play*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   if changedResources.isSome():
     updateResources(db, changedResources.get())
-    result["changedResources"] = toJson(changedResources.get())
+    result["changedResources"] = toProtoJson(changedResources.get())
 
   if protoJsonGetBool(currentAtBatGameInfo["currentAtBatEventInfo"]["afterGameSituation"], "isGameSet"):
     result["result"] = %*"xb_result_lost" # xbId == 10001

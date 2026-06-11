@@ -149,24 +149,6 @@ proc getRespawnAreaEnemies*(db: DbConn, areaId: int): seq[AreaObject] =
 
 
 # FIXME: this should not be called directly by adventure_AreaObject
-proc parseAreaObjectRow*(row: Row): JsonNode =
-  var areaObjectId = parseInt(row[0])
-  var areaPointId = parseInt(row[1])
-  var areaObjectBehaviorId = parseInt(row[2])
-  let actionStr = row[3]
-  let action = if actionStr != "": parseJson(actionStr) else: nil
-
-  result = %*{
-    "areaObjectId": areaObjectId,
-    "areaPointId": areaPointId,
-    "areaObjectBehaviorId": areaObjectBehaviorId,
-  }
-
-  if action != nil:
-    result["action"] = action
-
-
-# FIXME: this should not be called directly by adventure_AreaObject
 proc parseAreaEnemyRow*(row: Row): JsonNode =
   let areaPointId = parseInt(row[0])
   let areaEnemyRateSetId = parseInt(row[1])
@@ -339,15 +321,19 @@ proc resetAreaEnemies*(db: DbConn) =
   db.exec(sql"INSERT INTO areaEnemies SELECT * FROM areaEnemiesOriginal")
 
 
-proc getAreaObjectsInArea*(db: DbConn, areaId: int): seq[JsonNode] =
+proc getAreaObjectsInArea*(db: DbConn, areaId: int): seq[AreaObject] =
   let rows = db.getAllRows(sql"""
     SELECT areaObjectId, areaPointId, areaObjectBehaviorId, action
     FROM areaObjects
     WHERE areaId = ?
   """, areaId)
 
-  for row in rows:
-    result.add(parseAreaObjectRow(row))
+  rows.mapIt(AreaObject(
+    areaObjectId: some(parseInt(it[0])),
+    areaPointId: parseInt(it[1]),
+    areaObjectBehaviorId: some(parseInt(it[2])),
+    action: if it[3] != "": some(protoJsonTo(parseJson(it[3]), AreaObjectAction)) else: none(AreaObjectAction),
+  ))
 
 
 proc unlockFullMarksGates*(db: DbConn, flowerMark: int) =

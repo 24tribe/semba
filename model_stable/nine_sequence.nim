@@ -81,7 +81,7 @@ proc updateNineSequences*(db: DbConn, nineSequences: seq[NineSequence]) =
     db.exec(sql"""
       INSERT INTO nineSequences (nineSequenceId, content) VALUES (?, ?)
       ON CONFLICT (nineSequenceId) DO UPDATE SET content = excluded.content
-    """, nineSequence.nineSequenceId, toJson(nineSequence))
+    """, nineSequence.nineSequenceId, toProtoJson(nineSequence))
 
 
 proc addNineSequence*(db: DbConn, nineSequence: JsonNode) =

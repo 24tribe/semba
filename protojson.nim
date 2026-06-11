@@ -6,6 +6,7 @@ the functions in this file mimic the behaviour of the protobuf json dumper
 import std/json
 import std/jsonutils
 import std/strutils
+import std/macros
 
 export jsonutils
 
@@ -64,3 +65,22 @@ proc protoJsonTo*(b: JsonNode, T: typedesc): T =
       b
 
   jsonTo(val, T, Joptions(allowExtraKeys: true, allowMissingKeys: true))
+
+
+macro genEnumFromProtoJsonHook*(e: untyped): untyped =
+  ## Macro that receives an enum type and generates a fromJsonHook that
+  ## sets the result to the first value of the enum if receives an empty string.
+
+  quote do:
+    proc fromJsonHook(e: var `e`, n: JsonNode) =
+      e =
+        if n.kind == JString and n.getStr() == "":
+          `e`.low
+        else:
+          parseEnum[`e`](n.getStr())
+
+
+proc toProtoJson*[T](o: T): JsonNode =
+  var opts = initToJsonOptions()
+  opts.enumMode = joptEnumSymbol
+  toJson(o, opts)

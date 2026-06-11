@@ -31,25 +31,25 @@ proc getJsonResultStable*(
   db: DbConn, lastBattleInfo: var Option[BattleInfo]
 ): JsonNode =
   if uri == "/adventure/area_object":
-    result = adventure_AreaObject(db, jsonReq)
+    result = toProtoJson(adventure_AreaObject(db, jsonReq))
   elif uri == "/adventure/find_graffiti":
-    result = %*adventure_FindGraffiti(db, protoJsonTo(jsonReq, AdventureFindGraffitiRequest))
+    result = toProtoJson(adventure_FindGraffiti(db, protoJsonTo(jsonReq, AdventureFindGraffitiRequest)))
   elif uri == "/adventure/move_to_area":
-    result = %*adventure_MoveToArea(db, protoJsonTo(jsonReq, AdventureMoveToAreaRequest))
+    result = toProtoJson(adventure_MoveToArea(db, protoJsonTo(jsonReq, AdventureMoveToAreaRequest)))
   elif uri == "/adventure/update_character_status":
-    result = toJson(adventure_UpdateCharacterStatus(db, jsonReq))
+    result = toProtoJson(adventure_UpdateCharacterStatus(db, jsonReq))
   elif uri == "/adventure/read_sequence":
-    result = toJson(adventure_ReadSequence(db, protoJsonTo(jsonReq, AdventureReadSequenceRequest)))
+    result = toProtoJson(adventure_ReadSequence(db, protoJsonTo(jsonReq, AdventureReadSequenceRequest)))
   elif uri == "/adventure/acquire_area_item":
-    result = toJson(adventure_AcquireAreaItem(db, protoJsonTo(jsonReq, AdventureAcquireAreaItemRequest)))
+    result = toProtoJson(adventure_AcquireAreaItem(db, protoJsonTo(jsonReq, AdventureAcquireAreaItemRequest)))
   elif uri == "/adventure/release_event_lift":
     result = adventure_ReleaseEventLift(jsonReq)
   elif uri == "/adventure/warp_area_locator":
-    result = toJson(adventure_WarpAreaLocator(db, jsonReq))
+    result = toProtoJson(adventure_WarpAreaLocator(db, jsonReq))
   elif uri == "/adventure/hospital":
-    result = toJson(adventure_Hospital(db))
+    result = toProtoJson(adventure_Hospital(db))
   elif uri == "/adventure/access_warp_point":
-    result = %*adventure_AccessWarpPoint(db, jsonReq)
+    result = toProtoJson(adventure_AccessWarpPoint(db, jsonReq))
 
   elif uri == "/auth/steam_user":
     result = %*{"userId": 696969696969}
@@ -59,20 +59,20 @@ proc getJsonResultStable*(
     result = %*{"sessionToken": "69696969-6969-6969-6969-696969696969", "language": 2}
 
   elif uri == "/battle/start":
-    result = toJson(battle_Start(db, lastBattleInfo, jsonReq))
+    result = toProtoJson(battle_Start(db, lastBattleInfo, jsonReq))
   elif uri == "/battle/finish":
     result = battle_Finish(db, lastBattleInfo, jsonReq)
   elif uri == "/battle/restart":
-    result = %*battle_Restart(db, lastBattleInfo, protoJsonTo(jsonReq, BattleRestartRequest))
+    result = toProtoJson(battle_Restart(db, lastBattleInfo, protoJsonTo(jsonReq, BattleRestartRequest)))
 
   elif uri == "/character/costume_update":
-    result = toJson(character_CostumeUpdate(db, jsonReq))
+    result = toProtoJson(character_CostumeUpdate(db, jsonReq))
   elif uri == "/character/limit_break":
-    result = toJson(character_LimitBreak(db, jsonReq))
+    result = toProtoJson(character_LimitBreak(db, jsonReq))
   elif uri == "/character/equip":
-    result = %*character_Equip(db, protoJsonTo(jsonReq, CharacterEquipRequest))
+    result = toProtoJson(character_Equip(db, protoJsonTo(jsonReq, CharacterEquipRequest)))
   elif uri == "/character/enhance":
-    result = %*character_Enhance(db, protoJsonTo(jsonReq, CharacterEnhanceRequest))
+    result = toProtoJson(character_Enhance(db, protoJsonTo(jsonReq, CharacterEnhanceRequest)))
 
   elif uri == "/dungeon/entry":
     result = dungeon_Entry(db, jsonReq)
@@ -91,13 +91,13 @@ proc getJsonResultStable*(
     result = event_FinishNode(db, jsonReq)
 
   elif uri == "/follow/list":
-    result = %*follow_List()
+    result = toProtoJson(follow_List())
   elif uri == "/follow/search":
-    result = toJson(follow_Search(protoJsonTo(jsonReq, FollowSearchRequest)))
+    result = toProtoJson(follow_Search(protoJsonTo(jsonReq, FollowSearchRequest)))
   elif uri == "/follow/add":
-    result = %*follow_Add(protoJsonTo(jsonReq, FollowAddRequest))
+    result = toProtoJson(follow_Add(protoJsonTo(jsonReq, FollowAddRequest)))
   elif uri == "/follow/detail":
-    result = %*follow_Detail(protoJsonTo(jsonReq, FollowDetailRequest))
+    result = toProtoJson(follow_Detail(protoJsonTo(jsonReq, FollowDetailRequest)))
 
   elif uri == "/formation/update":
     result = formation_Update(db, jsonReq)
@@ -110,26 +110,26 @@ proc getJsonResultStable*(
     result = gacha_Execute(db, jsonReq)
 
   elif uri == "/happy_worker/list":
-    result = %*happy_worker_List(db)
+    result = toProtoJson(happy_worker_List(db))
   elif uri == "/happy_worker/start":
-    result = %*happy_worker_Start(db, protoJsonTo(jsonReq, HappyWorkerStartRequest))
+    result = toProtoJson(happy_worker_Start(db, protoJsonTo(jsonReq, HappyWorkerStartRequest)))
   elif uri == "/happy_worker/cancel":
-    result = %*happy_worker_Cancel(db, protoJsonTo(jsonReq, HappyWorkerCancelRequest))
+    result = toProtoJson(happy_worker_Cancel(db, protoJsonTo(jsonReq, HappyWorkerCancelRequest)))
 
   elif uri == "/item_request/get":
-    result = toJson(item_request_Get())
+    result = toProtoJson(item_request_Get())
   elif uri == "/item_request/list":
-    result = toJson(item_request_List())
+    result = toProtoJson(item_request_List())
   elif uri == "/item_request/publish":
-    result = toJson(item_request_Publish(protoJsonTo(jsonReq, ItemRequestPublishRequest)))
+    result = toProtoJson(item_request_Publish(protoJsonTo(jsonReq, ItemRequestPublishRequest)))
 
   elif uri == "/mail/list":
-    result = %*mail_List(db)
+    result = toProtoJson(mail_List(db))
   elif uri == "/mail/open":
-    result = %*mail_Open(db, protoJsonTo(jsonReq, MailOpenRequest))
+    result = toProtoJson(mail_Open(db, protoJsonTo(jsonReq, MailOpenRequest)))
 
   elif uri == "/mission/receive":
-    result = %*mission_Receive(db, protoJsonTo(jsonReq, MissionReceiveRequest))
+    result = toProtoJson(mission_Receive(db, protoJsonTo(jsonReq, MissionReceiveRequest)))
 
   elif uri == "/news/user_list":
     result = news_UserList()
@@ -137,14 +137,14 @@ proc getJsonResultStable*(
     result = news_UserList()
 
   elif uri == "/purchase/history":
-    result = %*purchase_History()
+    result = toProtoJson(purchase_History())
 
   elif uri == "/shop/gem_list":
-    result = %*shop_GemList()
+    result = toProtoJson(shop_GemList())
   elif uri == "/shop/random_costume_list":
-    result = %*shop_RandomCostumeList()
+    result = toProtoJson(shop_RandomCostumeList())
   elif uri == "/shop/purchase":
-    result = %*shop_Purchase(db, protoJsonTo(jsonReq, ShopPurchaseRequest))
+    result = toProtoJson(shop_Purchase(db, protoJsonTo(jsonReq, ShopPurchaseRequest)))
 
   elif uri == "/tension_card/limit_break_enhance":
     result = tensionCard_LimitBreakEnhance(db, jsonReq)
@@ -154,7 +154,7 @@ proc getJsonResultStable*(
   elif uri == "/tip/release":
     result = tip_Release(db, jsonReq)
   elif uri == "/tip/release_by_battle":
-    result = %*tip_ReleaseByBattle(db, protoJsonTo(jsonReq, TipReleaseByBattleRequest))
+    result = toProtoJson(tip_ReleaseByBattle(db, protoJsonTo(jsonReq, TipReleaseByBattleRequest)))
 
   elif uri == "/user/cross_date":
     result = user_CrossDate(db, jsonReq)

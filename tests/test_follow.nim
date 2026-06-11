@@ -1,5 +1,5 @@
-import std/tables
 import std/options
+import std/json
 
 import ../api_stable/follow
 import ../protojson
@@ -9,7 +9,7 @@ import utils
 proc testFollowSearch() =
   var ctx = getInMemorySembaCtx()
 
-  let resJson = ctx.sembaCall("/follow/search", toJson({"userId": "123456789123"}.toTable))
+  let resJson = ctx.sembaCall("/follow/search", %*{"userId": "123456789123"})
 
   let res = protoJsonTo(resJson, Option[FollowSearchResponse])
 

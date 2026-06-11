@@ -140,7 +140,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   if req.battleResult.get("") == "retire":
     let moveToAreaLocatorId = getLastWarpPoint(db).areaLocatorId
-    let changedResources = toJson(Resources(status: some(status), characters: characters))
+    let changedResources = toProtoJson(Resources(status: some(status), characters: characters))
     return %*{
       "changedResources": changedResources,
       "moveToAreaLocatorId": moveToAreaLocatorId
@@ -199,7 +199,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
   updateMissions(db, missions)
 
-  let changedResources = toJson(Resources(
+  let changedResources = toProtoJson(Resources(
     areaObjectLocks: some(areaObjectLocks),
     status: some(status),
     characters: newCharacters,

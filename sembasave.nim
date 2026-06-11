@@ -154,7 +154,7 @@ proc loadSaveFileVer5(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: boo
   db.exec(sql"DELETE FROM characterLimitBreaks")
 
   for character in save.characters:
-    addCharacter(db, toJson(character)) # FIXME: use type safe version of addCharacter
+    addCharacterTypeSafe(db, character) # FIXME: use type safe version of addCharacter
 
   db.exec(sql"DELETE FROM tensionCards")
   db.exec(sql"DELETE FROM tensionCardLimitBreaks")
@@ -488,7 +488,7 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   if db == nil:
       return baseError & ", db is not initialized"
 
-  let jsonData = toJson(getSaveFile(db))
+  let jsonData = toProtoJson(getSaveFile(db))
 
   writeFile(saves_dir & "/" & name & ".save", $jsonData)
 

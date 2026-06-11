@@ -5,6 +5,8 @@ import std/options
 
 import ../db_connector/db_sqlite
 
+import ../protojson
+import area_object
 import timestamp
 
 
@@ -22,8 +24,8 @@ const minEventFloorNodeId = 113101
 const maxEventFloorNodeId = 113128
 
 
-proc getEventLiftAreaObject(areaPointId: int): JsonNode =
-  return %*{
+proc getEventLiftAreaObject(areaPointId: int): AreaObject =
+  return protoJsonTo(%*{
     "areaObjectId": 141001,
     "areaPointId": areaPointId,
     "areaObjectBehaviorId": 14100101,
@@ -32,10 +34,10 @@ proc getEventLiftAreaObject(areaPointId: int): JsonNode =
         "id": 1,
         "eventLiftId": 14100101
     }
-  }
+  }, AreaObject)
 
 
-proc getLuxPhantasmaAreaObjects*(): seq[JsonNode] =
+proc getLuxPhantasmaAreaObjects*(): seq[AreaObject] =
   # 130801921: event lift
   # 130801922: bar counter
   # 130801923: kazuki first encounter in event
