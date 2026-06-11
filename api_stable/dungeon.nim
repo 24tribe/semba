@@ -36,7 +36,7 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let dungeonDifficultyId = jsonReq["dungeonDifficultyId"].getInt()
   let dungeonId = dungeonDifficultyIdToDungeonId(dungeonDifficultyId)
 
-  var challengeProgresses = %*[]
+  var challengeProgresses = newSeq[ChallengeProgress]()
   var challengeTasks = %*[]
 
   let healthyOutlawsChallengeProgress = getChallengeProgress(db, clearHealthyOutlawsChallengeProgressId)
@@ -45,11 +45,11 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): JsonNode =
     dungeonId == healthyOutlawsDungeonId and
     not isChallengeProgressComplete(healthyOutlawsChallengeProgress)
   ):
-    let rightNow = getDateNow()
+    let rightNow = some(getTimestampNow())
 
-    challengeProgresses = %*[
-      {"challengeProgressId": clearHealthyOutlawsChallengeProgressId.int, "clearedAt": rightNow, "state": 3},
-      {"challengeProgressId": 1010181, "state": 2}
+    challengeProgresses = @[
+      ChallengeProgress(challengeProgressId: clearHealthyOutlawsChallengeProgressId.int, clearedAt: rightNow, state: 3),
+      ChallengeProgress(challengeProgressId: 1010181, state: 2)
     ]
 
     updateChallengeProgresses(db, challengeProgresses)

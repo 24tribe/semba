@@ -7,6 +7,11 @@ import ../db_connector/db_sqlite
 const respiteUnitTutorialStatusKey* = 43
 
 
+type TutorialState* = object
+  tutorialStatusKey*: int
+  enabled*: bool
+
+
 proc updateTutorialState*(db: DbConn, tutorialStatusKey: int, enabled: bool) =
   db.exec(sql"""
     INSERT INTO tutorialStates (tutorialStatusKey, enabled) VALUES

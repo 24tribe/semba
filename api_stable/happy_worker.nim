@@ -1,10 +1,8 @@
 import std/sequtils
-import std/json
 import std/options
 
 import ../db_connector/db_sqlite
 
-import ../protojson
 import ../model_stable/area_object
 import ../model_stable/challenge
 import ../model_stable/challenge_progress
@@ -35,7 +33,7 @@ type HappyWorkerCancelResponse* = object
 
 
 proc happy_worker_List*(db: DbConn): HappyWorkerListResponse =
-  let cityIds = getCities(db).mapIt(protoJsonTo(it, City).cityId).toSeq()
+  let cityIds = getCities(db).mapIt(it.cityId).toSeq()
 
   result.happyWorkerItems = getHappyWorkerItems(db, cityIds)
 
@@ -52,7 +50,7 @@ proc happy_worker_Start*(db: DbConn, req: HappyWorkerStartRequest): HappyWorkerS
     challengeId: challengeId, state: 5, expiresAt: some(endOfToday())
   )]
 
-  result.changedResources.challenges = some(changedChallenges)
+  result.changedResources.challenges = changedChallenges
   upsertChallenges(db, changedChallenges)
 
   let firstProgressId = getChallengeFirstProgressId(db, challengeId)
@@ -65,14 +63,14 @@ proc happy_worker_Start*(db: DbConn, req: HappyWorkerStartRequest): HappyWorkerS
   ))
 
   upsertChallengeProgresses(db, challengeProgresses)
-  result.changedResources.challengeProgresses = some(challengeProgresses)
+  result.changedResources.challengeProgresses = challengeProgresses
 
   let challengeTasks = getChallengeTaskIdsForChallengeProgressIds(db, challengeProgressIds).mapIt(ChallengeTask(
     challengeTaskId: it
   ))
 
   upsertChallengeTasks(db, challengeTasks)
-  result.changedResources.challengeTasks = some(challengeTasks)
+  result.changedResources.challengeTasks = challengeTasks
 
   let areaObjects = getAreaObjectsWithCondition(
     db, areaObjectConditionTypeStartedChallengeProgress, firstProgressId
@@ -93,7 +91,7 @@ proc happy_worker_Cancel*(db: DbConn, req: HappyWorkerCancelRequest): HappyWorke
     challengeId: challengeId, state: 1, expiresAt: some(endOfToday())
   )]
 
-  result.changedResources.challenges = some(changedChallenges)
+  result.changedResources.challenges = changedChallenges
   upsertChallenges(db, changedChallenges)
 
   let challengeProgressIds = getChallengeProgressIds(db, challengeId)
@@ -104,13 +102,13 @@ proc happy_worker_Cancel*(db: DbConn, req: HappyWorkerCancelRequest): HappyWorke
   ))
 
   upsertChallengeProgresses(db, challengeProgresses)
-  result.changedResources.challengeProgresses = some(challengeProgresses)
+  result.changedResources.challengeProgresses = challengeProgresses
 
   let challengeTasks = getChallengeTaskIdsForChallengeProgressIds(db, challengeProgressIds).mapIt(ChallengeTask(
     challengeTaskId: it
   ))
 
   upsertChallengeTasks(db, challengeTasks)
-  result.changedResources.challengeTasks = some(challengeTasks)
+  result.changedResources.challengeTasks = challengeTasks
 
   # FIXME: update area objects with mdAreaBehavior conditions

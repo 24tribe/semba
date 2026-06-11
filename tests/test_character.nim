@@ -11,7 +11,6 @@ import ../model_stable/gear
 import ../model_stable/timestamp
 import ../model_stable/status
 import ../model_stable/item
-import ../model_stable/user
 import utils
 
 const yoCharId = 100101
@@ -54,7 +53,7 @@ proc testCharacterStatsDependOnLevel() =
   let irohaChar = getCharacter(ctx.db, irohaCharId)
   doAssert(checkIroha(irohaChar))
 
-  let characters = protoJsonTo(%*getCharacters(ctx.db), seq[Character])
+  let characters = getCharactersTypeSafe(ctx.db)
   doAssert(characters.any(checkYo))
   doAssert(characters.any(checkIroha))
 
@@ -78,7 +77,7 @@ proc testCharacterEquip() =
 
   let crRes = protoJsonTo(res, ChangedResourcesResponse)
 
-  let characters = protoJsonTo(%*(crRes.changedResources.characters.get()), seq[Character])
+  let characters = crRes.changedResources.characters
 
   doAssert(characters.len == 1)
   doAssert(characters[0].gearSlot1.isNone())
@@ -89,7 +88,7 @@ proc testCharacterEquip() =
 
   let crRes2 = protoJsonTo(res2, ChangedResourcesResponse)
 
-  let characters2 = protoJsonTo(%*(crRes2.changedResources.characters.get()), seq[Character])
+  let characters2 = crRes2.changedResources.characters
 
   doAssert(characters2.len == 1)
   doAssert(characters2[0].gearSlot1.isNone())
@@ -215,11 +214,10 @@ proc testCharacterEnhance() =
 
   doAssert(res.isSome())
 
-  let changedResources = res.get().changedResources
+  var changedResources = res.get().changedResources
 
-  let characters = changedResources.characters.get(@[])
-  doAssert(characters.len == 1)
-  doAssert(characters[0].exp.get(0) == level10MinExp)
+  doAssert(changedResources.characters.len == 1)
+  doAssert(changedResources.characters[0].exp.get(0) == level10MinExp)
 
   let ld = getItem(ctx.db, lifeDataId)
   doAssert(ld.isSome() and ld.get().quantity.get(0) == 0)
@@ -232,9 +230,8 @@ proc testCharacterEnhance() =
 
   doAssert(getUserStatusTypeSafe(ctx.db).gold.get(0) == 100)
 
-  var changedItems = changedResources.items.get(@[])
-  changedItems.sort(proc (x1, x2: Item): int = cmp(x1.itemId, x2.itemId))
-  doAssert(changedItems == @[
+  changedResources.items.sort(proc (x1, x2: Item): int = cmp(x1.itemId, x2.itemId))
+  doAssert(changedResources.items == @[
     Item(itemId: lifeDataId, quantity: some(0)),
     Item(itemId: goodLifeDataId, quantity: some(0)),
     Item(itemId: greatLifeDataId, quantity: some(0)),

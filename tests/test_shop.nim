@@ -41,8 +41,7 @@ proc testShopPurchase() =
   doAssert(shopProductsStates[0].shopProductId == 4012001)
   doAssert(shopProductsStates[0].purchasedCount == 2) ]#
 
-  let items = changedResources.items.get(@[])
-  doAssert(items == [Item(itemId: enigmaticPieceId, quantity: some(20))])
+  doAssert(changedResources.items == [Item(itemId: enigmaticPieceId, quantity: some(20))])
 
   let walletAfter = getWallet(ctx.db)
   doAssert(walletAfter.free.get(0) == walletBefore.free.get(0) + 240)

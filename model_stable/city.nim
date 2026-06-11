@@ -1,6 +1,5 @@
-import std/json
 import std/strutils
-import std/options
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -11,7 +10,7 @@ import magic_orb
 
 type City* = object
   cityId*: int
-  isGearShopReleased*: Option[bool]
+  isGearShopReleased*: bool
   releasedAt*: Timestamp
 
 type CityId* = enum
@@ -25,27 +24,21 @@ type CityId* = enum
   cityIdFractalVise3 = 83
 
 
-proc addCity*(db: DbConn, city: JsonNode) =
-  let cityId = city["cityId"].getInt()
-  let isGearShopReleased = city.getOrDefault("isGearShopReleased").getBool()
-  let releasedAt = city["releasedAt"].getStr()
+proc addCity*(db: DbConn, city: City) =
   db.exec(sql"""
     INSERT INTO cities (cityId, isGearShopReleased, releasedAt)
     VALUES (?, ?, ?)
     ON CONFLICT (cityId) DO UPDATE SET isGearShopReleased = excluded.isGearShopReleased
-  """, cityId, isGearShopReleased, releasedAt)
+  """, city.cityId, city.isGearShopReleased, city.releasedAt)
 
 
-proc getCities*(db: DbConn): seq[JsonNode] =
-  for row in db.getAllRows(sql"SELECT cityId, isGearShopReleased, releasedAt FROM cities"):
-    let cityId = parseInt(row[0])
-    let isGearShopReleased = row[1] == "true"
-    let releasedAt = row[2]
-    result.add(%*{
-      "cityId": cityId,
-      "isGearShopReleased": isGearShopReleased,
-      "releasedAt": releasedAt
-    })
+proc getCities*(db: DbConn): seq[City] =
+  let rows = db.getAllRows(sql"SELECT cityId, isGearShopReleased, releasedAt FROM cities")
+  result = rows.mapIt(City(
+    cityId: parseInt(it[0]),
+    isGearShopReleased: it[1] == "true",
+    releasedAt: it[2].Timestamp,
+  ))
 
 
 func areaIdToCityId*(areaId: int): int = areaId div 10000

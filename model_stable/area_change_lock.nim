@@ -1,5 +1,5 @@
 import std/strutils
-import std/json
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -14,16 +14,12 @@ proc addAreaChangeLock*(db: DbConn, areaChangeLockId: int) =
     ON CONFLICT DO NOTHING
   """, areaChangeLockId)
 
-proc getAreaChangeLocks*(db: DbConn): seq[JsonNode] =
+
+proc getAreaChangeLocks*(db: DbConn): seq[AreaChangeLock] =
   let rows = db.getAllRows(sql"SELECT areaChangeLockId FROM areaChangeLocks")
+  result = rows.mapIt(AreaChangeLock(areaChangeLockId: parseInt(it[0])))
 
-  for row in rows:
-    let areaChangeLockId = parseInt(row[0])
-    result.add(%*{
-      "areaChangeLockId": areaChangeLockId,
-    })
 
-proc updateAreaChangeLocks*(db: DbConn, areaChangeLocks: seq[JsonNode]) =
+proc updateAreaChangeLocks*(db: DbConn, areaChangeLocks: seq[AreaChangeLock]) =
   for areaChangeLock in areaChangeLocks:
-    let areaChangeLockId = areaChangeLock["areaChangeLockId"].getInt()
-    addAreaChangeLock(db, areaChangeLockId)
+    addAreaChangeLock(db, areaChangeLock.areaChangeLockId)

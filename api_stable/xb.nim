@@ -1,4 +1,5 @@
 import std/json
+import std/options
 
 import ../db_connector/db_sqlite
 
@@ -26,7 +27,7 @@ proc xb_Play*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let zoneAreaIndex = jsonReq.getOrDefault("zoneAreaIndex").getInt()
 
   var fakeNextAtBatGameInfo: JsonNode = nil
-  var changedResources: JsonNode = nil
+  var changedResources: Option[Resources]
   var fakeCurrentAtBatGameInfo: JsonNode = nil
   popCurrentXbPlayData(db, xbId, fakeNextAtBatGameInfo, changedResources, fakeCurrentAtBatGameInfo)
 
@@ -47,9 +48,9 @@ proc xb_Play*(db: DbConn, jsonReq: JsonNode): JsonNode =
   if nextAtBatGameInfo != nil:
     result["nextAtBatGameInfo"] = nextAtBatGameInfo
 
-  if changedResources != nil:
-    updateResources(db, changedResources)
-    result["changedResources"] = changedResources
+  if changedResources.isSome():
+    updateResources(db, changedResources.get())
+    result["changedResources"] = toJson(changedResources.get())
 
   if protoJsonGetBool(currentAtBatGameInfo["currentAtBatEventInfo"]["afterGameSituation"], "isGameSet"):
     result["result"] = %*"xb_result_lost" # xbId == 10001

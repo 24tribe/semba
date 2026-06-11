@@ -61,7 +61,7 @@ proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
 proc character_Equip*(db: DbConn, req: CharacterEquipRequest): ChangedResourcesResponse =
   updateCharacterGear(db, req.characterId, req.gearSlot1, req.gearSlot2, req.gearSlot3)
-  result.changedResources.characters = some(@[getCharacter(db, req.characterId)])
+  result.changedResources.characters = @[getCharacter(db, req.characterId)]
 
 
 proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResourcesResponse =
@@ -75,13 +75,13 @@ proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResour
     items.add(dbItem)
     upsertItem(db, dbItem)
 
-  result.changedResources.items = some(items)
+  result.changedResources.items = items
 
   let addExp = calcLifeDataExp(consumedItems)
 
   var character = getCharacter(db, req.characterId)
   updateCharacterExp(db, addExp, character, getCharacterMaxExp(db))
-  result.changedResources.characters = some(@[getCharacter(db, req.characterId)])
+  result.changedResources.characters = @[getCharacter(db, req.characterId)]
 
   let kane = 2*addExp
 

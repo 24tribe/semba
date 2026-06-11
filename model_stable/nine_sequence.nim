@@ -54,14 +54,9 @@ proc updateNineSequence(db: DbConn, nineSequence: NineSequence) =
   """, nineSequence.nineSequenceId, $jsonData)
 
 
-#[
-Swaps the nineSequences taken from online logs to the ones generated
-by a proper implementation.
-]#
-proc changeNineSequences*(
-  db: DbConn, nineSequenceRequests: seq[NineSequenceRequest], response: JsonNode
-) =
-  var nineSequences = newSeq[NineSequence]()
+proc processNineSequenceRequests*(db: DbConn, nineSequenceRequests: seq[NineSequenceRequest]): seq[NineSequence] =
+  ## Get a seq[NineSequence] based on nine sequence requests.
+  ## Updates the db.
 
   for nineSequenceReq in nineSequenceRequests:
     var nineSequence = getNineSequence(db, nineSequenceReq.id).get(NineSequence(
@@ -71,7 +66,7 @@ proc changeNineSequences*(
 
     nineSequence.lastReadAt = some(getTimestampNow())
 
-    nineSequences.add(nineSequence)
+    result.add(nineSequence)
     updateNineSequence(db, nineSequence)
 
   #[
@@ -80,20 +75,13 @@ proc changeNineSequences*(
   which one to return.
   ]#
 
-  response["changedResources"]["nineSequences"] = %*nineSequences
 
-
-proc updateNineSequences*(db: DbConn, nineSequences: JsonNode) =
+proc updateNineSequences*(db: DbConn, nineSequences: seq[NineSequence]) =
   for nineSequence in nineSequences:
-    let nineSequenceId = nineSequence["nineSequenceId"].getInt()
-    let seqCopy = nineSequence.copy()
-    seqCopy.delete("nineSequenceId")
-    let seqCopyStr = $seqCopy
-
     db.exec(sql"""
       INSERT INTO nineSequences (nineSequenceId, content) VALUES (?, ?)
-      ON CONFLICT (nineSequenceId) DO UPDATE SET content = ?
-    """, nineSequenceId, seqCopyStr, seqCopyStr)
+      ON CONFLICT (nineSequenceId) DO UPDATE SET content = excluded.content
+    """, nineSequence.nineSequenceId, toJson(nineSequence))
 
 
 proc addNineSequence*(db: DbConn, nineSequence: JsonNode) =

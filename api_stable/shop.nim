@@ -69,10 +69,8 @@ proc shop_Purchase*(db: DbConn, req: ShopPurchaseRequest): ChangedResourcesRespo
     of rewardItem.int:
       var item = getItem(db, cost.id).get()
       item.quantity = some(item.quantity.get(0) - cost.quantity*req.quantity)
-      var items = changedResources.items.get(@[])
-      items.add(item)
       upsertItem(db, item)
-      changedResources.items = some(items)
+      changedResources.items.add(item)
     else:
       discard
 

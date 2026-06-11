@@ -17,6 +17,7 @@ import mission
 import resources
 import reward
 import status
+import wallet
 
 
 type MdSequenceRequestKind* = enum
@@ -105,19 +106,6 @@ proc getMdSequenceRequests*(db: DbConn, sequenceRequestIds: openArray[int]): seq
     result.add(seqReq)
 
 
-proc parseReadSequenceRow*(row: Row): JsonNode =
-  result = %*{
-    "changedResources": {},
-    "areaObjects": [],
-  }
-
-  if row[0] != "":
-    result["areaObjects"] = parseJson(row[0])
-
-  if row[1] != "":
-    result["changedResources"] = parseJson(row[1])
-
-
 proc readSequenceMiniGame*(
   db: DbConn, miniGameId: int, sequenceRequestIds: openArray[int], areaId: int
 ): (Resources, seq[AreaObject]) =
@@ -155,6 +143,52 @@ proc readSequenceMiniGame*(
     db, missions, (mission, mdMission) => some(mission.count.get(0) + 1)
   )
 
-  result[0].missions = some(changedMissions)
+  result[0].missions = changedMissions
 
   updateMissions(db, changedMissions)
+
+
+proc removeProblematicResources(changedResources: var Resources) =
+  # Don't return (zero sensei) missions from online logs
+  changedResources.missions = @[]
+
+  # Remove wallet changes to avoid gems changing to random amounts in the client.
+  # The correct fix here would be to get the rewards from completing a challenge from
+  # the master data instead of the online logs, but for now it's okay
+  changedResources.wallet = none(Wallet)
+
+  # Don't change the currency items to avoid them changing to random amounts in the client.
+  # The correct fix here would be to get the rewards from completing a challenge from
+  # the master data instead of the online logs, but for now it's okay
+  const tPointItemId = 2
+  const stampsItemId = 14
+  const boostersItemId = 15
+  const problematicItemIds = [tPointItemId, stampsItemId, boostersItemId]
+
+  changedResources.items = changedResources.items.filterIt(not (it.itemId in problematicItemIds))
+
+
+proc getReplaySequenceFromSequenceRequestId*(db: DbConn, seqReqId: int): (Resources, seq[AreaObject]) =
+  let row = db.getRow(sql"""
+    SELECT changedResources, areaObjects FROM readSequence WHERE sequenceRequestId=?
+  """, seqReqId)
+
+  var changedResources = protoJsonTo(parseJson(row[0]), Resources)
+  let areaObjects = protoJsonTo(parseJson(row[1]), seq[AreaObject])
+
+  removeProblematicResources(changedResources)
+
+  result = (changedResources, areaObjects)
+
+
+proc getReplaySequenceFromNineSequenceId*(db: DbConn, nineSequenceId: int): (Resources, seq[AreaObject]) =
+  let row = db.getRow(sql"""
+    SELECT changedResources, areaObjects FROM readSequence WHERE nineSequenceId=?
+  """, nineSequenceId)
+
+  var changedResources = protoJsonTo(parseJson(row[0]), Resources)
+  let areaObjects = protoJsonTo(parseJson(row[1]), seq[AreaObject])
+
+  removeProblematicResources(changedResources)
+
+  result = (changedResources, areaObjects)

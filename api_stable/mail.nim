@@ -1,10 +1,8 @@
-import std/json
 import std/options
 import std/sequtils
 
 import ../db_connector/db_sqlite
 
-import ../protojson
 import ../model_stable/mail
 import ../model_stable/resources
 import ../model_stable/reward
@@ -37,11 +35,11 @@ proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
 
   var rewards = mails.foldl(a.concat(mailRewardsToProperRewards(db, b.rewards)), newSeq[Reward]())
 
-  let changedResources = updateResourcesFromRewards(db, rewards)
+  let changedResources = updateResourcesFromRewardsTypeSafe(db, rewards)
 
   let mailList = getMails(db)
 
   result.list = mailList
   result.rewards = rewards
-  result.changedResources = protoJsonTo(changedResources, Resources)
+  result.changedResources = changedResources
   result.changedResources.notifications = some(Notifications(mail: some(mailList.hasUnopenedMails())))

@@ -73,19 +73,13 @@ proc getNextChallengeProgress*(db: DbConn, challengeProgressId: int): Option[int
     result = some(parseInt(row[0]))
 
 
-proc updateChallengeProgresses*(db: DbConn, challengeProgresses: JsonNode) =
+proc updateChallengeProgresses*(db: DbConn, challengeProgresses: openArray[ChallengeProgress]) =
   for challengeProgress in challengeProgresses:
-    let challengeProgressId = challengeProgress["challengeProgressId"].getInt()
-    let clearedAt = challengeProgress.getOrDefault("clearedAt")
-    let state = challengeProgress["state"].getInt()
-
-    let clearedAtStr = if clearedAt != nil: clearedAt.getStr() else: ""
-
     db.exec(sql"""
       INSERT INTO challengeProgresses (challengeProgressId, clearedAt, state)
       VALUES (?, ?, ?)
-      ON CONFLICT (challengeProgressId) DO UPDATE SET clearedAt = ?, state = ?
-    """, challengeProgressId, clearedAtStr, state, clearedAtStr, state)
+      ON CONFLICT (challengeProgressId) DO UPDATE SET clearedAt = excluded.clearedAt, state = excluded.state
+    """, challengeProgress.challengeProgressId, optionToSqlArg(challengeProgress.clearedAt), challengeProgress.state)
 
 
 proc upsertChallengeProgresses*(db: DbConn, challengeProgresses: openArray[ChallengeProgress]) =

@@ -49,7 +49,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   updateMissions(db, changedMissions)
 
   result.changedResources = updateResourcesFromRewardsTypeSafe(db, rewards)
-  result.changedResources.missions = some(changedMissions)
+  result.changedResources.missions = changedMissions
   result.rewards = rewards
 
   result.changedResources.status.map(proc (status: Status) =

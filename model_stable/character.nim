@@ -130,6 +130,30 @@ proc addCharacterLimitBreak*(db: DbConn, characterId: int, limitBreak: int) =
   """, characterId, limitBreak)
 
 
+proc addCharacterTypeSafe*(db: DbConn, character: Character) =
+  db.exec(sql"""
+    INSERT INTO characters
+    (characterId, exp, hp, receivedAt, characterOwnershipType,
+     characterCostumeId, trainingScoreLevelScore, trainingScoreRankScore,
+     gearSlot1, gearSlot2, gearSlot3)
+    VALUES
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT (characterId) DO UPDATE SET
+      exp = excluded.exp, hp = excluded.hp, receivedAt = excluded.receivedAt,
+      characterOwnershipType = excluded.characterOwnershipType,
+      characterCostumeId = excluded.characterCostumeId, 
+      trainingScoreLevelScore = excluded.trainingScoreLevelScore,
+      trainingScoreRankScore = excluded.trainingScoreRankScore,
+      gearSlot1 = excluded.gearSlot1, gearSlot2 = excluded.gearSlot2, gearSlot3 = excluded.gearSlot3
+  """, character.characterId, character.exp.get(0), character.hp.get(0), character.receivedAt,
+    character.characterOwnershipType.get(0), character.characterCostumeId.get(0),
+    character.trainingScoreLevelScore.get(0), character.trainingScoreRankScore.get(0),
+    optionToSqlArg(character.gearSlot1), optionToSqlArg(character.gearSlot2), optionToSqlArg(character.gearSlot3)
+  )
+
+  addCharacterLimitBreak(db, character.characterId, character.limitBreak.get(0))
+
+
 proc addCharacter*(db: DbConn, character: JsonNode) =
   let characterId = character["characterId"].getInt()
   let exp = character.getOrDefault("exp").getInt()
@@ -196,6 +220,11 @@ proc addCharacter*(db: DbConn, character: JsonNode) =
 proc updateCharacters*(db: DbConn, characters: seq[JsonNode]) =
   for character in characters:
     addCharacter(db, character)
+
+
+proc updateCharactersTypeSafe*(db: DbConn, characters: seq[Character]) =
+  for character in characters:
+    addCharacterTypeSafe(db, character)
 
 
 proc getMdCharacter*(db: DbConn, characterId: int): MdCharacter =

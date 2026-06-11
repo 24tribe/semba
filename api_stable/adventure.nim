@@ -5,12 +5,10 @@ import std/strutils
 
 import ../db_connector/db_sqlite
 
-import ../protojson
 import ../model_stable/adventure_variable
 import ../model_stable/area
 import ../model_stable/area_item
 import ../model_stable/area_object
-import ../model_stable/area_object_lock
 import ../model_stable/character
 import ../model_stable/city
 import ../model_stable/graffiti_art
@@ -54,10 +52,10 @@ type AdventureAcquireAreaItemRequest* = object
   currentLocation*: CurrentLocation
 
 type AdventureReadSequenceResponse* = object
-  areaObjects*: Option[seq[AreaObject]]
-  rewards*: Option[seq[Rewards]]
+  areaObjects*: seq[AreaObject]
+  rewards*: seq[Rewards]
   changedResources*: Resources
-  deletedCharacterIds*: Option[seq[int]]
+  deletedCharacterIds*: seq[int]
 
 type AdventureReadSequenceRequest* = object
   sequenceRequestIds*: Option[seq[int]]
@@ -73,7 +71,7 @@ proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): JsonNode =
 
   let changedResources = Resources(
     status: some(getUserStatusTypeSafe(db)),
-    characters: some(healCharactersTypeSafe(db)),
+    characters: healCharactersTypeSafe(db),
   )
 
   return %*{
@@ -168,42 +166,37 @@ proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
   }
 
 
-proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): JsonNode =
+proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): AdventureReadSequenceResponse =
   let sequenceRequestIds = req.sequenceRequestIds.get(@[])
-  let nineSequences = req.nineSequences.get(@[])
+  let nineSequenceRequests = req.nineSequences.get(@[])
 
   if req.miniGameId.isSome():
     let miniGameId = req.miniGameId.get()
     let areaId = req.currentLocation.areaKeyId.get()
-    let (changedResources, areaObjects) = readSequenceMiniGame(db, miniGameId, sequenceRequestIds, areaId)
-
-    return toJson(AdventureReadSequenceResponse(changedResources: changedResources, areaObjects: some(areaObjects)))
+    (result.changedResources, result.areaObjects) = readSequenceMiniGame(db, miniGameId, sequenceRequestIds, areaId)
+    return
 
   # FIXME: use proper types, NOT JsonNode
 
   if sequenceRequestIds.len > 0:
     let seqReqId = sequenceRequestIds[0]
-    let row = db.getRow(sql"""
-      SELECT areaObjects, changedResources FROM readSequence WHERE sequenceRequestId=?
-    """, seqReqId);
 
-    # FIXME: this should be in a separate function
-    result = parseReadSequenceRow(row)
+    (result.changedResources, result.areaObjects) = getReplaySequenceFromSequenceRequestId(db, seqReqId)
 
     if seqReqId == 80001521:
-      let deletedCharacterIds = [100201, 101701]
-      result["deletedCharacterIds"] = %*deletedCharacterIds
-      deleteGuestCharacters(db, deletedCharacterIds)
+      result.deletedCharacterIds = @[100201, 101701]
+      deleteGuestCharacters(db, result.deletedCharacterIds)
 
     const talkWithEnokiSeqReqId = 80100431
     const talkWithMiuSeqReqId = 80100432
 
     if seqReqId in [80100421, 80100422, talkWithEnokiSeqReqId, talkWithMiuSeqReqId]:
-      changeReadSequenceResponse(db, seqReqId, result)
-      changeNineSequences(db, nineSequences, result)
-      changeAdventureVariables(db, sequenceRequestIds, result)
+      changeReadSequenceResponse(db, seqReqId, result.changedResources, result.areaObjects)
+      result.changedResources.nineSequences = processNineSequenceRequests(db, nineSequenceRequests)
+      result.changedResources.adventureVariables = getSequenceAdventureVariables(db, sequenceRequestIds)
 
-    updateFromReadSequenceResponse(db, result)
+    updateAreaObjectsEx(db, result.areaObjects)
+    updateResources(db, result.changedResources) 
 
     let readSequenceAreaAction = getReadSequenceAreaAction(db, seqReqId)
 
@@ -215,12 +208,10 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Jso
     if readSequenceAreaBgm.areaId != 0:
       updateAreaBgm(db, readSequenceAreaBgm.areaId, readSequenceAreaBgm.id, readSequenceAreaBgm.eventName)
   else:
-    let nineSequenceId = nineSequences[0].id
-    let row = db.getRow(sql"""
-      SELECT areaObjects, changedResources FROM readSequence WHERE nineSequenceId=?
-    """, nineSequenceId);
-    result = parseReadSequenceRow(row)
-    updateFromReadSequenceResponse(db, result)
+    let nineSeqReqId = nineSequenceRequests[0].id
+    (result.changedResources, result.areaObjects) = getReplaySequenceFromNineSequenceId(db, nineSeqReqId)
+    updateAreaObjectsEx(db, result.areaObjects)
+    updateResources(db, result.changedResources) 
 
     # TODO: does a nineSequence change an area action like in the other branch of the if?
 
@@ -236,7 +227,7 @@ proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest
     let cityId = areaIdToCityId(req.currentLocation.areaKeyId.get())
     let missions = getChangedOpenChestMissions(db, cityId)
 
-    changedResources.missions = some(missions)
+    changedResources.missions = missions
     updateMissions(db, missions)
 
   return %*{
@@ -264,16 +255,16 @@ proc adventure_Hospital*(db: DbConn): JsonNode =
 proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessWarpPointResponse =
   let warpPointId = jsonReq["warpPointId"].getInt()
 
-  var changedTutorialStates = newSeq[JsonNode]()
+  var changedTutorialStates = newSeq[TutorialState]()
   var changedWarpPoints = newSeq[JsonNode]()
   let status = getUserStatusTypeSafe(db)
 
   if not getTutorialState(db, respiteUnitTutorialStatusKey):
     updateTutorialState(db, respiteUnitTutorialStatusKey, true)
-    changedTutorialStates.add(%*{
-      "tutorialStatusKey": respiteUnitTutorialStatusKey,
-      "enabled": true
-    })
+    changedTutorialStates.add(TutorialState(
+      tutorialStatusKey: respiteUnitTutorialStatusKey,
+      enabled: true
+    ))
 
   if not hasWarpPoint(db, warpPointId):
     addWarpPoint(db, warpPointId)
@@ -290,9 +281,9 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
   return AdventureAccessWarpPointResponse(
     changedResources: Resources(
       warpPoints: some(changedWarpPoints),
-      tutorialStates: some(changedTutorialStates),
+      tutorialStates: changedTutorialStates,
       status: some(status),
-      characters: some(healCharactersTypeSafe(db)),
+      characters: healCharactersTypeSafe(db),
     ),
     areaObjects: areaObjects,
   )
@@ -301,7 +292,7 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
 proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): AdventureFindGraffitiResponse =
   let cityId = graffitiArtIdToCityId(req.graffitiArtId)
   let missions = getChangedGraffitiMissions(db, cityId)
-  result.changedResources.missions = some(missions)
+  result.changedResources.missions = missions
   updateMissions(db, missions)
 
   let graffitiArt = GraffitiArt(graffitiArtId: req.graffitiArtId)

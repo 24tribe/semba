@@ -424,7 +424,7 @@ proc testDummyAreaObjects() =
 proc checkCharactersHpIsMax(db: DbConn, charIds: openArray[int], changedResources: Resources) =
   proc cmpCharacters(chr1, chr2: Character): int = cmp(chr1.characterId, chr2.characterId)
 
-  var changedCharacters = changedResources.characters.get().filterIt(it.characterId in charIds)
+  var changedCharacters = changedResources.characters.filterIt(it.characterId in charIds)
   changedCharacters.sort(cmpCharacters)
 
   var changedHps = changedCharacters.mapIt((it.characterId, it.hp.get(0))).toSeq()
@@ -494,8 +494,7 @@ proc testMiniGameWithAreaObjectLock() =
 
   doAssert(areaObjectLocks == @[AreaObjectLock(areaObjectLockId: 10504502, count: some(1))])
 
-  let areaObjects = res.areaObjects.get(@[])
-  doAssert(areaObjects == protoJsonTo(%*[
+  doAssert(res.areaObjects == protoJsonTo(%*[
     {
       "areaObjectId": 108222, "areaPointId": 101001806, "areaObjectBehaviorId": 10822202,
       "action": {"type": 3, "id": 1, "label": "Control Panel", "sequenceId": 10822201}
@@ -506,7 +505,7 @@ proc testMiniGameWithAreaObjectLock() =
 proc testMiniGameWithoutAreaObjectLock() =
   var ctx = getInMemorySembaCtx()
 
-  let res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
+  var res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
     "sequenceRequestIds": [308002021, 308003021, 308001021],
     "currentLocation": {
       "areaType": 1, "direction": 3, "areaKeyId": 300401,
@@ -534,10 +533,9 @@ proc testMiniGameWithoutAreaObjectLock() =
     }
   ], seq[AreaObject])
 
-  var areaObjects = res.areaObjects.get(@[])
-  areaObjects.sort(proc (ao1, ao2: AreaObject): int = cmp(ao2.areaPointId, ao1.areaPointId))
+  res.areaObjects.sort(proc (ao1, ao2: AreaObject): int = cmp(ao2.areaPointId, ao1.areaPointId))
 
-  doAssert(expectedAreaObjects == areaObjects)
+  doAssert(expectedAreaObjects == res.areaObjects)
 
   doAssert(res.changedResources.status.isSome())
 

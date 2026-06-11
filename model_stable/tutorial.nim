@@ -37,7 +37,7 @@ proc resetToTutorial*(db: DbConn) =
   db.exec(sql"DELETE FROM areas")
   
   db.exec(sql"DELETE FROM challengeProgresses")
-  let challengeProgresses = %*[{"challengeProgressId": 1000011, "state": 2}]
+  let challengeProgresses = [ChallengeProgress(challengeProgressId: 1000011, state: 2)]
   updateChallengeProgresses(db, challengeProgresses)
 
   db.exec(sql"DELETE FROM challenges")

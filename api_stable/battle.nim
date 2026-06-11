@@ -1,6 +1,5 @@
 import std/json
 import std/options
-import std/tables
 import std/sequtils
 
 import ../db_connector/db_sqlite
@@ -221,11 +220,11 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   if challengeTask.isSome():
     let (_, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
 
-    result["changedResources"]["challengeTasks"] = %*resources.challengeTasks.get()
+    result["changedResources"]["challengeTasks"] = %*resources.challengeTasks
     updateChallengeTasks(db, result["changedResources"]["challengeTasks"])
 
-    result["changedResources"]["challengeProgresses"] = %*resources.challengeProgresses.get()
-    updateChallengeProgresses(db, result["changedResources"]["challengeProgresses"])
+    result["changedResources"]["challengeProgresses"] = %*resources.challengeProgresses
+    updateChallengeProgresses(db, resources.challengeProgresses)
 
   if areaObjects != nil:
     result["areaObjects"] = areaObjects

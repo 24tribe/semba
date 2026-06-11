@@ -29,9 +29,9 @@ proc testMissionReceive() =
 
   let res = protoJsonTo(resJson, MissionReceiveResponse)
 
-  doAssert(res.changedResources.missions.isSome())
+  doAssert(res.changedResources.missions.len > 0)
 
-  let missions = res.changedResources.missions.get().mapIt((it.missionId, it)).toTable()
+  let missions = res.changedResources.missions.mapIt((it.missionId, it)).toTable()
 
   for missionId in missionIds:
     let mission = missions[missionId]

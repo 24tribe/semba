@@ -46,9 +46,10 @@ proc getAdventureVariable(db: DbConn, adventureVariableId: int): Option[Adventur
     ))
 
 
-proc changeAdventureVariables*(db: DbConn, sequenceRequestIds: seq[int], response: JsonNode) =
-  let changedResources = response["changedResources"]
-  var adventureVariables = newSeq[AdventureVariable]()
+proc getSequenceAdventureVariables*(db: DbConn, sequenceRequestIds: seq[int]): seq[AdventureVariable] =
+  ## Calculates the new adventure variables based on the sequence request ids.
+  ## Doesn't update the db with the new adventure variables.
+
   for varChange in getVariableChanges(db, sequenceRequestIds):
     var adventureVar = getAdventureVariable(db, varChange.adventureVariableId).get(AdventureVariable(
       adventureVariableId: varChange.adventureVariableId,
@@ -61,20 +62,15 @@ proc changeAdventureVariables*(db: DbConn, sequenceRequestIds: seq[int], respons
       of variableOperatorUnknown: # Assume it's the opposite
         adventureVar.value = some(adventureVar.value.get(0) - varChange.variableChangeValue)
 
-    adventureVariables.add(adventureVar)
-
-  changedResources["adventureVariables"] = %*adventureVariables
+    result.add(adventureVar)
 
 
-proc updateAdventureVariables*(db: DbConn, adventureVariables: JsonNode) =
+proc updateAdventureVariables*(db: DbConn, adventureVariables: seq[AdventureVariable]) =
   for adventureVariable in adventureVariables:
-    let adventureVariableId = adventureVariable["adventureVariableId"].getInt()
-    let value = adventureVariable["value"].getInt()
-
     db.exec(sql"""
       INSERT INTO adventureVariables (adventureVariableId, value) VALUES (?, ?)
-      ON CONFLICT (adventureVariableId) DO UPDATE SET value = ?
-    """, adventureVariableId, value, value)
+      ON CONFLICT (adventureVariableId) DO UPDATE SET value = excluded.value
+    """, adventureVariable.adventureVariableId, adventureVariable.value.get(0))
 
 
 proc addAdventureVariable*(db: DbConn, adventureVariable: JsonNode) =

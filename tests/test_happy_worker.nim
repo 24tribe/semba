@@ -22,17 +22,17 @@ proc testHappyWorkerStart() =
   doAssert(res.happyWorkerItem.happyWorkerItemId == happyWorkerItemId)
   doAssert(res.happyWorkerItem.state == 5)
 
-  let challenges = res.changedResources.challenges.get()
+  let challenges = res.changedResources.challenges
   doAssert(challenges.len == 1)
   doAssert(challenges[0].challengeId == 105021)
   doAssert(challenges[0].state == 5)
   doAssert(challenges[0].expiresAt.isSome())
 
-  doAssert(res.changedResources.challengeProgresses.get(@[]) == @[ChallengeProgress(
+  doAssert(res.changedResources.challengeProgresses == @[ChallengeProgress(
     challengeProgressId: 10502101, state: 2
   )])
 
-  doAssert(res.changedResources.challengeTasks.get(@[]) == @[ChallengeTask(
+  doAssert(res.changedResources.challengeTasks == @[ChallengeTask(
     challengeTaskId: 105021011
   )])
 

@@ -1,5 +1,4 @@
 import std/json
-import std/sets
 import std/options
 import std/sequtils
 import std/tables
@@ -7,7 +6,6 @@ import std/tables
 import ../db_connector/db_sqlite
 
 import ../enum_ex
-import ../protojson
 import adventure_variable
 import area
 import area_change_lock
@@ -48,38 +46,38 @@ type Notifications* = object
   itemRequest*: Option[bool]
 
 type Resources* = object
-  adventureVariables: Option[seq[AdventureVariable]]
+  adventureVariables*: seq[AdventureVariable]
   areas*: Option[seq[Area]]
-  areaChangeLocks: Option[seq[AreaChangeLock]]
-  areaGroups: Option[seq[AreaGroup]]
+  areaChangeLocks: seq[AreaChangeLock]
+  areaGroups: seq[AreaGroup]
   areaObjectLocks*: Option[seq[AreaObjectLock]]
-  challenges*: Option[seq[Challenge]]
-  challengeProgresses*: Option[seq[ChallengeProgress]]
-  challengeTasks*: Option[seq[ChallengeTask]]
-  characters*: Option[seq[Character]]
-  characterCostumes: Option[seq[CharacterCostume]]
+  challenges*: seq[Challenge]
+  challengeProgresses*: seq[ChallengeProgress]
+  challengeTasks*: seq[ChallengeTask]
+  characters*: seq[Character]
+  characterCostumes: seq[CharacterCostume]
   characterLikabilities: Option[seq[CharacterLikability]]
   characterMountingPowers: Option[seq[CharacterMountingPower]]
   characterMountingPowerCommon: Option[CharacterMountingPowerCommon]
   characterPieces: Option[seq[CharacterPiece]]
-  cities: Option[seq[City]]
+  cities: seq[City]
   cycleUpdateShopStates: Option[seq[JsonNode]] # FIXME: CycleUpdateShopState
   dailyPassStates: Option[seq[JsonNode]] # FIXME: DailyPassState
   dungeons: Option[seq[Dungeon]]
   eventFloorNodes: Option[seq[EventFloorNode]]
   eventLifts: Option[seq[EventLift]]
   follows: Option[seq[JsonNode]] # FIXME: Follow
-  formations: Option[seq[JsonNode]] # FIXME: Formation
+  formations*: seq[JsonNode] # FIXME: Formation
   fractalVises: Option[seq[JsonNode]] # FIXME: FractalVise
   gears*: Option[seq[Gear]]
   graffitiArts*: Option[seq[GraffitiArt]]
   guestCharacters: Option[seq[JsonNode]] # FIXME: GuestCharacter
-  items*: Option[seq[Item]] # FIXME: Item
+  items*: seq[Item]
   loginBonuses: Option[seq[JsonNode]] # FIXME: LoginBonus
-  magicOrbs: Option[seq[JsonNode]] # FIXME: MagicOrb
-  missions*: Option[seq[Mission]]
+  magicOrbs*: seq[MagicOrb]
+  missions*: seq[Mission]
   missionCountRewardStates: Option[seq[JsonNode]] # FIXME: MissionCountRewardState
-  nineSequences: Option[seq[NineSequence]]
+  nineSequences*: seq[NineSequence]
   notifications*: Option[Notifications]
   profile: Option[JsonNode] # FIXME: Profile
   profileBadges: Option[seq[JsonNode]] # FIXME: ProfileBadge
@@ -90,11 +88,11 @@ type Resources* = object
   shopProductStates*: Option[seq[ShopProductState]]
   status*: Option[Status]
   synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
-  tensionCards: Option[seq[JsonNode]] # FIXME: TensionCard
+  tensionCards: seq[JsonNode] # FIXME: TensionCard
   tips*: Option[seq[Tip]]
   totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
-  tutorialStates*: Option[seq[JsonNode]] # FIXME: TutorialState
+  tutorialStates*: seq[TutorialState]
   wallet*: Option[Wallet]
   warpPoints*: Option[seq[JsonNode]] # FIXME: WarpPoint
   xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
@@ -103,151 +101,45 @@ type ChangedResourcesResponse* = object
   changedResources*: Resources
 
 
-proc updateResources*(db: DbConn, changedResources: var JsonNode) =
-  var handledKeys = initHashSet[string]()
+proc updateResources*(db: DbConn, changedResources: var Resources) =
+  updateMissions(db, changedResources.missions)
+  updateItems(db, changedResources.items)
 
-  let formations = changedResources.getOrDefault("formations").getElems()
+  updateFormations(db, changedResources.formations)
 
-  if formations.len > 0:
-    updateFormations(db, formations)
-    handledKeys.incl("formations")
+  if changedResources.status.isSome():
+    let changedStatus = changedResources.status.get()
 
-  if changedResources.getOrDefault("status") != nil:
-    handledKeys.incl("status")
     var status = getUserStatusTypeSafe(db)
 
-    if formations.len > 0:
-      let formationNumber = changedResources["status"].getOrDefault("formationNumber").getInt()
-      status.formationNumber = some(formationNumber)
+    if changedResources.formations.len > 0:
+      status.formationNumber = changedStatus.formationNumber
 
-    updateStatusFromStatusLocation(status, protoJsonTo(changedResources["status"], Status))
-    changedResources["status"] = %*status
+    updateStatusFromStatusLocation(status, changedStatus)
+
     setUserStatusTypeSafe(db, status);
+    changedResources.status = some(status)
 
-  let nineSequences = changedResources.getOrDefault("nineSequences")
+  updateNineSequences(db, changedResources.nineSequences)
+  updateAdventureVariables(db, changedResources.adventureVariables)
+  updateChallengeProgresses(db, changedResources.challengeProgresses)
+  upsertChallengeTasks(db, changedResources.challengeTasks)
+  upsertChallenges(db, changedResources.challenges)
 
-  if nineSequences != nil:
-    handledKeys.incl("nineSequences")
-    updateNineSequences(db, nineSequences)
+  for tutorialState in changedResources.tutorialStates:
+    updateTutorialState(db, tutorialState.tutorialStatusKey, tutorialState.enabled)
 
-  let adventureVariables = changedResources.getOrDefault("adventureVariables")
+  for areaGroup in changedResources.areaGroups:
+    addAreaGroup(db, areaGroup.areaGroupId)
 
-  if adventureVariables != nil:
-    handledKeys.incl("adventureVariables")
-    updateAdventureVariables(db, adventureVariables)
-
-  let challengeProgresses = changedResources.getOrDefault("challengeProgresses")
-
-  if challengeProgresses != nil:
-    handledKeys.incl("challengeProgresses")
-    updateChallengeProgresses(db, challengeProgresses)
-
-  let challengeTasks = changedResources.getOrDefault("challengeTasks")
-
-  if challengeTasks != nil:
-    handledKeys.incl("challengeTasks")
-    updateChallengeTasks(db, challengeTasks)
-
-  let challenges = changedResources.getOrDefault("challenges").getElems()
-  updateChallenges(db, challenges)
-
-  if challenges.len > 0:
-    handledKeys.incl("challenges")
-
-  let tutorialStates = changedResources.getOrDefault("tutorialStates").getElems()
-
-  if tutorialStates.len > 0:
-    handledKeys.incl("tutorialStates")
-
-  for tutorialState in tutorialStates:
-    let tutorialStatusKey = tutorialState["tutorialStatusKey"].getInt()
-    let enabled = tutorialState.getOrDefault("enabled").getBool()
-    updateTutorialState(db, tutorialStatusKey, enabled)
-
-  let areaGroups = changedResources.getOrDefault("areaGroups").getElems()
-
-  if areaGroups.len > 0:
-    handledKeys.incl("areaGroups")
-
-  for areaGroup in areaGroups:
-    let areaGroupId = areaGroup["areaGroupId"].getInt()
-    addAreaGroup(db, areaGroupId)
-
-  let cities = changedResources.getOrDefault("cities").getElems()
-
-  if cities.len > 0:
-    handledKeys.incl("cities")
-
-  for city in cities:
+  for city in changedResources.cities:
     addCity(db, city)
 
-  let magicOrbs = protoJsonTo(changedResources.getOrDefault("magicOrbs"), seq[MagicOrb])
-
-  if magicOrbs.len > 0:
-    handledKeys.incl("magicOrbs")
-
-  updateMagicOrbs(db, magicOrbs)
-
-  let areaChangeLocks = changedResources.getOrDefault("areaChangeLocks").getElems()
-
-  if areaChangeLocks.len > 0:
-    handledKeys.incl("areaChangeLocks")
-
-  updateAreaChangeLocks(db, areaChangeLocks)
-
-  let missions = changedResources.getOrDefault("missions")
-
-  if missions != nil:
-    # Don't return (zero sensei) missions from online logs
-    changedResources.delete("missions")
-    handledKeys.incl("missions")
-
-  let characters = changedResources.getOrDefault("characters").getElems()
-
-  if characters.len > 0:
-    updateCharacters(db, characters)
-    handledKeys.incl("characters")
-
-  let characterCostumes = protoJsonTo(changedResources.getOrDefault("characterCostumes"), Option[seq[CharacterCostume]])
-
-  if characterCostumes.isSome and characterCostumes.get().len > 0:
-    updateCharacterCostumes(db, characterCostumes.get())
-    handledKeys.incl("characterCostumes")
-
-  let tensionCards = changedResources.getOrDefault("tensionCards").getElems()
-
-  if tensionCards.len > 0:
-    updateTensionCards(db, tensionCards)
-    handledKeys.incl("tensionCards")
-
-  # Remove wallet changes to avoid gems changing to random amounts in the client.
-  # The correct fix here would be to get the rewards from completing a challenge from
-  # the master data instead of the online logs, but for now it's okay
-  if changedResources.hasKey("wallet"):
-    changedResources.delete("wallet")
-    handledKeys.incl("wallet")
-
-  let items = protoJsonTo(changedResources.getOrDefault("items"), Option[seq[Item]]).get(@[])
- 
-  if items.len > 0:
-    handledKeys.incl("items")
-
-    # Don't change the currency items to avoid them changing to random amounts in the client.
-    # The correct fix here would be to get the rewards from completing a challenge from
-    # the master data instead of the online logs, but for now it's okay
-    let seqItems = items.filterIt(not (it.itemId in [2, 14, 15])).toSeq() # tPoint, stamps, boosters
-    changedResources["items"] = %*seqItems
-    updateItems(db, seqItems)
-
-  for key, _ in changedResources.pairs():
-    if not (key in handledKeys):
-      echo("WARNING: " & key & " not handled in updateResources")
-
-
-proc updateFromReadSequenceResponse*(db: DbConn, response: JsonNode) =
-  updateAreaObjects(db, response["areaObjects"])
-  var changedResources = response["changedResources"]
-  updateResources(db, changedResources) 
+  updateMagicOrbs(db, changedResources.magicOrbs)
+  updateAreaChangeLocks(db, changedResources.areaChangeLocks)
+  updateCharactersTypeSafe(db, changedResources.characters)
+  updateCharacterCostumes(db, changedResources.characterCostumes)
+  updateTensionCards(db, changedResources.tensionCards)
 
 
 proc getChangedResourcesForCompletedChallengeTask*(
@@ -296,8 +188,8 @@ proc getChangedResourcesForCompletedChallengeTask*(
     ))
 
   let resources = Resources(
-    challengeTasks: some(challengeTasks),
-    challengeProgresses: some(challengeProgresses)
+    challengeTasks: challengeTasks,
+    challengeProgresses: challengeProgresses,
   )
 
   result = (areaObjects, resources)
@@ -307,21 +199,22 @@ proc getChangedResourcesForCompletedChallengeTask*(
 Swap the changed areaObjects, challengeTasks and challengeProgresses taken from
 the online logs with the ones from the master data
 ]# 
-proc changeReadSequenceResponse*(db: DbConn, seqReqId: int, response: JsonNode) =
-  response["areaObjects"] = %*[]
+proc changeReadSequenceResponse*(
+  db: DbConn, seqReqId: int, changedResources: var Resources, areaObjects: var seq[AreaObject]
+) =
+  areaObjects = @[]
 
-  let changedResources = response["changedResources"]
-  changedResources["challengeTasks"] = %*[]
-  changedResources["challengeProgresses"] = %*[]
+  changedResources.challengeTasks = @[]
+  changedResources.challengeProgresses = @[]
 
   let challengeTask = getMdChallengeTaskForSequenceRequestId(db, seqReqId)
 
   if challengeTask.isSome():
-    let (areaObjects, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
+    let (newAreaObjects, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
 
-    changedResources["challengeTasks"] = %*resources.challengeTasks.get()
-    changedResources["challengeProgresses"] = %*resources.challengeProgresses.get()
-    response["areaObjects"] = %*areaObjects
+    changedResources.challengeTasks = resources.challengeTasks
+    changedResources.challengeProgresses = resources.challengeProgresses
+    areaObjects = newAreaObjects
 
 
 proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): Resources =
@@ -387,9 +280,9 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
   setUserStatusTypeSafe(db, status)
 
   result.gears = some(gears)
-  result.items = some(items)
+  result.items = items
   result.status = some(status)
-  result.characters = some(characters)
+  result.characters = characters
 
 
 proc updateResourcesFromRewards*(

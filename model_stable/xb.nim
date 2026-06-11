@@ -1,11 +1,13 @@
 import std/json
 import std/strutils
 import std/math
+import std/options
 
 import ../db_connector/db_sqlite
 
 import ../semba_error
 import ../protojson
+import resources
 
 
 type TensionData = object
@@ -73,7 +75,7 @@ proc getCurrentXbPlayDataIdx*(db: DbConn, xbId: int): int =
 
 proc getXbPlayData(
   db: DbConn, xbId: int, idx: int,
-  nextAtBatGameInfo: var JsonNode, changedResources: var JsonNode, currentAtBatGameInfo: var JsonNode
+  nextAtBatGameInfo: var JsonNode, changedResources: var Option[Resources], currentAtBatGameInfo: var JsonNode
 ) =
   let row = db.getRow(sql"""
     SELECT idx, nextAtBatGameInfo, changedResources, currentAtBatGameInfo
@@ -84,12 +86,12 @@ proc getXbPlayData(
     raise newException(SembaError, "Couldn't find xbPlayData for idx=" & $idx & " and xbId=" & $xbId)
 
   nextAtBatGameInfo = if row[1] != "": parseJson(row[1]) else: nil
-  changedResources = if row[2] != "": parseJson(row[2]) else: nil
+  changedResources = if row[2] != "": some(protoJsonTo(parseJson(row[2]), Resources)) else: none(Resources)
   currentAtBatGameInfo = parseJson(row[3])
 
 proc popCurrentXbPlayData*(
   db: DbConn, xbId: int,
-  nextAtBatGameInfo: var JsonNode, changedResources: var JsonNode, currentAtBatGameInfo: var JsonNode
+  nextAtBatGameInfo: var JsonNode, changedResources: var Option[Resources], currentAtBatGameInfo: var JsonNode
 ) =
   let idx = getCurrentXbPlayDataIdx(db, xbId)
 

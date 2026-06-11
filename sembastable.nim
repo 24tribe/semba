@@ -39,7 +39,7 @@ proc getJsonResultStable*(
   elif uri == "/adventure/update_character_status":
     result = adventure_UpdateCharacterStatus(db, jsonReq)
   elif uri == "/adventure/read_sequence":
-    result = adventure_ReadSequence(db, protoJsonTo(jsonReq, AdventureReadSequenceRequest))
+    result = toJson(adventure_ReadSequence(db, protoJsonTo(jsonReq, AdventureReadSequenceRequest)))
   elif uri == "/adventure/acquire_area_item":
     result = adventure_AcquireAreaItem(db, protoJsonTo(jsonReq, AdventureAcquireAreaItemRequest))
   elif uri == "/adventure/release_event_lift":

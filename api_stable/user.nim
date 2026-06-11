@@ -81,6 +81,7 @@ proc user_LogIn*(db: DbConn): JsonNode =
   let missions = getMissions(db)
   let gears = getGears(db)
   let graffitiArts = getGraffitiArts(db)
+  let characters = getCharactersTypeSafe(db)
 
   return %*{
     "resources": {
@@ -95,7 +96,7 @@ proc user_LogIn*(db: DbConn): JsonNode =
       "characterCostumes": getCharacterCostumes(db),
       "characterMountingPowerCommon": {},
       "characterPieces": characterPieces,
-      "characters": getCharacters(db),
+      "characters": characters,
       "cities": cities,
       "dungeons": dungeons,
       "formations": formations,
