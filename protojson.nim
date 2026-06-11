@@ -58,6 +58,8 @@ proc toJsonHook*(a: ProtoJsonInt64): JsonNode = toJson($(a.int64))
 
 
 proc protoJsonTo*(b: JsonNode, T: typedesc): T =
+  ## jsonTo wrapper that allows extra keys, missing keys and a nil argument
+
   var val =
     if b.isNil():
       JsonNode(kind: JNull)
@@ -81,6 +83,8 @@ macro genEnumFromProtoJsonHook*(e: untyped): untyped =
 
 
 proc toProtoJson*[T](o: T): JsonNode =
+  ## toJson wrapper that represent enums as a string of their symbol name
+
   var opts = initToJsonOptions()
   opts.enumMode = joptEnumSymbol
   toJson(o, opts)
