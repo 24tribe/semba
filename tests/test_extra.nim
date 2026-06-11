@@ -2,6 +2,7 @@ import std/assertions
 import std/sequtils
 import std/json
 import std/options
+import std/strutils
 
 import ../protojson
 import ../db_connector/db_sqlite
@@ -98,6 +99,21 @@ proc testGenStringEnumHooks() =
   doAssert(req.battleResult == BattleResult.won)
 
 
+proc testSqliteMin() =
+  let db = initMemoryDb()
+
+  db.exec(sql"CREATE TABLE asd (x INTEGER)")
+  db.exec(sql"INSERT INTO asd VALUES (10)")
+
+  let addAmount = 30
+  let maxAmount = 20
+
+  db.exec(sql"UPDATE asd SET x = min(CAST(? as INTEGER), x + ?)", maxAmount, addAmount)
+
+  let amount = parseInt(db.getRow(sql"SELECT x FROM asd")[0])
+  doAssert(amount == 20)
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
@@ -107,3 +123,4 @@ proc testSuiteExtra*() =
   testOptionToJson()
   testNilJsonField()
   testGenStringEnumHooks()
+  testSqliteMin()

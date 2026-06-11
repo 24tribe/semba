@@ -8,11 +8,10 @@ import ../model_stable/area_object_lock
 import ../model_stable/city
 import ../model_stable/character
 import ../model_stable/battle
+import ../model_stable/battle_enum
 import ../model_stable/tension_card
-import ../model_stable/dungeon
 import ../model_stable/area_object
 import ../model_stable/reward
-import ../model_stable/enemy
 import ../model_stable/item
 import ../model_stable/challenge_task
 import ../model_stable/challenge_progress
@@ -25,7 +24,7 @@ import ../protojson
 
 
 type BattleFinishRequest = object
-  battleResult: Option[string]
+  battleResult: BattleResult
   characterUpdates: seq[CharacterUpdate]
   encounteredEnemyIds: seq[int]
 
@@ -130,95 +129,59 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   let status = getUserStatusTypeSafe(db)
 
-  if req.battleResult.get("") == "lost":
-    return BattleFinishResponse(changedResources: Resources(
-      status: some(status)
-    ))
+  case req.battleResult:
+  of BattleResult.lost:
+    result.changedResources.status = some(status)
 
-  for characterUpdate in req.characterUpdates:
-    setCharacterHp(db, characterUpdate.characterId, characterUpdate.hp.get(0))
+  of BattleResult.retire:
+    result.changedResources.status = some(status)
+    result.changedResources.characters = applyCharacterUpdates(db, req.characterUpdates)
+    result.moveToAreaLocatorId = some(getLastWarpPoint(db).areaLocatorId)
 
-  let characters = getCharactersWithId(db, characterIds)
+  of BattleResult.won:
+    discard applyCharacterUpdates(db, req.characterUpdates)
 
-  if req.battleResult.get("") == "retire":
-    return BattleFinishResponse(
-      changedResources: Resources(status: some(status), characters: characters),
-      moveToAreaLocatorId: some(getLastWarpPoint(db).areaLocatorId),
+    let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
+    updateCharacterExps(db, characterExps)
+    let characters = getCharactersWithId(db, characterIds)
+
+    let areaObjectLocks = handleWonBattleTriggers(db, battleTriggers, dungeonId, status.currentAreaKeyId.get(0))
+    upsertAreaObjectLocks(db, areaObjectLocks)
+
+    var allRewards = collectEnemyRewards(db, req.encounteredEnemyIds)
+
+    let (items, totalItems) = rewardsToChangedItems(db, allRewards)
+    updateItems(db, items)
+
+    let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
+
+    var missions: seq[Mission] = getChangedAttackTestMissions(db, characters, cityId)
+    missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
+    missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
+    updateMissions(db, missions)
+
+    result = BattleFinishResponse(
+      changedResources: Resources(
+        areaObjectLocks: some(areaObjectLocks),
+        status: some(status),
+        characters: characters,
+        items: items,
+        missions: missions,
+      ),
+      rewards: @[Rewards(`type`: some(6), contents: allRewards)],
+      characterExps: characterExps,
+      areaObjects: getBattleFinishAreaObjects(db, battleEntryIds[0]),
     )
 
-  var areaObjectLocks = newSeq[AreaObjectLock]()
+    let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
 
-  let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
-  updateCharacterExps(db, characterExps, characters)
-  let newCharacters = getCharactersWithId(db, characterIds)
+    if challengeTask.isSome():
+      let (_, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
 
-  for battleTrigger in battleTriggers:
-    var isAreaObject = battleTrigger.triggerType.get("") == "area_object"
-    var isActionSequence = battleTrigger.triggerType.get("") == "action_sequence"
-    var isDungeon = battleTrigger.triggerType.get("") == "dungeon"
+      result.changedResources.challengeTasks = resources.challengeTasks
+      upsertChallengeTasks(db, resources.challengeTasks)
 
-    if not isActionSequence:
-      for triggerId in battleTrigger.triggerIds.get(@[]):
-        if isDungeon:
-          removeDungeonEnemy(db, dungeonId.get(), triggerId)
-        else:
-          let areaKeyId = status.currentAreaKeyId.get(0)
-          if isAreaObject:
-            let areaObjectLockId = getAreaObjectLockIdForBattle(db, triggerId)
+      result.changedResources.challengeProgresses = resources.challengeProgresses
+      upsertChallengeProgresses(db, resources.challengeProgresses)
 
-            if areaObjectLockId.isSome():
-              areaObjectLocks.add(AreaObjectLock(areaObjectLockId: areaObjectLockId.get(), count: some(1)))
-
-            removeAreaObject(db, areaKeyId, triggerId)
-          else:
-            removeAreaEnemy(db, areaKeyId, triggerId)
-
-  upsertAreaObjectLocks(db, areaObjectLocks)
-
-  var allRewards = newSeq[Reward]()
-
-  for enemyId in req.encounteredEnemyIds:
-    let rewardItemIds = getEnemyRewardItemIds(db, enemyId)
-
-    if rewardItemIds.len == 0:
-      echo("Warning: rewardItemIds for enemyId=" & $enemyId & " is empty!!")
-
-    let rewards = getRandomRewards(db, rewardItemIds)
-    for reward in rewards:
-      allRewards.add(reward)
-
-  let (items, totalItems) = rewardsToChangedItems(db, allRewards)
-  updateItems(db, items)
-
-  let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
-
-  var missions: seq[Mission] = getChangedAttackTestMissions(db, newCharacters, cityId)
-  missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
-  missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
-  updateMissions(db, missions)
-
-  result = BattleFinishResponse(
-    changedResources: Resources(
-      areaObjectLocks: some(areaObjectLocks),
-      status: some(status),
-      characters: newCharacters,
-      items: items,
-      missions: missions,
-    ),
-    rewards: @[Rewards(`type`: some(6), contents: allRewards)],
-    characterExps: characterExps,
-    areaObjects: getBattleFinishAreaObjects(db, battleEntryIds[0]),
-  )
-
-  let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
-
-  if challengeTask.isSome():
-    let (_, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
-
-    result.changedResources.challengeTasks = resources.challengeTasks
-    upsertChallengeTasks(db, resources.challengeTasks)
-
-    result.changedResources.challengeProgresses = resources.challengeProgresses
-    upsertChallengeProgresses(db, resources.challengeProgresses)
-
-  updateAreaObjectsEx(db, result.areaObjects)
+    updateAreaObjectsEx(db, result.areaObjects)

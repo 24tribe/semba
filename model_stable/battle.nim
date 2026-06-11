@@ -8,9 +8,12 @@ import std/sugar
 import ../db_connector/db_sqlite
 
 import ../semba_error
-import enemy
-import dungeon
+import area_object
+import area_object_lock
 import character
+import dungeon
+import enemy
+import reward
 import mission
 
 
@@ -267,3 +270,53 @@ proc getChangedBeAForeverWinnerMissions*(db: DbConn, cityId: int): seq[Mission] 
   let beAForeverWinnerMissions = getBeAForeverWinnerMissionsForCityId(db, cityId)
 
   return getMissionsWithNewCount(db, beAForeverWinnerMissions, (mission, mdMission) => some(mission.count.get(0) + 1))
+
+
+proc handleWonBattleTriggers*(
+  db: DbConn, battleTriggers: openArray[BattleTrigger], dungeonId: Option[int], areaId: int
+): seq[AreaObjectLock] =
+  ## Dungeon: Remove defeated enemies
+  ## Adventure: Remove defeated area objects/enemies and unlocks reward
+  ## Return the changed area object locks
+
+  for battleTrigger in battleTriggers:
+    var isAreaObject = battleTrigger.triggerType.get("") == "area_object"
+    var isActionSequence = battleTrigger.triggerType.get("") == "action_sequence"
+    var isDungeon = battleTrigger.triggerType.get("") == "dungeon"
+
+    if not isActionSequence:
+      for triggerId in battleTrigger.triggerIds.get(@[]):
+        if isDungeon:
+          removeDungeonEnemy(db, dungeonId.get(), triggerId)
+        else:
+          if isAreaObject:
+            let areaObjectLockId = getAreaObjectLockIdForBattle(db, triggerId)
+
+            if areaObjectLockId.isSome():
+              result.add(AreaObjectLock(areaObjectLockId: areaObjectLockId.get(), count: some(1)))
+
+            removeAreaObject(db, areaId, triggerId)
+          else:
+            removeAreaEnemy(db, areaId, triggerId)
+
+
+proc applyCharacterUpdates*(db: DbConn, characterUpdates: openArray[CharacterUpdate]): seq[Character] =
+  ## Changes characters hp based on characterUpdates. Returns the changed characters.
+
+  for characterUpdate in characterUpdates:
+      setCharacterHp(db, characterUpdate.characterId, characterUpdate.hp.get(0))
+
+  getCharactersWithId(db, characterUpdates.mapIt(it.characterId))
+
+
+proc collectEnemyRewards*(db: DbConn, encounteredEnemyIds: openArray[int]): seq[Reward] =
+  for enemyId in encounteredEnemyIds:
+    let rewardItemIds = getEnemyRewardItemIds(db, enemyId)
+
+    if rewardItemIds.len == 0:
+      echo("Warning: rewardItemIds for enemyId=" & $enemyId & " is empty!!")
+
+    let rewards = getRandomRewards(db, rewardItemIds)
+
+    for reward in rewards:
+      result.add(reward)

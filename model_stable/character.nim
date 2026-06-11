@@ -522,9 +522,11 @@ proc getMdCharacterLevel(db: DbConn, level: int): MdCharacterLevel =
   )
 
 
-proc updateCharacterExp*(db: DbConn, addExp: int, character: Character, maxExp: int) =
-  let finalExp = min(character.exp.get(0) + addExp, maxExp)
-  db.exec(sql"UPDATE characters SET exp = ? WHERE characterId = ?", finalExp, character.characterId)
+proc updateCharacterExp*(db: DbConn, addExp: int, characterId: int, maxExp: int) =
+  db.exec(
+    sql"UPDATE characters SET exp = min(CAST(? as INTEGER), exp + ?) WHERE characterId = ?",
+    maxExp, addExp, characterId
+  )
 
 
 proc getCharacterMaxExp*(db: DbConn): int =
@@ -533,14 +535,11 @@ proc getCharacterMaxExp*(db: DbConn): int =
   return mdCharLevel.exp
 
 
-proc updateCharacterExps*(db: DbConn, characterExps: openArray[CharacterExp], characters: openArray[Character]) =
+proc updateCharacterExps*(db: DbConn, characterExps: openArray[CharacterExp]) =
   let maxExp = getCharacterMaxExp(db)
 
-  for character in characters:
-    for characterExp in characterExps:
-      if characterExp.characterId == character.characterId:
-        updateCharacterExp(db, characterExp.dropExp, character, maxExp)
-        break
+  for characterExp in characterExps:
+    updateCharacterExp(db, characterExp.dropExp, characterExp.characterId, maxExp)
 
 
 proc getCharacterCostumes*(db: DbConn): seq[JsonNode] =

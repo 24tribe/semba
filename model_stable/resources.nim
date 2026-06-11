@@ -261,15 +261,15 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
       let maxExp = getCharacterMaxExp(db)
 
       if members.character1Id.isSome():
-        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character1Id.get()), maxExp)
+        updateCharacterExp(db, reward.quantity, members.character1Id.get(), maxExp)
         characters.add(getCharacter(db, members.character1Id.get()))
 
       if members.character2Id.isSome():
-        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character2Id.get()), maxExp)
+        updateCharacterExp(db, reward.quantity, members.character2Id.get(), maxExp)
         characters.add(getCharacter(db, members.character2Id.get()))
 
       if members.character3Id.isSome():
-        updateCharacterExp(db, reward.quantity, getCharacter(db, members.character3Id.get()), maxExp)
+        updateCharacterExp(db, reward.quantity, members.character3Id.get(), maxExp)
         characters.add(getCharacter(db, members.character3Id.get()))
     else:
       discard
