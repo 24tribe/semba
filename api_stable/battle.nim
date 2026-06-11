@@ -23,7 +23,7 @@ import ../semba_error
 import ../protojson
 
 
-type BattleFinishRequest = object
+type BattleFinishRequest* = object
   battleResult: BattleResult
   characterUpdates: seq[CharacterUpdate]
   encounteredEnemyIds: seq[int]
@@ -114,7 +114,9 @@ proc battle_Restart*(
   result.advantageType = lastBattleInfo.get().advantageType
 
 
-proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): BattleFinishResponse =
+proc battle_Finish*(
+  db: DbConn, lastBattleInfo: var Option[BattleInfo], req: BattleFinishRequest
+): BattleFinishResponse =
   if lastBattleInfo.isNone():
     raise newException(SembaError, "lastBattleInfo.isNone()")
 
@@ -124,8 +126,6 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   let dungeonId = lastBattleInfo.get().dungeonId
 
   lastBattleInfo = none(BattleInfo)
-
-  let req = protoJsonTo(jsonReq, BattleFinishRequest)
 
   let status = getUserStatusTypeSafe(db)
 

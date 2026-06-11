@@ -61,7 +61,7 @@ proc getJsonResultStable*(
   elif uri == "/battle/start":
     result = toProtoJson(battle_Start(db, lastBattleInfo, jsonReq))
   elif uri == "/battle/finish":
-    result = toProtoJson(battle_Finish(db, lastBattleInfo, jsonReq))
+    result = toProtoJson(battle_Finish(db, lastBattleInfo, protoJsonTo(jsonReq, BattleFinishRequest)))
   elif uri == "/battle/restart":
     result = toProtoJson(battle_Restart(db, lastBattleInfo, protoJsonTo(jsonReq, BattleRestartRequest)))
 
