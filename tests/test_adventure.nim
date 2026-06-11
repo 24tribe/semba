@@ -548,12 +548,42 @@ proc testReplaySequenceBug(saves_dir: string) =
   let res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
     "sequenceRequestIds": [ 109502011 ],
     "currentLocation": {
-      "areaType": 1, "direction": 5, "areaType": 1, "areaKeyId": 101313,
-      "positionCoordinates": { "y": 0.0192914, "z": 2.75 }, "areaKeyId": 101313
-    }
+      "areaType": 1, "direction": 5, "areaKeyId": 101313,
+      "positionCoordinates": { "y": 0.0192914, "z": 2.75 },
+    },
+    "areaType": 1, "areaKeyId": 101313
   }), Option[AdventureReadSequenceResponse])
 
   doAssert(res.isSome())
+
+
+proc testMagicOrbMissionInReadSequence(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "before elevator 20f unlock 2")
+
+  let res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 80102011, 80102012 ],
+    "nineSequences": [ { "id": 95016001, "choices": "{\"Selections\":[]}" } ],
+    "currentLocation": {
+      "areaType": 1, "direction": 4, "areaKeyId": 101313,
+      "positionCoordinates": { "x": -2.7, "y": 0.019291561, "z": -1.3 }
+    },
+    "areaType": 1, "areaKeyId": 101313
+  }), Option[AdventureReadSequenceResponse])
+
+  doAssert(res.isSome())
+
+  var changedResources = res.get().changedResources
+
+  let verityOrbMissionIdx = changedResources.missions.findIt(it.missionId == 1041007)
+  doAssert(verityOrbMissionIdx != -1)
+
+  let firstVerityOrbMission = changedResources.missions[verityOrbMissionIdx]
+  doAssert(firstVerityOrbMission.count == some(1))
+  doAssert(firstVerityOrbMission.clearedAt.isSome)
+
+  doAssert(changedResources.missions.filterIt(it.missionId in [1041008, 1041009]).allIt(it.count == some(1)))
 
 
 proc testSuiteAdventure*(saves_dir: string) =
@@ -570,3 +600,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testMiniGameWithAreaObjectLock()
   testMiniGameWithoutAreaObjectLock()
   testReplaySequenceBug(saves_dir)
+  testMagicOrbMissionInReadSequence(saves_dir)
