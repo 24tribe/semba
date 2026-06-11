@@ -586,6 +586,29 @@ proc testMagicOrbMissionInReadSequence(saves_dir: string) =
   doAssert(changedResources.missions.filterIt(it.missionId in [1041008, 1041009]).allIt(it.count == some(1)))
 
 
+proc testUpdateCharacterStatus() =
+  var ctx = getInMemorySembaCtx()
+
+  let res = protoJsonTo(ctx.sembaCall("/adventure/update_character_status", %*{
+    "characterUpdates": [
+      {"characterId": 100201, "hp": 10},
+      {"characterId": 100101, "hp": 20},
+      {"characterId": 100501, "hp": 30},
+    ]
+  }), Option[ChangedResourcesResponse])
+
+  doAssert(res.isSome)
+
+  var changedResources = res.get().changedResources
+  changedResources.characters.sort(proc (a, b: Character): int = cmp(a.characterId, b.characterId))
+
+  let charHps = changedResources.characters.mapIt((it.characterId, it.hp.get(0))).toSeq()
+
+  doAssert(charHps == @[
+    (100101, 20), (100201, 10), (100501, 30)
+  ])
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -601,3 +624,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testMiniGameWithoutAreaObjectLock()
   testReplaySequenceBug(saves_dir)
   testMagicOrbMissionInReadSequence(saves_dir)
+  testUpdateCharacterStatus()
