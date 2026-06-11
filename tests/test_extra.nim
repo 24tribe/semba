@@ -7,6 +7,7 @@ import ../protojson
 import ../db_connector/db_sqlite
 import ../extsqlite
 import ../enum_ex
+import ../model_stable/battle_enum
 import utils
 
 proc test_null() =
@@ -86,6 +87,17 @@ proc testNilJsonField() =
   doAssert($x == "{\"bar\":null}") # SIGSEGV: Illegal storage access. (Attempt to read from nil?)
 
 
+proc testGenStringEnumHooks() =
+  type MockBattleFinishRequest = object
+    battleResult: BattleResult
+
+  doAssert(toProtoJson(MockBattleFinishRequest(battleResult: BattleResult.won)) == %*{"battleResult": "won"})
+
+  let jsonReq = %*{"battleResult": ""}
+  let req = protoJsonTo(jsonReq, MockBattleFinishRequest)
+  doAssert(req.battleResult == BattleResult.won)
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
@@ -94,3 +106,4 @@ proc testSuiteExtra*() =
   testIntToEnum()
   testOptionToJson()
   testNilJsonField()
+  testGenStringEnumHooks()

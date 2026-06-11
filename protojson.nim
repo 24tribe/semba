@@ -10,6 +10,8 @@ import std/macros
 
 export jsonutils
 
+import model_stable/battle_enum
+
 
 type ProtoJsonInt64* = distinct int64
 
@@ -69,23 +71,28 @@ proc protoJsonTo*(b: JsonNode, T: typedesc): T =
   jsonTo(val, T, Joptions(allowExtraKeys: true, allowMissingKeys: true))
 
 
-macro genEnumFromProtoJsonHook*(e: untyped): untyped =
-  ## Macro that receives an enum type and generates a fromJsonHook that
-  ## sets the result to the first value of the enum if receives an empty string.
+macro genStringEnumHooks*(e: untyped): untyped =
+  ## Macro that receives an enum type and generates a fromJsonHook and a toJsonHook that parses a JString.
+  ## The fromJsonHook sets the result to the first value of the enum when receives an empty string.
+  ## The toJsonHook does nothing special, but it's needed for consistency.
 
   quote do:
-    proc fromJsonHook(e: var `e`, n: JsonNode) =
+    proc fromJsonHook*(e: var `e`, n: JsonNode) =
       e =
         if n.kind == JString and n.getStr() == "":
           `e`.low
         else:
           parseEnum[`e`](n.getStr())
 
+    proc toJsonHook*(e: `e`): JsonNode = %($e)
+
 
 proc toProtoJson*[T](o: T): JsonNode =
-  ## toJson wrapper that represent enums as a string of their symbol name
+  ## toJson wrapper to match protoJsonTo
 
   var opts = initToJsonOptions()
-  opts.enumMode = joptEnumSymbol
   opts.jsonNodeMode = joptJsonNodeAsObject # https://github.com/nim-lang/Nim/issues/11894
   toJson(o, opts)
+
+
+genStringEnumHooks(BattleResult)

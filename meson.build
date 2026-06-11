@@ -58,6 +58,7 @@ semba_core_files = [
     'model_stable/area_object.nim',
     'model_stable/area_object_lock.nim',
     'model_stable/battle.nim',
+    'model_stable/battle_enum.nim',
     'model_stable/challenge.nim',
     'model_stable/challenge_progress.nim',
     'model_stable/challenge_task.nim',
