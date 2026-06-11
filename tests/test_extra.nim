@@ -49,6 +49,8 @@ proc testEnumToJson() =
 
   doAssert(foo["bar"].getStr() == "Bar2")
 
+  # protoJsonTo(%*{"bar": ""}, Foo).bar == Bar1 # ValueError: Invalid enum value
+
 
 proc testIntToEnum() =
   type Asd = enum

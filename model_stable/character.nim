@@ -484,63 +484,6 @@ proc getCharactersWithId*(db: DbConn, ids: openArray[int]): seq[Character] =
     result.add(character)
 
 
-proc updateCharacterPiece*(db: DbConn, characterPiece: JsonNode) =
-  let characterId = characterPiece["characterId"].getInt()
-  let quantity = characterPiece.getOrDefault("quantity").getInt()
-
-  db.exec(sql"""
-    INSERT INTO characterPieces (characterId, quantity) VALUES (?, ?)
-    ON CONFLICT (characterId) DO
-    UPDATE SET quantity = excluded.quantity
-  """, characterId, quantity)
-
-
-#[
-Add one character piece to the db, returns the changed count of character pieces
-]#
-proc addCharacterPiece*(db: DbConn, characterId: int): int =
-  let row = db.getRow(sql"SELECT quantity FROM characterPieces")
-
-  if row[0] == "":
-    result = 1
-  else:
-    result = parseInt(row[0]) + 1
-
-  updateCharacterPiece(db, %*{"characterId": characterId, "quantity": result})
-
-
-proc getCharacterPiece*(db: DbConn, characterId: int): JsonNode =
-  let row = db.getRow(
-    sql"SELECT characterId, quantity FROM characterPieces WHERE characterId = ?", characterId
-  )
-
-  let quantity = if row[0] == "": 0 else: parseInt(row[1])
-
-  result = %*{
-    "characterId": characterId,
-    "quantity": quantity,
-  }
-
-
-proc getCharacterPieces*(db: DbConn): seq[JsonNode] =
-  let rows = db.getAllRows(sql"SELECT characterId, quantity FROM characterPieces")
-  for row in rows:
-    let characterId = parseInt(row[0])
-    let quantity = parseInt(row[1])
-
-    result.add(%*{
-      "characterId": characterId,
-      "quantity": quantity
-    })
-  
-
-proc getCharacters*(db: DbConn): seq[JsonNode] {.deprecated: "use getCharactersTypeSafe instead".} =
-  let charactersRows = db.getAllRows(sql"SELECT characterId FROM characters")
-
-  for characterRow in charactersRows:   
-    result.add(%*getCharacter(db, parseInt(characterRow[0])))
-
-
 proc getCharactersTypeSafe*(db: DbConn): seq[Character] =
   let charactersRows = db.getAllRows(sql"SELECT characterId FROM characters")
 

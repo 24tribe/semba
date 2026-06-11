@@ -11,6 +11,7 @@ import ../model_stable/challenge
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
 import ../model_stable/character
+import ../model_stable/character_piece
 import ../model_stable/city
 import ../model_stable/dungeon
 import ../model_stable/formation

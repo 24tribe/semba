@@ -150,9 +150,7 @@ proc adventure_MoveToArea*(db: DbConn, req: AdventureMoveToAreaRequest): Adventu
     result.areaBehavior = some(AreaBehavior(actionSequenceId: actionSequenceId))
 
 
-proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  var changedCharacters = newSeq[Character]()
-
+proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   for characterUpdate in jsonReq["characterUpdates"]:
     let characterId = characterUpdate["characterId"].getInt()
     let hp = characterUpdate["hp"].getInt()
@@ -160,13 +158,7 @@ proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): JsonNode =
     setCharacterHp(db, characterId, hp)
 
     let character = getCharacter(db, characterId)
-    changedCharacters.add(character)
-
-  return %*{
-    "changedResources": {
-      "characters": changedCharacters
-    }
-  }
+    result.changedResources.characters.add(character)
 
 
 proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): AdventureReadSequenceResponse =
@@ -246,16 +238,9 @@ proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest
   result.areaItem = AreaItem(areaItemId: req.areaItemId, acquired: true)
 
 
-proc adventure_Hospital*(db: DbConn): JsonNode =
-  let status = getUserStatusTypeSafe(db)
-  let changedCharacters = healCharactersTypeSafe(db)
-
-  return %*{
-    "changedResources": {
-      "characters": changedCharacters,
-      "status": status
-    }
-  }
+proc adventure_Hospital*(db: DbConn): ChangedResourcesResponse =
+  result.changedResources.status = some(getUserStatusTypeSafe(db))
+  result.changedResources.characters = healCharactersTypeSafe(db)
 
 
 proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessWarpPointResponse =

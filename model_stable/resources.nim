@@ -59,7 +59,7 @@ type Resources* = object
   characterLikabilities: Option[seq[CharacterLikability]]
   characterMountingPowers: Option[seq[CharacterMountingPower]]
   characterMountingPowerCommon: Option[CharacterMountingPowerCommon]
-  characterPieces: Option[seq[CharacterPiece]]
+  characterPieces*: Option[seq[CharacterPiece]]
   cities: seq[City]
   cycleUpdateShopStates: Option[seq[JsonNode]] # FIXME: CycleUpdateShopState
   dailyPassStates: Option[seq[JsonNode]] # FIXME: DailyPassState

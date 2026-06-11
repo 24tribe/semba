@@ -6,6 +6,8 @@ import ../db_connector/db_sqlite
 import ../model_stable/character
 import ../model_stable/resources
 import ../model_stable/item
+import ../model_stable/reward
+import ../model_stable/character_piece
 import ../model_stable/status
 
 
@@ -19,26 +21,24 @@ type CharacterEnhanceRequest* = object
   characterId*: int
   consumedItems*: Option[seq[ConsumedItem]]
 
+type CharacterLimitBreakResponse* = object
+  changedResources*: Resources
+  rewards*: seq[Rewards]
 
-proc character_CostumeUpdate*(db: DbConn, jsonReq: JsonNode): JsonNode =
+
+proc character_CostumeUpdate*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   let costumeId = jsonReq["characterCostumeId"].getInt()
   let characterId = costumeIdToCharacterId(costumeId)
 
   var character = getCharacter(db, characterId)
   character.characterCostumeId = some(costumeId)
 
-  let characters = [character]
+  result.changedResources.characters = @[character]
 
   db.exec(sql"UPDATE characters SET characterCostumeId = ? WHERE characterId = ?", costumeId, characterId)
 
-  return %*{
-    "changedResources": {
-      "characters": characters
-    }
-  }
 
-
-proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): JsonNode =
+proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): CharacterLimitBreakResponse =
   let characterId = jsonReq["characterId"].getInt()
   let limitBreakCount = jsonReq["limitBreakCount"].getInt()
 
@@ -46,17 +46,12 @@ proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): JsonNode =
   character.limitBreak = character.limitBreak.map(proc (x: int): int = x + limitBreakCount)
   addCharacterLimitBreak(db, characterId, character.limitBreak.get(0))
 
-  let characterPiece = getCharacterPiece(db, characterId)
-  let quantity = max(0, characterPiece.getOrDefault("quantity").getInt() - 1)
-  characterPiece["quantity"] = %*quantity
+  var characterPiece = getCharacterPiece(db, characterId)
+  characterPiece.quantity = max(0, characterPiece.quantity - 1)
   updateCharacterPiece(db, characterPiece)
 
-  result = %*{
-    "changedResources": {
-      "characters": [character],
-      "characterPieces": [characterPiece],
-    }
-  }
+  result.changedResources.characters = @[character]
+  result.changedResources.characterPieces = some(@[characterPiece])
 
 
 proc character_Equip*(db: DbConn, req: CharacterEquipRequest): ChangedResourcesResponse =

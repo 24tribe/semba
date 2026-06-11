@@ -56,8 +56,21 @@ type BattleRestartResponse = object
   guestCharacters: seq[JsonNode] # FIXME: use Character
   difficultyDecreaseCount: Option[int]
 
+type BattleStartResponse* = object
+  characters: seq[Character]
+  tensionCards: seq[JsonNode] # FIXME: use TensionCard
+  battleParameters: seq[BattleParameter]
+  battleTriggers: seq[BattleTrigger]
+  advantageType: string
+  changedResources: Resources
+  characterDishes: seq[JsonNode] # FIXME: use CharacterDish
+  wonResultType: string
+  abilityEnigmaId: Option[int]
+  guestCharacters: seq[JsonNode] # FIXME: use Character
+  difficultyDecreaseCount: int
 
-proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): JsonNode =
+
+proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): BattleStartResponse =
   let lineCharacterIds = protoJsonTo(jsonReq["lineCharacterIds"], seq[int])
   let characters = getCharactersWithId(db, lineCharacterIds)
 
@@ -71,29 +84,19 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
 
   let battleEntryIds = protoJsonTo(jsonReq["battleEntryIds"], seq[int])
 
-  let battleParameters = getBattleParametersFromBattleEntryIds(db, battleEntryIds)
-
-  let advantageType = jsonReq.getOrDefault("advantageType")
-
-  result = %*{
-    "characters": characters,
-    "tensionCards": getEquippedTensionCards(db),
-    "changedResources": {
-      "status": status
-    },
-    "battleParameters": battleParameters,
-    "battleTriggers": jsonReq["battleTriggers"]
-  }
+  result.characters = characters
+  result.tensionCards = getEquippedTensionCards(db)
+  result.changedResources.status = some(status)
+  result.battleParameters = getBattleParametersFromBattleEntryIds(db, battleEntryIds)
+  result.battleTriggers = protoJsonTo(jsonReq["battleTriggers"], seq[BattleTrigger])
+  result.advantageType = jsonReq.getOrDefault("advantageType").getStr()
 
   lastBattleInfo = some(BattleInfo(
     battleEntryIds: battleEntryIds,
     lineCharacterIds: lineCharacterIds,
     battleTriggers: protoJsonTo(jsonReq["battleTriggers"], seq[BattleTrigger]),
-    advantageType: protoJsonTo(advantageType, Option[string]),
+    advantageType: some(result.advantageType),
   ))
-
-  if advantageType != nil:
-    result["advantageType"] = advantageType
 
 
 proc battle_Restart*(
@@ -137,11 +140,9 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
 
   if req.battleResult.get("") == "retire":
     let moveToAreaLocatorId = getLastWarpPoint(db).areaLocatorId
+    let changedResources = toJson(Resources(status: some(status), characters: characters))
     return %*{
-      "changedResources": {
-        "status": status,
-        "characters": characters,
-      },
+      "changedResources": changedResources,
       "moveToAreaLocatorId": moveToAreaLocatorId
     }
 
@@ -198,6 +199,14 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
   missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
   updateMissions(db, missions)
 
+  let changedResources = toJson(Resources(
+    areaObjectLocks: some(areaObjectLocks),
+    status: some(status),
+    characters: newCharacters,
+    items: items,
+    missions: missions,
+  ))
+
   result = %*{
     "characterExps": characterExps,
     "rewards": [
@@ -206,13 +215,7 @@ proc battle_Finish*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq:
         "contents": allRewards
       }
     ],
-    "changedResources": {
-      "areaObjectLocks": areaObjectLocks,
-      "status": status,
-      "characters": newCharacters,
-      "items": items,
-      "missions": missions,
-    }
+    "changedResources": changedResources
   }
 
   let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])

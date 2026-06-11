@@ -7,6 +7,7 @@ import std/options
 import ../db_connector/db_sqlite
 
 import character
+import character_piece
 import timestamp
 import reward
 import entity

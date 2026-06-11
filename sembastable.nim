@@ -37,7 +37,7 @@ proc getJsonResultStable*(
   elif uri == "/adventure/move_to_area":
     result = %*adventure_MoveToArea(db, protoJsonTo(jsonReq, AdventureMoveToAreaRequest))
   elif uri == "/adventure/update_character_status":
-    result = adventure_UpdateCharacterStatus(db, jsonReq)
+    result = toJson(adventure_UpdateCharacterStatus(db, jsonReq))
   elif uri == "/adventure/read_sequence":
     result = toJson(adventure_ReadSequence(db, protoJsonTo(jsonReq, AdventureReadSequenceRequest)))
   elif uri == "/adventure/acquire_area_item":
@@ -47,7 +47,7 @@ proc getJsonResultStable*(
   elif uri == "/adventure/warp_area_locator":
     result = toJson(adventure_WarpAreaLocator(db, jsonReq))
   elif uri == "/adventure/hospital":
-    result = adventure_Hospital(db)
+    result = toJson(adventure_Hospital(db))
   elif uri == "/adventure/access_warp_point":
     result = %*adventure_AccessWarpPoint(db, jsonReq)
 
@@ -59,16 +59,16 @@ proc getJsonResultStable*(
     result = %*{"sessionToken": "69696969-6969-6969-6969-696969696969", "language": 2}
 
   elif uri == "/battle/start":
-    result = battle_Start(db, lastBattleInfo, jsonReq)
+    result = toJson(battle_Start(db, lastBattleInfo, jsonReq))
   elif uri == "/battle/finish":
     result = battle_Finish(db, lastBattleInfo, jsonReq)
   elif uri == "/battle/restart":
     result = %*battle_Restart(db, lastBattleInfo, protoJsonTo(jsonReq, BattleRestartRequest))
 
   elif uri == "/character/costume_update":
-    result = character_CostumeUpdate(db, jsonReq)
+    result = toJson(character_CostumeUpdate(db, jsonReq))
   elif uri == "/character/limit_break":
-    result = character_LimitBreak(db, jsonReq)
+    result = toJson(character_LimitBreak(db, jsonReq))
   elif uri == "/character/equip":
     result = %*character_Equip(db, protoJsonTo(jsonReq, CharacterEquipRequest))
   elif uri == "/character/enhance":
