@@ -176,8 +176,6 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
     (result.changedResources, result.areaObjects) = readSequenceMiniGame(db, miniGameId, sequenceRequestIds, areaId)
     return
 
-  # FIXME: use proper types, NOT JsonNode
-
   if sequenceRequestIds.len > 0:
     let seqReqId = sequenceRequestIds[0]
 
