@@ -77,6 +77,15 @@ proc testOptionToJson() =
   doAssert(y == yAgain)
 
 
+proc testNilJsonField() =
+  type Foo = object
+    bar: JsonNode
+
+  let x = toProtoJson(Foo())
+
+  doAssert($x == "{\"bar\":null}") # SIGSEGV: Illegal storage access. (Attempt to read from nil?)
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
@@ -84,3 +93,4 @@ proc testSuiteExtra*() =
   testEnumToJson()
   testIntToEnum()
   testOptionToJson()
+  testNilJsonField()

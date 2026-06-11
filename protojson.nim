@@ -87,4 +87,5 @@ proc toProtoJson*[T](o: T): JsonNode =
 
   var opts = initToJsonOptions()
   opts.enumMode = joptEnumSymbol
+  opts.jsonNodeMode = joptJsonNodeAsObject # https://github.com/nim-lang/Nim/issues/11894
   toJson(o, opts)
