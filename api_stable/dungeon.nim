@@ -5,6 +5,7 @@ import ../db_connector/db_sqlite
 
 import ../dungeongen
 import ../protojson
+import ../model_stable/battle_enum
 import ../model_stable/character
 import ../model_stable/tension_card
 import ../model_stable/dungeon
@@ -20,7 +21,7 @@ type DungeonBattleStartRequest = object
   dungeonDifficultyId: int
   entityIds: seq[int]
   lineCharacterIds: seq[int]
-  advantageType: Option[string]
+  advantageType: BattleAdvantageType
   isAttackHit: bool
 
 type DungeonResumeRequest = object

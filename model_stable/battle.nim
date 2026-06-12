@@ -10,6 +10,7 @@ import ../db_connector/db_sqlite
 import ../semba_error
 import area_object
 import area_object_lock
+import battle_enum
 import character
 import dungeon
 import enemy
@@ -26,7 +27,7 @@ type BattleInfo* = object
   lineCharacterIds*: seq[int]
   battleTriggers*: seq[BattleTrigger]
   dungeonId*: Option[int]
-  advantageType*: Option[string]
+  advantageType*: BattleAdvantageType
 
 type MdBattleEntry = object
   id: int

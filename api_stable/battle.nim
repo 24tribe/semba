@@ -47,9 +47,9 @@ type BattleRestartResponse = object
   tensionCards: seq[JsonNode] # FIXME: use TensionCard
   battleParameters: seq[BattleParameter]
   battleTriggers: seq[BattleTrigger]
-  advantageType: Option[string]
+  advantageType: BattleAdvantageType
   characterDishes: seq[JsonNode] # FIXME: use CharacterDish
-  wonResultType: Option[string]
+  wonResultType: BattleWonResultType
   abilityEnigmaId: Option[int]
   changedResources: Resources
   guestCharacters: seq[JsonNode] # FIXME: use Character
@@ -60,10 +60,10 @@ type BattleStartResponse* = object
   tensionCards: seq[JsonNode] # FIXME: use TensionCard
   battleParameters: seq[BattleParameter]
   battleTriggers: seq[BattleTrigger]
-  advantageType: string
+  advantageType: BattleAdvantageType
   changedResources: Resources
   characterDishes: seq[JsonNode] # FIXME: use CharacterDish
-  wonResultType: string
+  wonResultType: BattleWonResultType
   abilityEnigmaId: Option[int]
   guestCharacters: seq[JsonNode] # FIXME: use Character
   difficultyDecreaseCount: int
@@ -88,13 +88,13 @@ proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: 
   result.changedResources.status = some(status)
   result.battleParameters = getBattleParametersFromBattleEntryIds(db, battleEntryIds)
   result.battleTriggers = protoJsonTo(jsonReq["battleTriggers"], seq[BattleTrigger])
-  result.advantageType = jsonReq.getOrDefault("advantageType").getStr()
+  result.advantageType = protoJsonTo(jsonReq{"advantageType"}, BattleAdvantageType)
 
   lastBattleInfo = some(BattleInfo(
     battleEntryIds: battleEntryIds,
     lineCharacterIds: lineCharacterIds,
     battleTriggers: protoJsonTo(jsonReq["battleTriggers"], seq[BattleTrigger]),
-    advantageType: some(result.advantageType),
+    advantageType: result.advantageType,
   ))
 
 

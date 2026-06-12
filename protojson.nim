@@ -10,8 +10,6 @@ import std/macros
 
 export jsonutils
 
-import model_stable/battle_enum
-
 
 type ProtoJsonInt64* = distinct int64
 
@@ -61,6 +59,10 @@ proc toJsonHook*(a: ProtoJsonInt64): JsonNode = toJson($(a.int64))
 
 proc protoJsonTo*(b: JsonNode, T: typedesc): T =
   ## jsonTo wrapper that allows extra keys, missing keys and a nil argument
+
+  when T is enum:
+    if b.isNil or b.kind == JNull:
+      return T.low
 
   var val =
     if b.isNil():
