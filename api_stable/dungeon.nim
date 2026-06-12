@@ -42,6 +42,7 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   # FIXME: save dungeons to db?
   result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: true)]
   result.changedResources.missions = getChangedRiftClearMissions(db, dungeonId)
+  updateMissions(db, result.changedResources.missions)
 
   if (
     dungeonId == healthyOutlawsDungeonId and
