@@ -11,8 +11,6 @@ import ../model_stable/tension_card
 import ../model_stable/dungeon
 import ../model_stable/challenge_progress
 import ../model_stable/timestamp
-import ../model_stable/challenge_task
-import ../model_stable/area_object
 import ../model_stable/battle
 import ../model_stable/status
 import ../model_stable/resources
