@@ -4,6 +4,7 @@ import std/strutils
 import std/math
 import std/sequtils
 import std/sugar
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -17,6 +18,10 @@ import enemy
 import reward
 import mission
 
+
+type BattleTaskTopic* = object
+  `type`*: BattleTaskTopicType
+  count*: int
 
 type BattleTrigger* = object
   triggerType*: Option[string]
@@ -321,3 +326,10 @@ proc collectEnemyRewards*(db: DbConn, encounteredEnemyIds: openArray[int]): seq[
 
     for reward in rewards:
       result.add(reward)
+
+
+proc getBattleTaskTopicsMissions*(db: DbConn, battleTaskTopics: openArray[BattleTaskTopic], cityId: int): seq[Mission] =
+  let btt = battleTaskTopics.mapIt((it.`type`, it.count)).toTable()
+
+  if btt.hasKey(BattleTaskTopicType.healHp):
+    result.insert(getChangedBattleBetweenTheRevivedMissions(db, cityId), result.len)

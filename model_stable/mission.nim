@@ -214,6 +214,11 @@ proc getChangedHappyWorkaholicMissions*(db: DbConn, cityId: int): seq[Mission] =
   )
 
 
+proc getChangedBattleBetweenTheRevivedMissions*(db: DbConn, cityId: int): seq[Mission] =
+  let mdMissions = getMissionsForCity(db, [1041037], cityId)
+  return getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] = some(1))
+
+
 proc cmpMissionsById*(a, b: Mission): int = cmp(a.missionId, b.missionId)
 
 proc cmpMdMissionsById*(a, b: MdMission): int = cmp(a.id, b.id)

@@ -27,6 +27,7 @@ type BattleFinishRequest* = object
   battleResult: BattleResult
   characterUpdates: seq[CharacterUpdate]
   encounteredEnemyIds: seq[int]
+  battleTaskTopics: seq[BattleTaskTopic]
 
 type BattleFinishResponse* = object
   rewards*: seq[Rewards]
@@ -158,6 +159,7 @@ proc battle_Finish*(
     var missions: seq[Mission] = getChangedAttackTestMissions(db, characters, cityId)
     missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
     missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
+    missions.insert(getBattleTaskTopicsMissions(db, req.battleTaskTopics, cityId), missions.len)
     updateMissions(db, missions)
 
     result = BattleFinishResponse(
