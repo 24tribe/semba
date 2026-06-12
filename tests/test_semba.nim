@@ -13,6 +13,7 @@ import test_mission
 import test_status
 import test_shop
 import test_happy_worker
+import test_dungeon
 
 
 let saves_dir = paramStr(1)
@@ -29,3 +30,4 @@ testSuiteStatus()
 testSuiteShop()
 testSuiteHappyWorker()
 testSuiteFollow()
+testSuiteDungeon()
