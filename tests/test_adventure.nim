@@ -609,6 +609,33 @@ proc testUpdateCharacterStatus() =
   ])
 
 
+proc testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "before completing happy worker mission")
+
+  doAssert(
+    getAreaObjectsInArea(ctx.db, 101311)
+      .findIt(it.areaObjectId == some(100109) and it.areaPointId == 101311212) != -1
+  )
+
+  let res = protoJsonTo(ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 100111011 ],
+    "currentLocation": {
+      "areaType": 1, "direction": 1, "areaKeyId": 101311,
+      "positionCoordinates": { "x": 2.5726233, "y": 3.0020013, "z": 2.5793955}
+    },
+    "areaType": 1, "areaKeyId": 101311
+  }), Option[AdventureReadSequenceResponse])
+
+  doAssert(res.isSome)
+
+  doAssert(
+    getAreaObjectsInArea(ctx.db, 101311)
+      .findIt(it.areaObjectId == some(100109) and it.areaPointId == 101311212) == -1
+  )
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -625,3 +652,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testReplaySequenceBug(saves_dir)
   testMagicOrbMissionInReadSequence(saves_dir)
   testUpdateCharacterStatus()
+  testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir)
