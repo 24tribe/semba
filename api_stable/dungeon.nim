@@ -15,6 +15,7 @@ import ../model_stable/challenge_task
 import ../model_stable/area_object
 import ../model_stable/battle
 import ../model_stable/status
+import ../model_stable/resources
 
 
 type DungeonBattleStartRequest = object
@@ -33,46 +34,22 @@ type DungeonResumeResponse = object
   dungeonAreaItems: seq[JsonNode]
 
 
-proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): JsonNode =
+proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   let dungeonDifficultyId = jsonReq["dungeonDifficultyId"].getInt()
   let dungeonId = dungeonDifficultyIdToDungeonId(dungeonDifficultyId)
 
-  var challengeProgresses = newSeq[ChallengeProgress]()
-  var challengeTasks = %*[]
-
   let healthyOutlawsChallengeProgress = getChallengeProgress(db, clearHealthyOutlawsChallengeProgressId)
+
+  # FIXME: save dungeons to db?
+  result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: true)]
 
   if (
     dungeonId == healthyOutlawsDungeonId and
     not isChallengeProgressComplete(healthyOutlawsChallengeProgress)
   ):
-    let rightNow = some(getTimestampNow())
-
-    challengeProgresses = @[
-      ChallengeProgress(challengeProgressId: clearHealthyOutlawsChallengeProgressId.int, clearedAt: rightNow, state: 3),
-      ChallengeProgress(challengeProgressId: 1010181, state: 2)
-    ]
-
-    updateChallengeProgresses(db, challengeProgresses)
-
-    challengeTasks = %*[{"challengeTaskId": 10101731, "clearedAt": rightNow, "count": 1}]
-
-    updateChallengeTasks(db, challengeTasks)
-
-    updateAreaObjects(db, %*[
-      {
-        "areaObjectId": 700110, "areaPointId": 101001101, "areaObjectBehaviorId": 7010709,
-        "action": {"type": 7, "id": 1}
-      }
-    ])
-
-  result = %*{
-    "changedResources": {
-      "dungeons": [{"dungeonId": dungeonId, "isFinished": true}],
-      "challengeProgresses": challengeProgresses,
-      "challengeTasks": challengeTasks,
-    }
-  }
+    let (challengeProgresses, challengeTasks) = completeMainStoryRiftTutorialChallenge(db)
+    result.changedResources.challengeProgresses = challengeProgresses
+    result.changedResources.challengeTasks = challengeTasks
 
 
 proc dungeon_BattleStart*(db: DbConn, jsonReq: JsonNode, lastBattleInfo: var Option[BattleInfo]): JsonNode =

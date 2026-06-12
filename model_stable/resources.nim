@@ -63,7 +63,7 @@ type Resources* = object
   cities: seq[City]
   cycleUpdateShopStates: Option[seq[JsonNode]] # FIXME: CycleUpdateShopState
   dailyPassStates: Option[seq[JsonNode]] # FIXME: DailyPassState
-  dungeons: Option[seq[Dungeon]]
+  dungeons*: seq[Dungeon]
   eventFloorNodes: Option[seq[EventFloorNode]]
   eventLifts: Option[seq[EventLift]]
   follows: Option[seq[JsonNode]] # FIXME: Follow
@@ -315,3 +315,27 @@ proc rewardsToChangedItems*(db: DbConn, rewards: seq[Reward]): (seq[Item], int) 
   let items = changedItems.values().toSeq()
 
   return (items, totalItems)
+
+
+proc completeMainStoryRiftTutorialChallenge*(db: DbConn): (seq[ChallengeProgress], seq[ChallengeTask]) =
+  let rightNow = some(getTimestampNow())
+
+  let challengeProgresses = @[
+    ChallengeProgress(challengeProgressId: clearHealthyOutlawsChallengeProgressId.int, clearedAt: rightNow, state: 3),
+    ChallengeProgress(challengeProgressId: 1010181, state: 2)
+  ]
+
+  updateChallengeProgresses(db, challengeProgresses)
+
+  let challengeTasks = @[ChallengeTask(challengeTaskId: 10101731, clearedAt: rightNow, count: some(1))]
+
+  upsertChallengeTasks(db, challengeTasks)
+
+  updateAreaObjects(db, %*[
+    {
+      "areaObjectId": 700110, "areaPointId": 101001101, "areaObjectBehaviorId": 7010709,
+      "action": {"type": 7, "id": 1}
+    }
+  ])
+
+  result = (challengeProgresses, challengeTasks)

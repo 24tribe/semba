@@ -14,7 +14,7 @@ import city
 
 type Dungeon* = object
   dungeonId*: int
-  isFinished*: Option[bool]
+  isFinished*: bool
 
 type DungeonDifficultyPiece = DungeonPiece
 
