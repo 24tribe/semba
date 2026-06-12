@@ -4,6 +4,7 @@ import std/sequtils
 
 import ../protojson
 import ../model_stable/resources
+import ../model_stable/mission
 import utils
 
 
@@ -24,6 +25,8 @@ proc testDungeonFinish() =
   let clearDungeonMission = changedResources.missions[clearDungeonMissionIdx]
 
   doAssert(clearDungeonMission.count == some(1))
+
+  doAssert(getMissionsWithIds(ctx.db, [clearDungeonMission.missionId]) == @[clearDungeonMission])
 
 
 proc testSuiteDungeon*() =
