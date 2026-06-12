@@ -106,7 +106,5 @@ proc toProtoJson*[T](o: T): JsonNode =
   ## toJson wrapper to match protoJsonTo
 
   var opts = initToJsonOptions()
+  opts.enumMode = joptEnumString
   toJson(o, opts)
-
-
-genStringEnumHooks(BattleResult)

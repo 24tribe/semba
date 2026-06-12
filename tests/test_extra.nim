@@ -95,7 +95,7 @@ proc testGenStringEnumHooks() =
 
   doAssert(toProtoJson(MockBattleFinishRequest(battleResult: BattleResult.won)) == %*{"battleResult": "won"})
 
-  let jsonReq = %*{"battleResult": ""}
+  let jsonReq = %*{}
   let req = protoJsonTo(jsonReq, MockBattleFinishRequest)
   doAssert(req.battleResult == BattleResult.won)
 
