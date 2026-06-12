@@ -15,6 +15,7 @@ import ../model_stable/area_object
 import ../model_stable/character
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
+import ../model_stable/mission
 import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
@@ -630,10 +631,14 @@ proc testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir: str
 
   doAssert(res.isSome)
 
+  let changedResources = res.get().changedResources
+
   doAssert(
     getAreaObjectsInArea(ctx.db, 101311)
       .findIt(it.areaObjectId == some(100109) and it.areaPointId == 101311212) == -1
   )
+
+  doAssert(changedResources.missions == @[Mission(missionId: 1041002, count: some(1))])
 
 
 proc testSuiteAdventure*(saves_dir: string) =
