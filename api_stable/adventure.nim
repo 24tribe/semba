@@ -11,6 +11,7 @@ import ../model_stable/area_object
 import ../model_stable/character
 import ../model_stable/city
 import ../model_stable/graffiti_art
+import ../model_stable/happy_worker
 import ../model_stable/lux_phantasma
 import ../model_stable/mission
 import ../model_stable/magic_orb
@@ -165,6 +166,11 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
 
     result.changedResources = changedResources.get(Resources())
     result.areaObjects = areaObjects.get(newSeq[AreaObject]())
+
+    let challenges = result.changedResources.challenges
+
+    if challenges.len == 1 and deleteAreaObjectsOfCompletedHappyWorkerChallenge(db, challenges[0]):
+      discard
 
     if seqReqId == 80001521:
       result.deletedCharacterIds = @[100201, 101701]

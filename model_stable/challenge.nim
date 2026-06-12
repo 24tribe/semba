@@ -9,6 +9,10 @@ import ../semba_error
 import timestamp
 
 
+type ChallengeState* = enum
+  challengeStateStarted = 5
+  challengeStateCompleted = 6
+
 type Challenge* = object
   challengeId*: int
   state*: int

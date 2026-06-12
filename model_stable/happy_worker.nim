@@ -6,6 +6,8 @@ import ../db_connector/db_sqlite
 
 import ../extsqlite
 import ../semba_error
+import area_object
+import challenge
 
 
 type HappyWorkerItem* = object
@@ -44,3 +46,31 @@ proc getHappyWorkerItemChallengeId*(db: DbConn, happyWorkerItemId: int): int =
     raise newException(SembaError, "Failed to get challengeId for happyWorkerItemId=" & $happyWorkerItemId)
 
   result = parseInt(row[0])
+
+
+proc getChallengeAreaObjectIds*(db: DbConn, challengeId: int): seq[int] =
+  let rows = db.getAllRows(sql"""
+    SELECT mdAreaObjectBehavior.areaObjectId
+    FROM mdChallengeProgress
+    JOIN mdChallenge ON mdChallenge.id = mdChallengeProgress.challengeId
+    JOIN mdAreaObjectBehavior ON mdAreaObjectBehavior.challengeProgressId = mdChallengeProgress.id
+    WHERE mdChallenge.id = ?
+  """, challengeId)
+
+  result = rows.mapIt(parseInt(it[0]))
+
+
+proc isHappyWorkerChallenge*(db: DbConn, challengeId: int): bool =
+  db.getRow(
+    sql"SELECT challengeId FROM mdHappyWorkerItem WHERE challengeId = ?", challengeId
+  )[0] != ""
+
+
+proc deleteAreaObjectsOfCompletedHappyWorkerChallenge*(db: DbConn, challenge: Challenge): bool =
+  ## Remove the area objects of the challenge if it's a completed Happy Worker challenge.
+  ## Returns whether it was a completed Happy Worker challenge or not.
+
+  if challenge.state == challengeStateCompleted.int and isHappyWorkerChallenge(db, challenge.challengeId):
+    let areaObjectIds = getChallengeAreaObjectIds(db, challenge.challengeId)
+    deleteAreaObjectsWithIds(db, areaObjectIds)
+    return true

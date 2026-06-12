@@ -353,3 +353,9 @@ proc unlockFullMarksGates*(db: DbConn, flowerMark: int) =
       ) AS unlockedGateAreaBehavior
       WHERE areaObjects.areaObjectId = unlockedGateAreaBehavior.areaObjectId
   """, flowerMark)
+
+
+proc deleteAreaObjectsWithIds*(db: DbConn, areaObjectIds: openArray[int]) =
+  db.exec(sql("""
+    DELETE FROM areaObjects WHERE areaObjectId IN """ & sqlIntTuple(areaObjectIds)
+  ))
