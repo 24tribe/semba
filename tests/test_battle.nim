@@ -36,6 +36,9 @@ proc test_endrone_battle_start(saves_dir: string) =
 
   doAssert(res != nil)
 
+  let wonResultType = res{"wonResultType"}
+  doAssert(wonResultType == nil or wonResultType.getStr() == "on_adventure")
+
   let battleParameters = protoJsonTo(res["battleParameters"], seq[BattleParameter])
 
   doAssert(battleParameters == protoJsonTo(%*[{
