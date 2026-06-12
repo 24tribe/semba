@@ -7,6 +7,7 @@ import std/tables
 import ../db_connector/db_sqlite
 import ../extsqlite
 import ../protojson
+import ../semba_error
 
 import timestamp
 import graffiti_art
@@ -217,6 +218,23 @@ proc getChangedHappyWorkaholicMissions*(db: DbConn, cityId: int): seq[Mission] =
 proc getChangedBattleBetweenTheRevivedMissions*(db: DbConn, cityId: int): seq[Mission] =
   let mdMissions = getMissionsForCity(db, [1041037], cityId)
   return getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] = some(1))
+
+
+proc getRiftClearMission*(db: DbConn, dungeonId: int): seq[MdMission] =
+  let row = db.getRow(sql"SELECT missionId FROM clearDungeonMissionIds WHERE dungeonId = ?", dungeonId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't get 'Clear Dungeon' missionId from dungeonId " & $dungeonId)
+
+  let missionId = parseInt(row[0])
+  getMdMissionsWithIds(db, [missionId])
+
+
+proc getChangedRiftClearMissions*(db: DbConn, dungeonId: int): seq[Mission] =
+  let mdMissions = getRiftClearMission(db, dungeonId)
+  getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
+    some(mi.count.get(0) + 1)
+  )
 
 
 proc cmpMissionsById*(a, b: Mission): int = cmp(a.missionId, b.missionId)

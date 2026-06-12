@@ -14,6 +14,7 @@ import ../model_stable/timestamp
 import ../model_stable/battle
 import ../model_stable/status
 import ../model_stable/resources
+import ../model_stable/mission
 
 
 type DungeonBattleStartRequest = object
@@ -40,6 +41,7 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
 
   # FIXME: save dungeons to db?
   result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: true)]
+  result.changedResources.missions = getChangedRiftClearMissions(db, dungeonId)
 
   if (
     dungeonId == healthyOutlawsDungeonId and
