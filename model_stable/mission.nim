@@ -61,6 +61,11 @@ proc getGraffitiMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   return getMissionsForCity(db, missionIds, cityId)
 
 
+proc getHappyWorkaholicMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041002, 1041302, 1041402]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
 proc getMagicOrbMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   const missionIds = [1041007, 1041008, 1041009, 1041307, 1041308, 1041309, 1041409]
   return getMissionsForCity(db, missionIds, cityId)
@@ -198,6 +203,14 @@ proc getChangedGraffitiMissions*(db: DbConn, cityId: int): seq[Mission] =
 
   return getMissionsWithNewCount(db, graffitiMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
     result = some(graffitiCount + 1)
+  )
+
+
+proc getChangedHappyWorkaholicMissions*(db: DbConn, cityId: int): seq[Mission] =
+  let missions = getHappyWorkaholicMissionsForCity(db, cityId)
+
+  return getMissionsWithNewCount(db, missions, proc (mi: Mission, mdMi: MdMission): Option[int] =
+    some(mi.count.get(0) + 1)
   )
 
 

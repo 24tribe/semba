@@ -168,9 +168,12 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
     result.areaObjects = areaObjects.get(newSeq[AreaObject]())
 
     let challenges = result.changedResources.challenges
+    var missions = getChangedMagicOrbMissions(db, result.changedResources.magicOrbs.len, cityId)
 
     if challenges.len == 1 and deleteAreaObjectsOfCompletedHappyWorkerChallenge(db, challenges[0]):
-      discard
+      missions.insert(getChangedHappyWorkaholicMissions(db, cityId), missions.len)
+
+    result.changedResources.missions = missions
 
     if seqReqId == 80001521:
       result.deletedCharacterIds = @[100201, 101701]
@@ -183,8 +186,6 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
       changeReadSequenceResponse(db, seqReqId, result.changedResources, result.areaObjects)
       result.changedResources.nineSequences = processNineSequenceRequests(db, nineSequenceRequests)
       result.changedResources.adventureVariables = getSequenceAdventureVariables(db, sequenceRequestIds)
-
-    result.changedResources.missions = getChangedMagicOrbMissions(db, result.changedResources.magicOrbs.len, cityId)
 
     updateAreaObjectsEx(db, result.areaObjects)
     updateResources(db, result.changedResources) 
