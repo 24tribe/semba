@@ -253,7 +253,9 @@ proc testBattleWithZeroSenseiMission(saves_dir: string) =
 
   let changedResources = res.get().changedResources
 
-  let challengeIndex = changedResources.challenges.findIt(it.challengeId == 105041)
+  const haywiredDroneChallengeId = 105041
+
+  let challengeIndex = changedResources.challenges.findIt(it.challengeId == haywiredDroneChallengeId)
 
   doAssert(challengeIndex != -1)
 
@@ -261,6 +263,16 @@ proc testBattleWithZeroSenseiMission(saves_dir: string) =
 
   doAssert(challenge.state == challengeStateCompleted.int)
   doAssert(challenge.clearedAt.isSome)
+
+  const happyWorkaholicMissionIdShinagawa = 1041002
+
+  let missionIndex = changedResources.missions.findIt(it.missionId == happyWorkaholicMissionIdShinagawa)
+
+  doAssert(missionIndex != -1)
+
+  let mission = changedResources.missions[missionIndex]
+
+  doAssert(mission.count == some(1))
 
 
 proc testSuiteBattle*(saves_dir: string) =
