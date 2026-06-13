@@ -148,6 +148,7 @@ proc getChangedResourcesForCompletedChallengeTask*(
   var areaObjects = newSeq[AreaObject]()
   var challengeTasks = newSeq[ChallengeTask]()
   var challengeProgresses = newSeq[ChallengeProgress]()
+  var challenges = newSeq[Challenge]()
 
   challengeTasks.add(ChallengeTask(
     challengeTaskId: challengeTask.id, count: some(1), clearedAt: some(getTimestampNow())
@@ -181,6 +182,13 @@ proc getChangedResourcesForCompletedChallengeTask*(
       areaObjects.insert(getAreaObjectsWithCondition(
         db, areaObjectConditionTypeStartedChallengeProgress, nextChallengeProgressId.get()
       ), areaObjects.len)
+    else:
+      challenges.add(Challenge(
+        challengeId: getChallengeId(db, challengeTask.challengeProgressId),
+        state: challengeStateCompleted.int,
+        clearedAt: some(getTimestampNow()),
+        # expiresAt?
+      ))
   else:
     challengeProgresses.add(ChallengeProgress(
       challengeProgressId: challengeTask.challengeProgressId,
@@ -190,6 +198,7 @@ proc getChangedResourcesForCompletedChallengeTask*(
   let resources = Resources(
     challengeTasks: challengeTasks,
     challengeProgresses: challengeProgresses,
+    challenges: challenges,
   )
 
   result = (areaObjects, resources)

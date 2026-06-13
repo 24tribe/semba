@@ -6,6 +6,7 @@ import std/sequtils
 import ../db_connector/db_sqlite
 
 import ../extsqlite
+import ../semba_error
 import timestamp
 
 
@@ -108,3 +109,12 @@ proc getChallengeProgress*(db: DbConn, challengeProgressId: int): JsonNode =
     result = %*{"challengeProgressId": challengeProgressId, "state": state}
     if clearedAt != "":
       result["clearedAt"] = %*clearedAt
+
+
+proc getChallengeId*(db: DbConn, challengeProgressId: int): int =
+  let row = db.getRow(sql"SELECT challengeId FROM mdChallengeProgress WHERE id = ?", challengeProgressId)
+
+  if row[0] == "":
+    raise newException(SembaError, "Couldn't get challengeId for challengeProgressId " & $challengeProgressId)
+
+  result = parseInt(row[0])
