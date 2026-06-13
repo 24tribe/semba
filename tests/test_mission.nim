@@ -98,7 +98,7 @@ proc testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir: string) =
   doAssert(missions == expected)
 
 
-proc testSaveFileWithBuggerMagicOrbsMissionsIsFixed(saves_dir: string) =
+proc testSaveFileWithBuggedMagicOrbsMissionsIsFixed(saves_dir: string) =
   var ctx = getInMemorySembaCtx()
 
   ctx.loadSaveFile(saves_dir, "skybridge marine biology research center door")
@@ -112,9 +112,24 @@ proc testSaveFileWithBuggerMagicOrbsMissionsIsFixed(saves_dir: string) =
   doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: some(1))))
 
 
+proc testSaveFileWithBuggedHelpfulDemeanorMissions(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "bugged Helpful Demeanor")
+
+  var mdMissions = getCompleteCityChallengeMissionsForCityId(ctx.db, cityIdShinagawa.int)
+  var missions = getMissionsWithIds(ctx.db, mdMissions.mapIt(it.id))
+
+  missions.sort(cmpMissionsById)
+  mdMissions.sort(cmpMdMissionsById)
+
+  doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: some(4))))
+
+
 proc testSuiteMission*(saves_dir: string) =
   testMissionReceive()
   testUnlockFullMarkGates()
   testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir)
   testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir)
-  testSaveFileWithBuggerMagicOrbsMissionsIsFixed(saves_dir)
+  testSaveFileWithBuggedMagicOrbsMissionsIsFixed(saves_dir)
+  testSaveFileWithBuggedHelpfulDemeanorMissions(saves_dir)
