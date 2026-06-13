@@ -6,8 +6,6 @@ import ../db_connector/db_sqlite
 
 import ../extsqlite
 import ../semba_error
-import area_object
-import challenge
 
 
 type HappyWorkerItem* = object
