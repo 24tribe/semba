@@ -25,6 +25,7 @@ import formation
 import gear
 import graffiti_art
 import gacha
+import happy_worker
 import item
 import magic_orb
 import mission
@@ -348,3 +349,19 @@ proc completeMainStoryRiftTutorialChallenge*(db: DbConn): (seq[ChallengeProgress
   ])
 
   result = (challengeProgresses, challengeTasks)
+
+
+proc getChallengesChangedMissions*(db: DbConn, challenges: openArray[Challenge], cityId: int): seq[Mission] =
+  ## Iterates throught `challenges` and collects changed missions.
+  ## If it finds a completed Happy Worker challenge, it deletes the challenge area objects from the db.
+  ## Doesn't update the missions in the db.
+  ## Returns the changed missions.
+
+  for challenge in challenges:
+    if challenge.state == challengeStateCompleted.int:
+      if isHappyWorkerChallenge(db, challenge.challengeId):
+        let areaObjectIds = getChallengeAreaObjectIds(db, challenge.challengeId)
+        deleteAreaObjectsWithIds(db, areaObjectIds)
+        result.insert(getChangedHappyWorkaholicMissions(db, cityId), result.len)
+      elif isCityChallenge(db, challenge.challengeId):
+        result.insert(getChangedCompleteCityChallengeMissions(db, cityId), result.len)

@@ -181,9 +181,7 @@ proc battle_Finish*(
       result.changedResources.challenges = resources.challenges
       upsertChallenges(db, resources.challenges)
 
-      for challenge in resources.challenges:
-        if deleteAreaObjectsOfCompletedHappyWorkerChallenge(db, challenge):
-          missions.insert(getChangedHappyWorkaholicMissions(db, cityId))
+      missions.insert(getChallengesChangedMissions(db, resources.challenges, cityId), missions.len)
 
     missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
     missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)

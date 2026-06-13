@@ -19,6 +19,9 @@ type Challenge* = object
   clearedAt*: Option[Timestamp]
   expiresAt*: Option[Timestamp]
 
+type MdChallengeType* = enum
+  mdChallengeTypeCityChallenge = 6
+
 
 proc updateChallenges*(db: DbConn, challenges: seq[JsonNode]) =
   for challenge in challenges:
@@ -78,3 +81,8 @@ proc getChallenges*(db: DbConn): seq[JsonNode] =
       challenge["expiresAt"] = %*expiresAt
 
     result.add(challenge)
+
+
+proc isCityChallenge*(db: DbConn, challengeId: int): bool =
+  let query = sql"SELECT id FROM mdChallenge WHERE id = ? AND type = ?"
+  db.getRow(query, challengeId, mdChallengeTypeCityChallenge.int)[0] != ""

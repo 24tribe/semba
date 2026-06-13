@@ -167,12 +167,8 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
     result.changedResources = changedResources.get(Resources())
     result.areaObjects = areaObjects.get(newSeq[AreaObject]())
 
-    let challenges = result.changedResources.challenges
     var missions = getChangedMagicOrbMissions(db, result.changedResources.magicOrbs.len, cityId)
-
-    if challenges.len == 1 and deleteAreaObjectsOfCompletedHappyWorkerChallenge(db, challenges[0]):
-      missions.insert(getChangedHappyWorkaholicMissions(db, cityId), missions.len)
-
+    missions.insert(getChallengesChangedMissions(db, result.changedResources.challenges, cityId), missions.len)
     result.changedResources.missions = missions
 
     if seqReqId == 80001521:

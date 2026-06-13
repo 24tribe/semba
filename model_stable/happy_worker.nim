@@ -64,13 +64,3 @@ proc isHappyWorkerChallenge*(db: DbConn, challengeId: int): bool =
   db.getRow(
     sql"SELECT challengeId FROM mdHappyWorkerItem WHERE challengeId = ?", challengeId
   )[0] != ""
-
-
-proc deleteAreaObjectsOfCompletedHappyWorkerChallenge*(db: DbConn, challenge: Challenge): bool =
-  ## Remove the area objects of the challenge if it's a completed Happy Worker challenge.
-  ## Returns whether it was a completed Happy Worker challenge or not.
-
-  if challenge.state == challengeStateCompleted.int and isHappyWorkerChallenge(db, challenge.challengeId):
-    let areaObjectIds = getChallengeAreaObjectIds(db, challenge.challengeId)
-    deleteAreaObjectsWithIds(db, areaObjectIds)
-    return true

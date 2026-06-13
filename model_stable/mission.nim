@@ -87,6 +87,11 @@ proc getBeAForeverWinnerMissionsForCityId*(db: DbConn, cityId: int): seq[MdMissi
   return getMissionsForCity(db, missionIds, cityId)
 
 
+proc getCompleteCityChallengeMissionsForCityId*(db: DbConn, cityId: int): seq[MdMission] = 
+  const missionIds = [1041003, 1041004, 1041303, 1041304, 1041403, 1041404]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
 proc getMdMissionsWithIds*(db: DbConn, ids: openArray[int]): seq[MdMission] = 
   let rows = db.getAllRows(sql("SELECT id, steps, cityId FROM mdMission WHERE id IN " & sqlIntTuple(ids)))
 
@@ -233,6 +238,14 @@ proc getRiftClearMission*(db: DbConn, dungeonId: int): seq[MdMission] =
 proc getChangedRiftClearMissions*(db: DbConn, dungeonId: int): seq[Mission] =
   let mdMissions = getRiftClearMission(db, dungeonId)
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
+    some(mi.count.get(0) + 1)
+  )
+
+
+proc getChangedCompleteCityChallengeMissions*(db: DbConn, cityId: int): seq[Mission] =
+  let mdMissions = getCompleteCityChallengeMissionsForCityId(db, cityId)
+
+  getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
     some(mi.count.get(0) + 1)
   )
 
