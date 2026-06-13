@@ -9,6 +9,7 @@ import ../protojson
 import ../api_stable/battle
 import ../model_stable/area_object_lock
 import ../model_stable/battle
+import ../model_stable/challenge
 import ../model_stable/challenge_task
 import ../model_stable/challenge_progress
 
@@ -258,7 +259,7 @@ proc testBattleWithZeroSenseiMission(saves_dir: string) =
 
   let challenge = changedResources.challenges[challengeIndex]
 
-  doAssert(challenge.state == challengeProgressStateCleared.int)
+  doAssert(challenge.state == challengeStateCompleted.int)
   doAssert(challenge.clearedAt.isSome)
 
 
