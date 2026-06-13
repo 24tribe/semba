@@ -1,9 +1,11 @@
 import std/json
 import std/options
+import std/sequtils
 
 import utils
 import ../protojson
 import ../api_stable/happy_worker
+import ../model_stable/area_object
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
 
@@ -37,5 +39,25 @@ proc testHappyWorkerStart() =
   )])
 
 
-proc testSuiteHappyWorker*() =
+proc testHappyWorkerCancelAreaObjects(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "after accept haywired drone challenge")
+
+  let haywiredDroneHWItemId = 1000005
+
+  let droneAOB = 10000301
+
+  doAssert(getAreaObjectsInArea(ctx.db, 101001).findIt(it.areaObjectBehaviorId == some(droneAOB)) != -1)
+
+  let res = protoJsonTo(ctx.sembaCall("/happy_worker/cancel", %*{
+    "happyWorkerItemId": haywiredDroneHWItemId
+  }), Option[HappyWorkerCancelResponse])
+
+  doAssert(res.isSome)
+  doAssert(getAreaObjectsInArea(ctx.db, 101001).findIt(it.areaObjectBehaviorId == some(droneAOB)) == -1)
+
+
+proc testSuiteHappyWorker*(saves_dir: string) =
   testHappyWorkerStart()
+  testHappyWorkerCancelAreaObjects(saves_dir)
