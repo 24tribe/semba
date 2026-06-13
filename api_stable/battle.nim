@@ -6,6 +6,7 @@ import ../db_connector/db_sqlite
 
 import ../model_stable/area_object_lock
 import ../model_stable/city
+import ../model_stable/challenge
 import ../model_stable/character
 import ../model_stable/battle
 import ../model_stable/battle_enum
@@ -185,5 +186,8 @@ proc battle_Finish*(
 
       result.changedResources.challengeProgresses = resources.challengeProgresses
       upsertChallengeProgresses(db, resources.challengeProgresses)
+
+      result.changedResources.challenges = resources.challenges
+      upsertChallenges(db, resources.challenges)
 
     updateAreaObjectsEx(db, result.areaObjects)
