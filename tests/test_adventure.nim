@@ -15,6 +15,7 @@ import ../model_stable/area_object
 import ../model_stable/character
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
+import ../model_stable/item
 import ../model_stable/mission
 import ../model_stable/nine_sequence
 import ../model_stable/resources
@@ -641,6 +642,36 @@ proc testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir: str
   doAssert(changedResources.missions == @[Mission(missionId: 1041002, count: some(1))])
 
 
+proc testFieldResearchMission() =
+  var ctx = getInMemorySembaCtx()
+
+  const miracleStorageItemId = 3103
+  const fieldResearchMissionId = 1041067
+
+  let quantity = getItem(ctx.db, miracleStorageItemId).get(Item()).quantity
+
+  let res = protoJsonTo(ctx.sembaCall("/adventure/acquire_area_item", %*{
+    "currentLocation": {
+      "areaType": 1, "direction": 5, "areaKeyId": 100411, 
+      "positionCoordinates": { "x": 16.742615, "y": 0.041666508, "z": -12.25 }
+    },
+    "areaItemId": 100411602
+  }), Option[AdventureAcquireAreaItemResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  let itemIndex = changedResources.items.findIt(it.itemId == miracleStorageItemId)
+  doAssert(itemIndex != -1)
+
+  let item = changedResources.items[itemIndex]
+
+  let missionIndex = changedResources.missions.findIt(it.missionId == fieldResearchMissionId)
+  doAssert(missionIndex != -1)
+  doAssert(changedResources.missions[missionIndex].count == some(item.quantity - quantity))
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -658,3 +689,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testMagicOrbMissionInReadSequence(saves_dir)
   testUpdateCharacterStatus()
   testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir)
+  testFieldResearchMission()
