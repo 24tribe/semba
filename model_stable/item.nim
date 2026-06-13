@@ -7,7 +7,7 @@ import ../db_connector/db_sqlite
 
 type Item* = object
   itemId*: int
-  quantity*: Option[int]
+  quantity*: int
 
 type ConsumedItem* = Item
 
@@ -28,7 +28,7 @@ proc upsertItem*(db: DbConn, item: Item) =
     INSERT INTO items (itemId, quantity) VALUES (?, ?)
     ON CONFLICT DO
     UPDATE SET quantity = excluded.quantity
-  """, item.itemId, item.quantity.get(0))
+  """, item.itemId, item.quantity)
 
 proc updateItems*(db: DbConn, items: seq[Item]) =
   for item in items:
@@ -40,7 +40,7 @@ proc getItems*(db: DbConn): seq[Item] =
 
   for row in rows:
     result.add(Item(
-      itemId: parseInt(row[0]), quantity: some(parseInt(row[1]))
+      itemId: parseInt(row[0]), quantity: parseInt(row[1])
     ))
 
 
@@ -48,7 +48,7 @@ proc getItemsTable*(db: DbConn): Table[int, Item] =
   let rows = db.getAllRows(sql(selectItemsSql))
 
   for row in rows:
-    let item = Item(itemId: parseInt(row[0]), quantity: some(parseInt(row[1])))
+    let item = Item(itemId: parseInt(row[0]), quantity: parseInt(row[1]))
     result[item.itemId] = item
 
 
@@ -58,7 +58,7 @@ proc getItem*(db: DbConn, itemId: int): Option[Item] =
   if row[0] != "":
     result = some(Item(
       itemId: itemId,
-      quantity: some(parseInt(row[0]))
+      quantity: parseInt(row[0]),
     ))
 
 
@@ -66,10 +66,10 @@ proc calcLifeDataExp*(consumedItems: openArray[ConsumedItem]): int =
   for item in consumedItems:
     case item.itemId:
     of lifeDataId:
-      result += item.quantity.get(0)*lifeDataExp
+      result += item.quantity*lifeDataExp
     of goodLifeDataId:
-      result += item.quantity.get(0)*goodLifeDataExp
+      result += item.quantity*goodLifeDataExp
     of greatLifeDataId:
-      result += item.quantity.get(0)*greatLifeDataExp
+      result += item.quantity*greatLifeDataExp
     else:
       echo("WARNING: item.id=" & $item.itemId & " is not a life data!")

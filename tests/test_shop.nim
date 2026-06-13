@@ -23,7 +23,7 @@ proc testShopPurchase() =
 
   const enigmaticPieceId = 106
 
-  upsertItem(ctx.db, Item(itemId: enigmaticPieceId, quantity: some(120)))
+  upsertItem(ctx.db, Item(itemId: enigmaticPieceId, quantity: 120))
 
   let res = protoJsonTo(
     ctx.sembaCall("/shop/purchase", %*{"shopProductId": 4012001, "quantity": 2}),
@@ -41,7 +41,7 @@ proc testShopPurchase() =
   doAssert(shopProductsStates[0].shopProductId == 4012001)
   doAssert(shopProductsStates[0].purchasedCount == 2) ]#
 
-  doAssert(changedResources.items == [Item(itemId: enigmaticPieceId, quantity: some(20))])
+  doAssert(changedResources.items == [Item(itemId: enigmaticPieceId, quantity: 20)])
 
   let walletAfter = getWallet(ctx.db)
   doAssert(walletAfter.free.get(0) == walletBefore.free.get(0) + 240)

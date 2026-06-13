@@ -20,7 +20,6 @@ import ../model_stable/resources
 import ../model_stable/status
 import ../model_stable/warp_point
 import ../model_stable/mission
-import ../model_stable/happy_worker
 import ../semba_error
 import ../protojson
 

@@ -258,9 +258,9 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
     of rewardItem:
       if not (reward.id in itemsTable):
         let item = getItem(db, reward.id)
-        itemsTable[reward.id] = item.get(Item(itemId: reward.id, quantity: some(0)))
+        itemsTable[reward.id] = item.get(Item(itemId: reward.id))
 
-      itemsTable[reward.id].quantity = some(itemsTable[reward.id].quantity.get(0) + reward.quantity)
+      itemsTable[reward.id].quantity += reward.quantity
     of rewardGold:
       status.gold = some(status.gold.get(0) + reward.quantity)
     of rewardFlowerMark:
@@ -315,9 +315,9 @@ proc rewardsToChangedItems*(db: DbConn, rewards: seq[Reward]): (seq[Item], int) 
       if reward.id in itemsTable:
         itemsTable[reward.id]
       else:
-        Item(itemId: reward.id, quantity: some(0))
+        Item(itemId: reward.id)
 
-    item.quantity = some(reward.quantity + item.quantity.get(0))
+    item.quantity += reward.quantity
     totalItems += reward.quantity
 
     changedItems[reward.id] = item

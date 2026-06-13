@@ -193,9 +193,9 @@ proc testCharacterEnhance() =
   const grossExp = 18500
 
   let consumedItems = [
-    Item(itemId: lifeDataId, quantity: some(2)),
-    Item(itemId: goodLifeDataId, quantity: some(3)),
-    Item(itemId: greatLifeDataId, quantity: some(2)),
+    Item(itemId: lifeDataId, quantity: 2),
+    Item(itemId: goodLifeDataId, quantity: 3),
+    Item(itemId: greatLifeDataId, quantity: 2),
   ]
 
   for item in consumedItems:
@@ -220,21 +220,21 @@ proc testCharacterEnhance() =
   doAssert(changedResources.characters[0].exp.get(0) == level10MinExp)
 
   let ld = getItem(ctx.db, lifeDataId)
-  doAssert(ld.isSome() and ld.get().quantity.get(0) == 0)
+  doAssert(ld.isSome() and ld.get().quantity == 0)
 
   let goodLd = getItem(ctx.db, goodLifeDataId)
-  doAssert(goodLd.isSome() and goodLd.get().quantity.get(0) == 0)
+  doAssert(goodLd.isSome() and goodLd.get().quantity == 0)
 
   let greatLd = getItem(ctx.db, greatLifeDataId)
-  doAssert(greatLd.isSome() and greatLd.get().quantity.get(0) == 0)
+  doAssert(greatLd.isSome() and greatLd.get().quantity == 0)
 
   doAssert(getUserStatusTypeSafe(ctx.db).gold.get(0) == 100)
 
   changedResources.items.sort(proc (x1, x2: Item): int = cmp(x1.itemId, x2.itemId))
   doAssert(changedResources.items == @[
-    Item(itemId: lifeDataId, quantity: some(0)),
-    Item(itemId: goodLifeDataId, quantity: some(0)),
-    Item(itemId: greatLifeDataId, quantity: some(0)),
+    Item(itemId: lifeDataId, quantity: 0),
+    Item(itemId: goodLifeDataId, quantity: 0),
+    Item(itemId: greatLifeDataId, quantity: 0),
   ])
 
 
