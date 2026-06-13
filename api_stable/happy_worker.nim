@@ -111,4 +111,5 @@ proc happy_worker_Cancel*(db: DbConn, req: HappyWorkerCancelRequest): HappyWorke
   upsertChallengeTasks(db, challengeTasks)
   result.changedResources.challengeTasks = challengeTasks
 
-  # FIXME: update area objects with mdAreaBehavior conditions
+  let areaObjectIds = getChallengeAreaObjectIds(db, challengeId)
+  deleteAreaObjectsWithIds(db, areaObjectIds)
