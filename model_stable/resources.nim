@@ -373,3 +373,12 @@ proc getCityChallengesCount*(db: DbConn): CountTable[CityId] =
     SELECT challengeId FROM mdChallenge JOIN challenges ON mdChallenge.id = challenges.challengeId
     WHERE state = ?
   """, challengeStateCompleted.int).mapIt(parseInt(it[0]).challengeIdToCityId()).toCountTable
+
+
+proc getChangedFieldResearchMissions*(db: DbConn, itemCounts: Table[int, int]): seq[Mission] =
+  let missionItemIds = getFieldResearchMissionIdsWithItemIds(db, itemCounts.keys.toSeq)
+  let mdMissions = getMdMissionsWithIds(db, missionItemIds.keys.toSeq)
+
+  getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
+    some(mi.count.get(0) + itemCounts[missionItemIds[mi.missionId]])
+  )

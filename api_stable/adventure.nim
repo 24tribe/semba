@@ -219,14 +219,16 @@ proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest
 
   result.changedResources = updateResourcesFromRewardsTypeSafe(db, result.rewards[0].contents, itemCounts)
 
+  var missions = getChangedFieldResearchMissions(db, itemCounts)
+
   if isChestAreaItem(areaItem.areaItemBaseId):
     let cityId = areaIdToCityId(req.currentLocation.areaKeyId.get())
-    let missions = getChangedOpenChestMissions(db, cityId)
-
-    result.changedResources.missions = missions
-    updateMissions(db, missions)
+    missions.insert(getChangedOpenChestMissions(db, cityId), missions.len)
 
   result.areaItem = AreaItem(areaItemId: req.areaItemId, acquired: true)
+
+  result.changedResources.missions = missions
+  updateMissions(db, missions)
 
 
 proc adventure_Hospital*(db: DbConn): ChangedResourcesResponse =

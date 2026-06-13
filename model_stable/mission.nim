@@ -250,6 +250,14 @@ proc getChangedCompleteCityChallengeMissions*(db: DbConn, cityId: int): seq[Miss
   )
 
 
+proc getFieldResearchMissionIdsWithItemIds*(db: DbConn, itemIds: openArray[int]): Table[int, int] =
+  ## Returns a table mapping "Field Research" mission ids to the item ids in `itemIds`
+
+  db.getAllRows(sql("""
+    SELECT missionId, itemId FROM fieldResearchMissionIds WHERE itemId IN """ & sqlIntTuple(itemIds)
+  )).mapIt((parseInt(it[0]), parseInt(it[1]))).toTable
+
+
 proc cmpMissionsById*(a, b: Mission): int = cmp(a.missionId, b.missionId)
 
 proc cmpMdMissionsById*(a, b: MdMission): int = cmp(a.id, b.id)
