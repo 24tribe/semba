@@ -2,6 +2,7 @@ import std/assertions
 import std/json
 import std/options
 import std/algorithm
+import std/sequtils
 
 import utils
 import ../protojson
@@ -207,9 +208,64 @@ proc testBattleWithAreaObjectLock() =
   doAssert(res.changedResources.areaObjectLocks.get() == @[AreaObjectLock(areaObjectLockId: 30500702, count: some(1))])
 
 
+proc testBattleWithZeroSenseiMission(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "after accept haywired drone challenge")
+
+  doAssert(ctx.sembaCall("/battle/start", %*{
+    "battleEntryIds": [ 4009001 ],
+    "lineCharacterIds": [ 101101, 100801, 100201 ],
+    "battleTriggers": [ { "triggerType": "area_object", "triggerIds": [ 10000301 ] } ],
+    "advantageType": "advantage", "isAttackHit": true,
+    "currentLocation": {
+      "areaType": 1, "direction": 6, "areaKeyId": 101001,
+      "positionCoordinates": { "x": -12.827356, "y": 0.042727925, "z": -7.901186 }
+    },
+    "bloodStainLocation": {
+      "areaKeyId": 101001, "areaType": 1,
+      "positionCoordinates": { "x": -13.628947, "y": 0.028908402, "z": -5.2202187 }
+    }
+  }) != nil)
+
+  let res = protoJsonTo(ctx.sembaCall("/battle/finish", %*{
+    "characterUpdates": [
+      {"characterId": 101101, "hp": 738}, {"characterId": 100801, "hp": 557}, {"characterId": 100201, "hp": 579}
+    ],
+    "battleTaskTopics": [
+      { "type": "qte", "count": 7 }, { "type": "heal_hp", "count": 25 }, { "type": "special_attack", "count": 1 }
+    ],
+    "encounteredEnemyIds": [ 250103 ],
+    "battleTimeSecond": 56,
+    "taskConditionResult": {
+      "usedSkills": [
+        { "characterSkillId": 1011016, "count": 3 },
+        { "characterSkillId": 1008016, "count": 2 },
+        { "characterSkillId": 1002016, "count": 2 },
+        { "characterSkillId": 1002014, "count": 1 }
+      ],
+      "enemyStabilityBreaks": [ { "enemyId": 250103, "count": 3 } ]
+    }
+  }), Option[BattleFinishResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  let challengeIndex = changedResources.challenges.findIt(it.challengeId == 105041)
+
+  doAssert(challengeIndex != -1)
+
+  let challenge = changedResources.challenges[challengeIndex]
+
+  doAssert(challenge.state == challengeProgressStateCleared.int)
+  doAssert(challenge.clearedAt.isSome)
+
+
 proc testSuiteBattle*(saves_dir: string) =
     test_endrone_battle_start(saves_dir)
     test_battle_finish_challenge_data(saves_dir)
     testLostBattleFinish()
     testBattleRetire(saves_dir)
     testBattleWithAreaObjectLock()
+    testBattleWithZeroSenseiMission(saves_dir)
