@@ -4,6 +4,7 @@ import std/sequtils
 import ../db_connector/db_sqlite
 
 import ../semba_error
+import ../enum_ex
 import timestamp
 import magic_orb
 
@@ -53,3 +54,12 @@ proc magicOrbIdToCityId*(magicOrbId: int): CityId =
     cityIdChiyoda
   else:
     raise newException(SembaError, "Magic orb doesn't belong to any city?")
+
+
+proc challengeIdToCityId*(challengeId: int): CityId =
+  var cityId = challengeId
+
+  while cityId > 99:
+    cityId = cityId div 10
+
+  intToEnum(cityId, CityId)

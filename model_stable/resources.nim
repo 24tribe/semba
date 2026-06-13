@@ -1,6 +1,7 @@
 import std/json
 import std/options
 import std/sequtils
+import std/strutils
 import std/tables
 
 import ../db_connector/db_sqlite
@@ -365,3 +366,10 @@ proc getChallengesChangedMissions*(db: DbConn, challenges: openArray[Challenge],
         result.insert(getChangedHappyWorkaholicMissions(db, cityId), result.len)
       elif isCityChallenge(db, challenge.challengeId):
         result.insert(getChangedCompleteCityChallengeMissions(db, cityId), result.len)
+
+
+proc getCityChallengesCount*(db: DbConn): CountTable[CityId] =
+  db.getAllRows(sql"""
+    SELECT challengeId FROM mdChallenge JOIN challenges ON mdChallenge.id = challenges.challengeId
+    WHERE state = ?
+  """, challengeStateCompleted.int).mapIt(parseInt(it[0]).challengeIdToCityId()).toCountTable

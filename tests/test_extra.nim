@@ -10,6 +10,7 @@ import ../extsqlite
 import ../enum_ex
 import ../model_stable/battle_enum
 import ../model_stable/area
+import ../model_stable/city
 import utils
 
 proc test_null() =
@@ -123,6 +124,11 @@ proc testJsonNodeFields() =
   doAssert(jsonData[0].keys().toSeq() == @["areaChangeLockId"])
 
 
+proc testChallengeIdToCityId() =
+  let cityIds = [100, 1021, 10301, 100131].mapIt(challengeIdToCityId(it))
+  doAssert(cityIds.allIt(it == cityIdShinagawa))
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
@@ -134,3 +140,4 @@ proc testSuiteExtra*() =
   testGenStringEnumHooks()
   testSqliteMin()
   testJsonNodeFields()
+  testChallengeIdToCityId()

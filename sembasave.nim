@@ -63,6 +63,7 @@ import model_stable/lux_phantasma
 import model_stable/magic_orb
 import model_stable/mission
 import model_stable/nine_sequence
+import model_stable/resources
 import model_stable/status
 import model_stable/tension_card
 import model_stable/tip
@@ -287,6 +288,12 @@ proc fixMagicOrbMissions(missions: var Table[int, Mission], db: DbConn, magicOrb
   fixMissionCounts(missions, db, magicOrbCounts, getMagicOrbMissionsForCity)
 
 
+proc fixClearCityChallengesMissions(
+  missions: var Table[int, Mission], db: DbConn, cityChallengesCount: CountTable[CityId]
+) =
+  fixMissionCounts(missions, db, cityChallengesCount, getCompleteCityChallengeMissionsForCityId)
+
+
 proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[CityId, HashSet[int]]) =
   var missions = save.missions.mapIt((it.missionId, it)).toTable()
 
@@ -296,9 +303,12 @@ proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[C
 
   let magicOrbCounts = save.magicOrbs.mapIt(magicOrbIdToCityId(it.magicOrbId)).toCountTable
 
+  let cityChallengesCount = getCityChallengesCount(db)
+
   fixTroubleshooterMissions(missions, db, cityAreaObjectLockIds)
   fixGraffitiMissions(missions, db, graffitiArtCounts)
   fixMagicOrbMissions(missions, db, magicOrbCounts)
+  fixClearCityChallengesMissions(missions, db, cityChallengesCount)
 
   save.missions = missions.values().toSeq()
 
