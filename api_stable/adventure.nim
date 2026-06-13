@@ -11,7 +11,6 @@ import ../model_stable/area_object
 import ../model_stable/character
 import ../model_stable/city
 import ../model_stable/graffiti_art
-import ../model_stable/happy_worker
 import ../model_stable/lux_phantasma
 import ../model_stable/mission
 import ../model_stable/magic_orb
