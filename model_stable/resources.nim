@@ -228,9 +228,10 @@ proc changeReadSequenceResponse*(
     areaObjects = newAreaObjects
 
 
-proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): Resources =
+proc updateResourcesFromRewardsTypeSafe*(
+  db: DbConn, rewards: var seq[Reward], itemCounts: var Table[int, int]
+): Resources =
   var gears = newSeq[Gear]()
-  var itemsTable: Table[int, Item]
 
   var status = getUserStatusTypeSafe(db)
 
@@ -256,11 +257,10 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
       addGear(db, gear)
       gears.add(gear)
     of rewardItem:
-      if not (reward.id in itemsTable):
-        let item = getItem(db, reward.id)
-        itemsTable[reward.id] = item.get(Item(itemId: reward.id))
+      if not (reward.id in itemCounts):
+        itemCounts[reward.id] = 0
 
-      itemsTable[reward.id].quantity += reward.quantity
+      itemCounts[reward.id] += reward.quantity
     of rewardGold:
       status.gold = some(status.gold.get(0) + reward.quantity)
     of rewardFlowerMark:
@@ -285,7 +285,7 @@ proc updateResourcesFromRewardsTypeSafe*(db: DbConn, rewards: var seq[Reward]): 
     else:
       discard
 
-  let items = itemsTable.values().toSeq()
+  let items = addCountsToItems(db, itemCounts)
   updateItems(db, items)
 
   setUserStatusTypeSafe(db, status)

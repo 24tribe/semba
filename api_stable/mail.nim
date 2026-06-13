@@ -1,5 +1,6 @@
 import std/options
 import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -35,7 +36,8 @@ proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
 
   var rewards = mails.foldl(a.concat(mailRewardsToProperRewards(db, b.rewards)), newSeq[Reward]())
 
-  let changedResources = updateResourcesFromRewardsTypeSafe(db, rewards)
+  var unused: Table[int, int]
+  let changedResources = updateResourcesFromRewardsTypeSafe(db, rewards, unused)
 
   let mailList = getMails(db)
 

@@ -1,8 +1,12 @@
 import std/strutils
 import std/tables
 import std/options
+import std/sequtils
+import std/sugar
 
 import ../db_connector/db_sqlite
+
+import ../extsqlite
 
 
 type Item* = object
@@ -73,3 +77,16 @@ proc calcLifeDataExp*(consumedItems: openArray[ConsumedItem]): int =
       result += item.quantity*greatLifeDataExp
     else:
       echo("WARNING: item.id=" & $item.itemId & " is not a life data!")
+
+
+proc addCountsToItems*(db: DbConn, itemCounts: Table[int, int]): seq[Item] =
+  ## Gets the item quantities in the db and adds `itemCounts` values to them.
+  ## Returns the changed items. Doesn't update the db.
+
+  let currentItemCounts = db.getAllRows(sql("""
+    SELECT itemId, quantity FROM items WHERE itemId IN """ & sqlIntTuple(itemCounts.keys.toSeq)
+  )).mapIt((parseInt(it[0]), parseInt(it[1]))).toTable
+
+  result = collect:
+    for itemId, quantity in itemCounts.pairs:
+      Item(itemId: itemId, quantity: quantity + currentItemCounts.getOrDefault(itemId))

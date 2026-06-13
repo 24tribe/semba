@@ -48,7 +48,8 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
 
   updateMissions(db, changedMissions)
 
-  result.changedResources = updateResourcesFromRewardsTypeSafe(db, rewards)
+  var unused: Table[int, int]
+  result.changedResources = updateResourcesFromRewardsTypeSafe(db, rewards, unused)
   result.changedResources.missions = changedMissions
   result.rewards = rewards
 

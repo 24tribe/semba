@@ -1,6 +1,7 @@
 import std/json
 import std/options
 import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -214,7 +215,9 @@ proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest
 
   result.rewards = getAreaItemRewards(db, areaItem.areaItemRewardIds)
 
-  result.changedResources = updateResourcesFromRewardsTypeSafe(db, result.rewards[0].contents)
+  var itemCounts: Table[int, int]
+
+  result.changedResources = updateResourcesFromRewardsTypeSafe(db, result.rewards[0].contents, itemCounts)
 
   if isChestAreaItem(areaItem.areaItemBaseId):
     let cityId = areaIdToCityId(req.currentLocation.areaKeyId.get())

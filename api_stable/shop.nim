@@ -1,6 +1,7 @@
 import std/json
 import std/options
 import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -49,7 +50,8 @@ proc shop_Purchase*(db: DbConn, req: ShopPurchaseRequest): ChangedResourcesRespo
   let rewardSet = getMdRewardSet(db, rewardSetId)
   var rewards = rewardSet.rewards.mapIt(Reward(`type`: it.`type`, `id`: it.`id`, quantity: it.quantity*req.quantity))
 
-  var changedResources = updateResourcesFromRewardsTypeSafe(db, rewards)
+  var unused: Table[int, int]
+  var changedResources = updateResourcesFromRewardsTypeSafe(db, rewards, unused)
 
   # FIXME: save on db?
   # FIXME: "the exchangeable items have been updated"
