@@ -426,6 +426,8 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
 
   upsertAreaObjectLocks(db, save.areaObjectLocks)
 
+  db.exec(sql"UPDATE happyWorkerItems SET isCleared = false, state = 1")
+
   if save.version >= 14:
     updateHappyWorkerItems(db, save.happyWorkerItems)
 
