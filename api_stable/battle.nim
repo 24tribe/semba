@@ -20,6 +20,7 @@ import ../model_stable/resources
 import ../model_stable/status
 import ../model_stable/warp_point
 import ../model_stable/mission
+import ../model_stable/happy_worker
 import ../semba_error
 import ../protojson
 
@@ -157,24 +158,19 @@ proc battle_Finish*(
 
     let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
 
-    var missions: seq[Mission] = getChangedAttackTestMissions(db, characters, cityId)
-    missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
-    missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
-    missions.insert(getBattleTaskTopicsMissions(db, req.battleTaskTopics, cityId), missions.len)
-    updateMissions(db, missions)
-
     result = BattleFinishResponse(
       changedResources: Resources(
         areaObjectLocks: some(areaObjectLocks),
         status: some(status),
         characters: characters,
         items: items,
-        missions: missions,
       ),
       rewards: @[Rewards(`type`: some(6), contents: allRewards)],
       characterExps: characterExps,
       areaObjects: getBattleFinishAreaObjects(db, battleEntryIds[0]),
     )
+
+    var missions = getChangedAttackTestMissions(db, characters, cityId)
 
     let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
 
@@ -189,5 +185,16 @@ proc battle_Finish*(
 
       result.changedResources.challenges = resources.challenges
       upsertChallenges(db, resources.challenges)
+
+      for challenge in resources.challenges:
+        if deleteAreaObjectsOfCompletedHappyWorkerChallenge(db, challenge):
+          missions.insert(getChangedHappyWorkaholicMissions(db, cityId))
+
+    missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
+    missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
+    missions.insert(getBattleTaskTopicsMissions(db, req.battleTaskTopics, cityId), missions.len)
+
+    result.changedResources.missions = missions
+    updateMissions(db, missions)
 
     updateAreaObjectsEx(db, result.areaObjects)
