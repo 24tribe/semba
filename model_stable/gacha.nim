@@ -3,6 +3,7 @@ import std/strutils
 import std/random
 import std/tables
 import std/options
+import std/sugar
 
 import ../db_connector/db_sqlite
 
@@ -314,10 +315,10 @@ Update the db from drawnCards, returns the changedResources
 ]#
 proc updateDbFromDrawnCards*(
   db: DbConn, drawnCards: seq[JsonNode], drawnRewards: var seq[JsonNode]
-): JsonNode =
+): (seq[CharacterPiece], seq[TensionCard]) =
   var characterCount = initCountTable[int]()
 
-  var tensionCards = newSeq[JsonNode]()
+  var tensionCards = newSeq[TensionCard]()
 
   for card in drawnCards:
     let reward = getRewardFromCard(db, card)
@@ -331,28 +332,21 @@ proc updateDbFromDrawnCards*(
     elif cardType == gachaCardTensionCard.int:
       let entityId = reward["entityId"].getInt()
       let tensionCard = getNewTensionCard(db, entityId, cardId)
-      addTensionCard(db, tensionCard)
+      upsertTensionCard(db, tensionCard)
       tensionCards.add(tensionCard)
     else:
       raise newException(SembaError, "Invalid cardType=" & $cardType)
 
   # FIXME: should check if the character exists and add it to changedResources.characters if not
-  var characterPieces = newSeq[JsonNode]()
+  let characterPieces = collect:
+    for characterId, count in characterCount.pairs:
+      var quantity: int
+      for i in 0 ..< count:
+        quantity = addCharacterPiece(db, characterId)
 
-  for characterId, count in characterCount.pairs():
-    var quantity: int
-    for i in 0 ..< count:
-      quantity = addCharacterPiece(db, characterId)
+      CharacterPiece(characterId: characterId, quantity: quantity)
 
-    characterPieces.add(%*{
-      "characterId": characterId,
-      "quantity": quantity
-    })
-
-  result = %*{
-    "characterPieces": characterPieces,
-    "tensionCards": tensionCards,
-  }
+  result = (characterPieces, tensionCards)
 
 
 proc getDrawnCards*(db: DbConn, gacha: JsonNode, gachaButtonId: int): seq[JsonNode] =

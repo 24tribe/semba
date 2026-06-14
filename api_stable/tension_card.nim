@@ -3,49 +3,42 @@ import std/json
 import ../db_connector/db_sqlite
 
 import ../model_stable/tension_card
+import ../model_stable/item
+import ../model_stable/resources
 
 
-proc tensionCard_LimitBreakEnhance*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let entityId = jsonReq["entityId"].getInt()
-  let consumedEntityIds = jsonReq["consumedEntityIds"]
+type TensionCardLimitBreakEnhanceRequest* = object
+  entityId*: int
+  consumedEntityIds*: seq[int]
+  consumedItem*: ConsumedItem
 
-  let tensionCard = getTensionCard(db, entityId)
-  let limitBreak = tensionCard.getOrDefault("limitBreak").getInt() + consumedEntityIds.len
-  tensionCard["limitBreak"] = %*limitBreak
-  updateTensionCardLimitBreak(db, entityId, limitBreak)
+type TensionCardLimitBreakEnhanceResponse* = object
+  changedResources*: Resources
+  deletedResources*: ResourceEntities
 
-  for consumedEntityId in consumedEntityIds:
-    db.exec(sql"DELETE FROM tensionCards WHERE entityId = ?", consumedEntityId.getInt())
-    db.exec(sql"DELETE FROM tensionCardLimitBreaks WHERE entityId = ?", consumedEntityId.getInt())
-
-  result = %*{
-    "changedResources": {
-      "tensionCards": [tensionCard],
-    },
-    "deletedResources": {
-      "tensionCardEntityIds": consumedEntityIds,
-    }
-  }
+type TensionCardLockRequest* = object
+  entityIds*: seq[int]
+  isLock*: bool
 
 
-proc tensionCard_Lock*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let isLock = jsonReq.getOrDefault("isLock").getBool()
-  let entityIds = jsonReq["entityIds"]
+proc tensionCard_LimitBreakEnhance*(db: DbConn, req: TensionCardLimitBreakEnhanceRequest): TensionCardLimitBreakEnhanceResponse =
+  var tensionCard = getTensionCards(db, [req.entityId])[0]
+  tensionCard.limitBreak += req.consumedEntityIds.len
+  upsertTensionCard(db, tensionCard)
 
-  var tensionCards = newSeq[JsonNode]()
+  deleteTensionCards(db, req.consumedEntityIds)
 
-  for entityId in entityIds:
-    let tensionCard = getTensionCard(db, entityId.getInt())
-    tensionCard["isLocked"] = %*isLock
-    tensionCards.add(tensionCard)
-    let isLocked = if isLock: 1 else: 0
-    db.exec(
-      sql"UPDATE tensionCards SET isLocked = ? WHERE entityId = ?",
-      isLocked, entityId.getInt()
-    )
+  result = TensionCardLimitBreakEnhanceResponse(
+    changedResources: Resources(tensionCards: @[tensionCard]),
+    deletedResources: ResourceEntities(tensionCardEntityIds: req.consumedEntityIds),
+  )
 
-  result = %*{
-    "changedResources": {
-      "tensionCards": tensionCards,
-    }
-  }
+
+proc tensionCard_Lock*(db: DbConn, req: TensionCardLockRequest): ChangedResourcesResponse =
+  var tensionCards = getTensionCards(db, req.entityIds)
+
+  for tensionCard in tensionCards.mitems:
+    tensionCard.isLocked = req.isLock
+
+  upsertTensionCards(db, tensionCards)
+  result.changedResources.tensionCards = tensionCards

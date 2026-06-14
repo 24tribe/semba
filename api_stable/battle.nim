@@ -46,7 +46,7 @@ type BattleRestartRequest* = object
 
 type BattleRestartResponse = object
   characters: seq[Character]
-  tensionCards: seq[JsonNode] # FIXME: use TensionCard
+  tensionCards: seq[TensionCard]
   battleParameters: seq[BattleParameter]
   battleTriggers: seq[BattleTrigger]
   advantageType: BattleAdvantageType
@@ -59,7 +59,7 @@ type BattleRestartResponse = object
 
 type BattleStartResponse* = object
   characters: seq[Character]
-  tensionCards: seq[JsonNode] # FIXME: use TensionCard
+  tensionCards: seq[TensionCard]
   battleParameters: seq[BattleParameter]
   battleTriggers: seq[BattleTrigger]
   advantageType: BattleAdvantageType

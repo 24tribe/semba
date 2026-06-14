@@ -1,10 +1,13 @@
 import std/json
 import std/strutils
 import std/options
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
+import ../extsqlite
 import ../semba_error
+import ../protojson
 import timestamp
 import status
 
@@ -17,10 +20,10 @@ type AbilityEfficacy* = object
   activeTimeMillisecond*: int
   efficacyType*: int
   probability*: int
-  activateConditions*: Option[string]
-  deactivateConditions*: Option[string]
-  sustainConditions*: Option[string]
-  targetConditions*: Option[string]
+  activateConditions*: string
+  deactivateConditions*: string
+  sustainConditions*: string
+  targetConditions*: string
   fValues*: seq[float]
   values*: seq[int]
   uiViewPriority*: int
@@ -34,105 +37,60 @@ type TensionCard* = object
   entityId*: int
   exp*: int
   limitBreak*: int
-  receivedAt*: Option[Timestamp]
+  receivedAt*: Timestamp
   maxLevel*: int
   abilityEfficacies*: seq[AbilityEfficacy]
   trainingScoreLevelScore*: int
   isLocked*: bool
 
 
-const dbTensionCardsFields = """
-  tensionCardId, receivedAt, maxLevel, abilityEfficacies,
-  trainingScoreLevelScore, entityId, isLocked
-"""
+proc getTensionCards*(db: DbConn, filterIds: openArray[int] = @[]): seq[TensionCard] =
+  let whereSql =
+    if filterIds.len > 0:
+      "WHERE tensionCardId IN " & sqlIntTuple(filterIds)
+    else:
+      ""
 
-const dbTensionCardsFieldsJoin = """
-  tensionCardId, receivedAt, maxLevel, abilityEfficacies,
-  trainingScoreLevelScore, tensionCards.entityId, isLocked, limitBreak
-"""
-
-const selectTensionCardSql = """
-  SELECT """ & dbTensionCardsFieldsJoin & """
-  FROM tensionCards FULL JOIN tensionCardLimitBreaks
-  ON tensionCards.entityId = tensionCardLimitBreaks.entityId
-"""
-
-
-proc updateTensionCardLimitBreak*(db: DbConn, entityId: int, limitBreak: int) =
-  db.exec(sql"""
-    INSERT INTO tensionCardLimitBreaks (entityId, limitBreak) VALUES (?, ?)
-    ON CONFLICT (entityId) DO
-    UPDATE SET limitBreak = excluded.limitBreak
-  """, entityId, limitBreak)
+  db.getAllRows(sql("""
+    SELECT
+      tensionCardId, receivedAt, maxLevel, abilityEfficacies,
+      trainingScoreLevelScore, entityId, isLocked, limitBreak, exp
+    FROM tensionCards """ & whereSql
+  )).mapIt(TensionCard(
+    tensionCardId: parseInt(it[0]),
+    receivedAt: it[1].Timestamp,
+    maxLevel: parseInt(it[2]),
+    abilityEfficacies: protoJsonTo(parseJson(it[3]), seq[AbilityEfficacy]),
+    trainingScoreLevelScore: parseInt(it[4]),
+    entityId: parseInt(it[5]),
+    isLocked: parseInt(it[6]) == 1,
+    limitBreak: tryParseInt(it[7]).get(0),
+    exp: tryParseInt(it[8]).get(0),
+  ))
 
 
-proc parseTensionCardRow(tensionCardRow: Row): JsonNode =
-  let tensionCardId = parseInt(tensionCardRow[0])
-  let receivedAt = tensionCardRow[1]
-  let maxLevel = parseInt(tensionCardRow[2])
-  let abilityEfficacies = parseJson(tensionCardRow[3])
-  let trainingScoreLevelScore = parseInt(tensionCardRow[4])
-  let entityId = parseInt(tensionCardRow[5])
-  let isLocked = if parseInt(tensionCardRow[6]) == 1: true else: false
-  let limitBreak = if tensionCardRow[7] == "": 0 else: parseInt(tensionCardRow[7])
-
-  return %*{
-    "tensionCardId": tensionCardId,
-    "receivedAt": receivedAt,
-    "maxLevel": maxLevel,
-    "abilityEfficacies": abilityEfficacies,
-    "trainingScoreLevelScore": trainingScoreLevelScore,
-    "entityId": entityId,
-    "isLocked": isLocked,
-    "limitBreak": limitBreak
-  }
-
-proc getTensionCards*(db: DbConn): seq[JsonNode] =
-  let tensionCardsRows = db.getAllRows(sql(selectTensionCardSql))
-
-  for tensionCardRow in tensionCardsRows:
-    result.add(parseTensionCardRow(tensionCardRow))
-
-proc getTensionCard*(db: DbConn, entityId: int): JsonNode =
-  let row = db.getRow(sql(selectTensionCardSql & " WHERE tensionCards.entityId = ?"), entityId)
-
-  if row[0] == "":
-    raise newException(SembaError, "Couldn't find tensionCard for entityId=" & $entityId)
-
-  result = parseTensionCardRow(row)
-
-proc addTensionCard*(db: DbConn, tensionCard: JsonNode) =
-  let tensionCardId = tensionCard["tensionCardId"].getInt()
-  let receivedAt = tensionCard["receivedAt"].getStr()
-  let maxLevel = tensionCard["maxLevel"].getInt()
-  let abilityEfficacies = $tensionCard["abilityEfficacies"]
-  let trainingScoreLevelScore = tensionCard["trainingScoreLevelScore"].getInt()
-  let entityId = tensionCard["entityId"].getInt()
-  let isLocked = if tensionCard["isLocked"].getBool(): 1 else: 0
-  let limitBreak = tensionCard.getOrDefault("limitBreak").getInt()
-
+proc upsertTensionCard*(db: DbConn, tc: TensionCard) =
   db.exec(
-    sql("INSERT INTO tensionCards (" & dbTensionCardsFields & """)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT (entityId) DO
-    UPDATE SET
-      tensionCardId = excluded.tensionCardId,
-      receivedAt = excluded.receivedAt,
-      maxLevel = excluded.maxLevel,
-      abilityEfficacies = excluded.abilityEfficacies,
-      trainingScoreLevelScore = excluded.trainingScoreLevelScore,
-      isLocked = excluded.isLocked
-    """),
-    tensionCardId, receivedAt, maxLevel, abilityEfficacies,
-    trainingScoreLevelScore, entityId, isLocked
+    sql"""
+      INSERT INTO tensionCards
+        (tensionCardId, receivedAt, maxLevel, abilityEfficacies,
+        trainingScoreLevelScore, entityId, isLocked, limitBreak, exp)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (entityId)
+      DO UPDATE SET
+        tensionCardId = excluded.tensionCardId, receivedAt = excluded.receivedAt,
+        maxLevel = excluded.maxLevel, abilityEfficacies = excluded.abilityEfficacies,
+        trainingScoreLevelScore = excluded.trainingScoreLevelScore, isLocked = excluded.isLocked,
+        limitBreak = excluded.limitBreak, exp = excluded.exp
+    """,
+    tc.tensionCardId, tc.receivedAt, tc.maxLevel, toProtoJson(tc.abilityEfficacies),
+    tc.trainingScoreLevelScore, tc.entityId, if tc.isLocked: 1 else: 0, tc.limitBreak, tc.exp
   )
 
-  updateTensionCardLimitBreak(db, entityId, limitBreak)
 
-
-proc updateTensionCards*(db: DbConn, tensionCards: seq[JsonNode]) =
-  for tc in tensionCards:
-    addTensionCard(db, tc)
+proc upsertTensionCards*(db: DbConn, tensionCards: openArray[TensionCard]) =
+  for tensionCard in tensionCards:
+    upsertTensionCard(db, tensionCard)
 
 
 proc getFormationCards(db: DbConn, formationNumber: int): JsonNode =
@@ -143,30 +101,35 @@ proc getFormationCards(db: DbConn, formationNumber: int): JsonNode =
 
   result = parseJson(row[0])
 
-proc getEquippedTensionCards*(db: DbConn): seq[JsonNode] =
+
+proc getEquippedTensionCards*(db: DbConn): seq[TensionCard] =
   let status = getUserStatusTypeSafe(db)
   let formationNumber = status.formationNumber.get(0)
   let cards = getFormationCards(db, formationNumber)
 
+  var tensionCardIds = newSeq[int]()
+
   let tensionCard1Id = cards.getOrDefault("tensionCard1Id")
   if tensionCard1Id != nil:
-    result.add(getTensionCard(db, tensionCard1Id.getInt()))
+    tensionCardIds.add(tensionCard1Id.getInt())
 
   let tensionCard2Id = cards.getOrDefault("tensionCard2Id")
   if tensionCard2Id != nil:
-    result.add(getTensionCard(db, tensionCard2Id.getInt()))
+    tensionCardIds.add(tensionCard2Id.getInt())
 
   let tensionCard3Id = cards.getOrDefault("tensionCard3Id")
   if tensionCard3Id != nil:
-    result.add(getTensionCard(db, tensionCard3Id.getInt()))
+    tensionCardIds.add(tensionCard3Id.getInt())
 
   let tensionCard4Id = cards.getOrDefault("tensionCard4Id")
   if tensionCard4Id != nil:
-    result.add(getTensionCard(db, tensionCard4Id.getInt()))
+    tensionCardIds.add(tensionCard4Id.getInt())
 
   let tensionCard5Id = cards.getOrDefault("tensionCard5Id")
   if tensionCard5Id != nil:
-    result.add(getTensionCard(db, tensionCard5Id.getInt()))
+    tensionCardIds.add(tensionCard5Id.getInt())
+
+  result = getTensionCards(db, tensionCardIds)
 
 
 proc getAbilityEfficacyIds(db: DbConn, tensionCardId: int): seq[int] =
@@ -186,79 +149,44 @@ proc getAbilityEfficacyIds(db: DbConn, tensionCardId: int): seq[int] =
     result.add(abilityEfficacyId)
 
 
-proc parseAbilityEfficacyRow(row: Row): JsonNode =
-  let abilityEfficacyId = parseInt(row[0])
-  let abilityEfficacyGroupId = parseInt(row[1])
-  let coolTimeMillisecond = parseInt(row[2])
-  let effectCoolTimeMillisecond = parseInt(row[3])
-  let activeTimeMillisecond = parseInt(row[4])
-  let efficacyType = parseInt(row[5])
-  let probability = parseInt(row[6])
-  let activateConditions = row[7]
-  let deactivateConditions = row[8]
-  let sustainConditions = row[9]
-  let targetConditions = row[10]
-  let fValues = parseJson(row[11])
-  let values = parseJson(row[12])
-  let uiViewPriority = parseInt(row[13])
-  let effectValueSteps = parseJson(row[14])
-  let targetType = parseInt(row[15])
-
-  result = %*{
-    "id": abilityEfficacyId,
-    "coolTimeMillisecond": coolTimeMillisecond,
-    "effectCoolTimeMillisecond": effectCoolTimeMillisecond,
-    "activeTimeMillisecond": activeTimeMillisecond,
-    "efficacyType": efficacyType,
-    "probability": probability,
-    "activateConditions": activateConditions,
-    "deactivateConditions": deactivateConditions,
-    "sustainConditions": sustainConditions,
-    "targetConditions": targetConditions,
-    "fValues": fValues,
-    "values": values,
-    "uiViewPriority": uiViewPriority,
-    "effectValueSteps": effectValueSteps,
-    "targetType": targetType,
-  }
-
-  if abilityEfficacyGroupId != 0:
-    result["abilityEfficacyGroupId"] = %*abilityEfficacyGroupId
+proc getAbilityEfficacies(db: DbConn, tensionCardId: int): seq[AbilityEfficacy] =
+  db.getAllRows(sql("""
+    SELECT abilityEfficacyId, abilityEfficacyGroupId, coolTimeMillisecond,
+          effectCoolTimeMillisecond, activeTimeMillisecond, efficacyType, probability,
+          activateConditions, deactivateConditions, sustainConditions, targetConditions,
+          fValues, values_, uiViewPriority, effectValueSteps, targetType
+    FROM mdAbilityEfficacy WHERE abilityEfficacyId IN """ & sqlIntTuple(getAbilityEfficacyIds(db, tensionCardId))
+  )).mapIt(AbilityEfficacy(
+    id: parseInt(it[0]),
+    abilityEfficacyGroupId: if parseInt(it[1]) != 0: some(parseInt(it[1])) else: none(int),
+    coolTimeMillisecond: parseInt(it[2]),
+    effectCoolTimeMillisecond: parseInt(it[3]),
+    activeTimeMillisecond: parseInt(it[4]),
+    efficacyType: parseInt(it[5]),
+    probability: parseInt(it[6]),
+    activateConditions: it[7],
+    deactivateConditions: it[8],
+    sustainConditions: it[9],
+    targetConditions: it[10],
+    fValues: protoJsonTo(parseJson(it[11]), seq[float]),
+    values: protoJsonTo(parseJson(it[12]), seq[int]),
+    uiViewPriority: parseInt(it[13]),
+    effectValueSteps: protoJsonTo(parseJson(it[14]), seq[float]),
+    targetType: parseInt(it[15]),
+  ))
 
 
-proc getAbilityEfficacies(db: DbConn, tensionCardId: int): seq[JsonNode] =
-  var whereBody = ""
-
-  for abilityEfficacyId in getAbilityEfficacyIds(db, tensionCardId):
-    if whereBody == "":
-      whereBody = "abilityEfficacyId=" & $abilityEfficacyId
-    else:
-      whereBody &= " OR abilityEfficacyId=" & $abilityEfficacyId
-
-  if whereBody != "":
-    let rows = db.getAllRows(sql("""
-      SELECT abilityEfficacyId, abilityEfficacyGroupId, coolTimeMillisecond,
-            effectCoolTimeMillisecond, activeTimeMillisecond, efficacyType, probability,
-            activateConditions, deactivateConditions, sustainConditions, targetConditions,
-            fValues, values_, uiViewPriority, effectValueSteps, targetType
-      FROM mdAbilityEfficacy WHERE """ & whereBody)
-    )
-
-    for row in rows:
-      let abilityEfficacy = parseAbilityEfficacyRow(row)
-      result.add(abilityEfficacy)
+proc getNewTensionCard*(db: DbConn, entityId: int, tensionCardId: int): TensionCard =
+  TensionCard(
+    abilityEfficacies: getAbilityEfficacies(db, tensionCardId),
+    entityId: entityId,
+    isLocked: false,
+    maxLevel: 10,
+    receivedAt: getTimestampNow(),
+    tensionCardId: tensionCardId,
+    trainingScoreLevelScore: 2,
+  )
 
 
-proc getNewTensionCard*(db: DbConn, entityId: int, tensionCardId: int): JsonNode =
-  let receivedAt = getDateNow()
-  let abilityEfficacies = getAbilityEfficacies(db, tensionCardId)
-
-  result = %*{
-    "abilityEfficacies": abilityEfficacies,
-    "entityId": entityId,
-    "isLocked": false,
-    "maxLevel": 10,
-    "receivedAt": receivedAt,
-    "tensionCardId": tensionCardId,
-    "trainingScoreLevelScore": 2,
-  }
+proc deleteTensionCards*(db: DbConn, entityIds: openArray[int]) =
+  db.exec(sql("DELETE FROM tensionCards WHERE entityId IN " & sqlIntTuple(entityIds)))

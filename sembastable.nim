@@ -107,7 +107,7 @@ proc getJsonResultStable*(
   elif uri == "/gacha/list":
     result = gacha_List(db)
   elif uri == "/gacha/execute":
-    result = gacha_Execute(db, jsonReq)
+    result = gacha_Execute(db, jsonReq).toProtoJson
 
   elif uri == "/happy_worker/list":
     result = toProtoJson(happy_worker_List(db))
@@ -147,9 +147,9 @@ proc getJsonResultStable*(
     result = toProtoJson(shop_Purchase(db, protoJsonTo(jsonReq, ShopPurchaseRequest)))
 
   elif uri == "/tension_card/limit_break_enhance":
-    result = tensionCard_LimitBreakEnhance(db, jsonReq)
+    result = tensionCard_LimitBreakEnhance(db, protoJsonTo(jsonReq, TensionCardLimitBreakEnhanceRequest)).toProtoJson
   elif uri == "/tension_card/lock":
-    result = tensionCard_Lock(db, jsonReq)
+    result = tensionCard_Lock(db, protoJsonTo(jsonReq, TensionCardLockRequest)).toProtoJson
 
   elif uri == "/tip/release":
     result = tip_Release(db, jsonReq)

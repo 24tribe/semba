@@ -7,6 +7,7 @@ import std/tables
 import ../db_connector/db_sqlite
 
 import ../enum_ex
+import ../protojson
 import adventure_variable
 import area
 import area_change_lock
@@ -43,6 +44,11 @@ import wallet
 import warp_point
 
 
+type ResourceEntities* = object
+  followUserIds*: seq[ProtoJsonInt64]
+  gearEntityIds*: seq[int]
+  tensionCardEntityIds*: seq[int]
+
 type Notifications* = object
   gacha*: Option[GachaNotification]
   mail*: Option[bool]
@@ -62,7 +68,7 @@ type Resources* = object
   characterLikabilities: Option[seq[CharacterLikability]]
   characterMountingPowers: Option[seq[CharacterMountingPower]]
   characterMountingPowerCommon: Option[CharacterMountingPowerCommon]
-  characterPieces*: Option[seq[CharacterPiece]]
+  characterPieces*: seq[CharacterPiece]
   cities: seq[City]
   cycleUpdateShopStates: Option[seq[JsonNode]] # FIXME: CycleUpdateShopState
   dailyPassStates: Option[seq[JsonNode]] # FIXME: DailyPassState
@@ -91,7 +97,7 @@ type Resources* = object
   shopProductStates*: Option[seq[ShopProductState]]
   status*: Option[Status]
   synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
-  tensionCards: seq[JsonNode] # FIXME: TensionCard
+  tensionCards*: seq[TensionCard]
   tips*: Option[seq[Tip]]
   totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
@@ -142,7 +148,7 @@ proc updateResources*(db: DbConn, changedResources: var Resources) =
   updateAreaChangeLocks(db, changedResources.areaChangeLocks)
   updateCharactersTypeSafe(db, changedResources.characters)
   updateCharacterCostumes(db, changedResources.characterCostumes)
-  updateTensionCards(db, changedResources.tensionCards)
+  upsertTensionCards(db, changedResources.tensionCards)
 
 
 proc getChangedResourcesForCompletedChallengeTask*(

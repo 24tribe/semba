@@ -83,7 +83,7 @@ type SembaSave* = object
   offlineLogs: seq[OfflineLog]
   areaBgms: seq[JsonNode]
   characters: seq[Character]
-  tensionCards: seq[JsonNode]
+  tensionCards: seq[TensionCard]
   challengeProgresses: seq[JsonNode]
   nineSequences: seq[JsonNode]
   totalTasks: seq[JsonNode]
@@ -158,10 +158,9 @@ proc loadSaveFileVer5(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: boo
     addCharacterTypeSafe(db, character) # FIXME: use type safe version of addCharacter
 
   db.exec(sql"DELETE FROM tensionCards")
-  db.exec(sql"DELETE FROM tensionCardLimitBreaks")
 
   for tensionCard in save.tensionCards:
-    addTensionCard(db, tensionCard)
+    upsertTensionCard(db, tensionCard)
 
   db.exec(sql"DELETE FROM challengeProgresses")
 

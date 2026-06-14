@@ -51,7 +51,7 @@ proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): CharacterLimitBreakRe
   updateCharacterPiece(db, characterPiece)
 
   result.changedResources.characters = @[character]
-  result.changedResources.characterPieces = some(@[characterPiece])
+  result.changedResources.characterPieces = @[characterPiece]
 
 
 proc character_Equip*(db: DbConn, req: CharacterEquipRequest): ChangedResourcesResponse =
