@@ -707,6 +707,7 @@ proc testLinkedSignpostsMission(saves_dir: string) =
 
   let mission = changedResources.missions[missionIndex]
   doAssert(mission.count.get(0) == beforeMission.count.get(0) + 1)
+  doAssert(mission.count.get(0) == 4)
 
 
 proc testSuiteAdventure*(saves_dir: string) =
