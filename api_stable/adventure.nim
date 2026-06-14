@@ -238,6 +238,7 @@ proc adventure_Hospital*(db: DbConn): ChangedResourcesResponse =
 
 proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessWarpPointResponse =
   let warpPointId = jsonReq["warpPointId"].getInt()
+  let cityId = warpPointIdToCityId(warpPointId)
 
   var changedResources = Resources()
 
@@ -255,6 +256,8 @@ proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessW
     changedResources.warpPoints.add(WarpPoint(
       warpPointId: warpPointId
     ))
+    changedResources.missions = getChangedLinkedSignpostsMissions(db, cityId)
+    updateMissions(db, changedResources.missions)
 
   let areaId = getWarpPointAreaId(db, warpPointId)
   result.areaObjects = getRespawnAreaEnemies(db, areaId)

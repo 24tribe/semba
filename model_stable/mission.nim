@@ -92,6 +92,11 @@ proc getCompleteCityChallengeMissionsForCityId*(db: DbConn, cityId: int): seq[Md
   return getMissionsForCity(db, missionIds, cityId)
 
 
+proc getLinkedSignpostsMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041061, 1041361, 1041461]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
 proc getMdMissionsWithIds*(db: DbConn, ids: openArray[int]): seq[MdMission] = 
   let rows = db.getAllRows(sql("SELECT id, steps, cityId FROM mdMission WHERE id IN " & sqlIntTuple(ids)))
 
@@ -259,7 +264,11 @@ proc getFieldResearchMissionIdsWithItemIds*(db: DbConn, itemIds: openArray[int])
 
 
 proc getChangedLinkedSignpostsMissions*(db: DbConn, cityId: int): seq[Mission] =
-  discard
+  let mdMissions = getLinkedSignpostsMissionsForCity(db, cityId)
+
+  getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
+    some(mi.count.get(0) + 1)
+  )
 
 
 proc cmpMissionsById*(a, b: Mission): int = cmp(a.missionId, b.missionId)

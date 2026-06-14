@@ -59,4 +59,4 @@ proc getWarpPointAreaId*(db: DbConn, warpPointId: int): int =
   result = parseInt(row[0])
 
 
-proc warpPointToCityId*(warpPointId: int): int = warpPointId div 10000
+proc warpPointIdToCityId*(warpPointId: int): int = warpPointId div 10000
