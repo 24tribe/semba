@@ -21,6 +21,7 @@ import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
 import ../model_stable/timestamp
+import ../model_stable/warp_point
 
 
 proc sortByAreaPointId(a, b: AreaObject): int = cmp(a.areaPointId, b.areaPointId)
@@ -672,6 +673,42 @@ proc testFieldResearchMission() =
   doAssert(changedResources.missions[missionIndex].count == some(item.quantity - quantity))
 
 
+proc testLinkedSignpostsMission(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "meiou isle restricted area puzzle")
+
+  const warpPointId = 109109
+  const linkedSignpostsShinagawaMissionId = 1041061
+
+  let beforeMissions = getMissionsWithIds(ctx.db, [linkedSignpostsShinagawaMissionId])
+  let beforeMission =
+    if beforeMissions.len == 1:
+      beforeMissions[0]
+    else:
+      Mission(missionId: linkedSignpostsShinagawaMissionId)
+
+  let res = protoJsonTo(ctx.sembaCall("/adventure/access_warp_point", %*{
+    "warpPointId": warpPointId,
+    "currentLocation": {
+      "areaType": 1, "direction": 1, "areaKeyId": 101301,
+      "positionCoordinates": { "x": 14.90187, "y": 0.15625, "z": -2.4999998 }
+    }
+  }), Option[AdventureAccessWarpPointResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.warpPoints == @[WarpPoint(warpPointId: warpPointId)])
+
+  let missionIndex = changedResources.missions.findIt(it.missionId == linkedSignpostsShinagawaMissionId)
+  doAssert(missionIndex != -1)
+
+  let mission = changedResources.missions[missionIndex]
+  doAssert(mission.count.get(0) == beforeMission.count.get(0) + 1)
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -690,3 +727,4 @@ proc testSuiteAdventure*(saves_dir: string) =
   testUpdateCharacterStatus()
   testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir)
   testFieldResearchMission()
+  testLinkedSignpostsMission(saves_dir)
