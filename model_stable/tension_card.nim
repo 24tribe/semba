@@ -9,6 +9,38 @@ import timestamp
 import status
 
 
+type AbilityEfficacy* = object
+  id*: int
+  abilityEfficacyGroupId*: Option[int]
+  coolTimeMillisecond*: int
+  effectCoolTimeMillisecond*: int
+  activeTimeMillisecond*: int
+  efficacyType*: int
+  probability*: int
+  activateConditions*: Option[string]
+  deactivateConditions*: Option[string]
+  sustainConditions*: Option[string]
+  targetConditions*: Option[string]
+  fValues*: seq[float]
+  values*: seq[int]
+  uiViewPriority*: int
+  effectValueSteps*: seq[float]
+  targetType*: int
+  maximumActiveTimeMillisecond*: Option[int]
+
+
+type TensionCard* = object
+  tensionCardId*: int
+  entityId*: int
+  exp*: int
+  limitBreak*: int
+  receivedAt*: Option[Timestamp]
+  maxLevel*: int
+  abilityEfficacies*: seq[AbilityEfficacy]
+  trainingScoreLevelScore*: int
+  isLocked*: bool
+
+
 const dbTensionCardsFields = """
   tensionCardId, receivedAt, maxLevel, abilityEfficacies,
   trainingScoreLevelScore, entityId, isLocked
