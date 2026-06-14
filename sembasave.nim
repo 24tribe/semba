@@ -94,7 +94,7 @@ type SembaSave* = object
   questStates: seq[JsonNode]
   clearedAchievements: seq[JsonNode]
   challenges: seq[JsonNode]
-  warpPoints: seq[JsonNode]
+  warpPoints: seq[WarpPoint]
   areas: seq[JsonNode]
   areaGroups: seq[JsonNode]
   cities: seq[City]
@@ -213,7 +213,7 @@ proc loadSaveFileVer8(db: DbConn, save: SembaSave) =
   db.exec(sql"DELETE FROM warpPoints")
 
   for warpPoint in save.warpPoints:
-    addWarpPoint(db, warpPoint["warpPointId"].getInt())
+    addWarpPoint(db, warpPoint.warpPointId)
 
   db.exec(sql"DELETE FROM areas")
 
@@ -309,6 +309,9 @@ proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[C
   fixGraffitiMissions(missions, db, graffitiArtCounts)
   fixMagicOrbMissions(missions, db, magicOrbCounts)
   fixClearCityChallengesMissions(missions, db, cityChallengesCount)
+  
+  let warpPointCounts = save.warpPoints.mapIt(warpPointIdToCityId(it.warpPointId).intToEnum(CityId)).toCountTable
+  fixMissionCounts(missions, db, warpPointCounts, getLinkedSignpostsMissionsForCity)
 
   save.missions = missions.values().toSeq()
 

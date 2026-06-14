@@ -1,5 +1,5 @@
-import std/json
 import std/strutils
+import std/sequtils
 
 import ../db_connector/db_sqlite
 import ../semba_error
@@ -26,12 +26,10 @@ proc getLastWarpPoint*(db: DbConn): MdWarpPoint =
   result = MdWarpPoint(id: parseInt(row[0]), areaLocatorId: parseInt(row[1]))
 
 
-proc getWarpPoints*(db: DbConn): seq[JsonNode] =
-  for row in db.getAllRows(sql"SELECT warpPointId FROM warpPoints"):
-    let warpPointId = parseInt(row[0])
-    result.add(%*{
-      "warpPointId": warpPointId
-    })
+proc getWarpPoints*(db: DbConn): seq[WarpPoint] =
+  db.getAllRows(sql"SELECT warpPointId FROM warpPoints").mapIt(WarpPoint(
+    warpPointId: parseInt(it[0])
+  ))
 
 
 proc hasWarpPoint*(db: DbConn, warpPointId: int): bool =
