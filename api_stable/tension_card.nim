@@ -65,4 +65,9 @@ proc tensionCard_Enhance*(db: DbConn, req: TensionCardEnhanceRequest): ChangedRe
   changedResources.items = @[item]
   updateItems(db, changedResources.items)
 
+  var tc = getTensionCards(db, [req.entityId])[0]
+  tc.exp += exp
+  changedResources.tensionCards = @[tc]
+  upsertTensionCard(db, tc)
+
   result.changedResources = changedResources
