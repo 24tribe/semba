@@ -368,6 +368,7 @@ def gen_md_area_object_behavior(md_area_object_behavior_json, f):
             area_object_behavior["area_point_id"],
             area_object_behavior["challenge_progress_id"],
             area_object_behavior["id"],
+            area_object_behavior["priority"],
         )
 
         area_object_behaviors.append(aob_row)
@@ -405,7 +406,7 @@ def gen_md_area_object_behavior(md_area_object_behavior_json, f):
             area_object_behavior_conditions.append(aob_condition_row)
 
     xprint("""
-INSERT INTO mdAreaObjectBehavior (areaObjectId, areaPointId, challengeProgressId, id)
+INSERT INTO mdAreaObjectBehavior (areaObjectId, areaPointId, challengeProgressId, id, priority)
 VALUES
 """)
 
