@@ -40,6 +40,7 @@ import tension_card
 import lux_phantasma
 import timestamp
 import wallet
+import warp_point
 
 
 type Notifications* = object
@@ -96,7 +97,7 @@ type Resources* = object
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
   tutorialStates*: seq[TutorialState]
   wallet*: Option[Wallet]
-  warpPoints*: Option[seq[JsonNode]] # FIXME: WarpPoint
+  warpPoints*: seq[WarpPoint]
   xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
 
 type ChangedResourcesResponse* = object

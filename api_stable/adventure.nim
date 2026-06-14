@@ -239,38 +239,31 @@ proc adventure_Hospital*(db: DbConn): ChangedResourcesResponse =
 proc adventure_AccessWarpPoint*(db: DbConn, jsonReq: JsonNode): AdventureAccessWarpPointResponse =
   let warpPointId = jsonReq["warpPointId"].getInt()
 
-  var changedTutorialStates = newSeq[TutorialState]()
-  var changedWarpPoints = newSeq[JsonNode]()
-  let status = getUserStatusTypeSafe(db)
+  var changedResources = Resources()
+
+  changedResources.status = some(getUserStatusTypeSafe(db))
 
   if not getTutorialState(db, respiteUnitTutorialStatusKey):
     updateTutorialState(db, respiteUnitTutorialStatusKey, true)
-    changedTutorialStates.add(TutorialState(
+    changedResources.tutorialStates.add(TutorialState(
       tutorialStatusKey: respiteUnitTutorialStatusKey,
       enabled: true
     ))
 
   if not hasWarpPoint(db, warpPointId):
     addWarpPoint(db, warpPointId)
-    changedWarpPoints.add(%*{
-      "warpPointId": warpPointId
-    })
+    changedResources.warpPoints.add(WarpPoint(
+      warpPointId: warpPointId
+    ))
 
   let areaId = getWarpPointAreaId(db, warpPointId)
-  let areaObjects = getRespawnAreaEnemies(db, areaId)
+  result.areaObjects = getRespawnAreaEnemies(db, areaId)
   resetAreaEnemies(db)
 
-  # TODO: update also missions (zero sensei?) and guestCharacters
+  # TODO: guestCharacters?
+  changedResources.characters = healCharactersTypeSafe(db)
 
-  return AdventureAccessWarpPointResponse(
-    changedResources: Resources(
-      warpPoints: some(changedWarpPoints),
-      tutorialStates: changedTutorialStates,
-      status: some(status),
-      characters: healCharactersTypeSafe(db),
-    ),
-    areaObjects: areaObjects,
-  )
+  result.changedResources = changedResources
 
 
 proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): AdventureFindGraffitiResponse =

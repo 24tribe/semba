@@ -9,6 +9,9 @@ type MdWarpPoint* = object
   id*: int
   areaLocatorId*: int
 
+type WarpPoint* = object
+  warpPointId*: int
+
 
 proc getLastWarpPoint*(db: DbConn): MdWarpPoint =
   let row = db.getRow(sql"""
@@ -54,3 +57,6 @@ proc getWarpPointAreaId*(db: DbConn, warpPointId: int): int =
     raise newException(SembaError, "Couldn't find areaId for warpPoint with id=" & $warpPointId)
 
   result = parseInt(row[0])
+
+
+proc warpPointToCityId*(warpPointId: int): int = warpPointId div 10000

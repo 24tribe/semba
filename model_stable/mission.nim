@@ -258,6 +258,10 @@ proc getFieldResearchMissionIdsWithItemIds*(db: DbConn, itemIds: openArray[int])
   )).mapIt((parseInt(it[0]), parseInt(it[1]))).toTable
 
 
+proc getChangedLinkedSignpostsMissions*(db: DbConn, cityId: int): seq[Mission] =
+  discard
+
+
 proc cmpMissionsById*(a, b: Mission): int = cmp(a.missionId, b.missionId)
 
 proc cmpMdMissionsById*(a, b: MdMission): int = cmp(a.id, b.id)
