@@ -21,7 +21,7 @@ type CurrentLocation* = object
 type Status* = object
   exp*: Option[int]
   rank*: int
-  gold*: Option[int]
+  gold*: int
   staminaWhenUpdated*: Option[Timestamp]
   staminaUpdatedAt*: Timestamp
   formationNumber*: Option[int]

@@ -263,7 +263,7 @@ proc updateResourcesFromRewardsTypeSafe*(
 
       itemCounts[reward.id] += reward.quantity
     of rewardGold:
-      status.gold = some(status.gold.get(0) + reward.quantity)
+      status.gold += reward.quantity
     of rewardFlowerMark:
       status.flowerMark = some(status.flowerMark.get(0) + reward.quantity)
     of rewardCharacterExp:

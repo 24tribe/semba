@@ -80,6 +80,6 @@ proc character_Enhance*(db: DbConn, req: CharacterEnhanceRequest): ChangedResour
   let kane = 2*addExp
 
   var status = getUserStatusTypeSafe(db)
-  status.gold = some(status.gold.get(0) - kane)
+  status.gold -= kane
   setUserStatusTypeSafe(db, status)
   result.changedResources.status = some(status)

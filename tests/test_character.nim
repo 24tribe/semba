@@ -202,7 +202,7 @@ proc testCharacterEnhance() =
     upsertItem(ctx.db, item)
 
   var status = getUserStatusTypeSafe(ctx.db)
-  status.gold = some(2*grossExp + 100)
+  status.gold = 2*grossExp + 100
   setUserStatusTypeSafe(ctx.db, status)
 
   let res = protoJsonTo(sembaCall(ctx, "/character/enhance", %*{
@@ -228,7 +228,7 @@ proc testCharacterEnhance() =
   let greatLd = getItem(ctx.db, greatLifeDataId)
   doAssert(greatLd.isSome() and greatLd.get().quantity == 0)
 
-  doAssert(getUserStatusTypeSafe(ctx.db).gold.get(0) == 100)
+  doAssert(getUserStatusTypeSafe(ctx.db).gold == 100)
 
   changedResources.items.sort(proc (x1, x2: Item): int = cmp(x1.itemId, x2.itemId))
   doAssert(changedResources.items == @[
