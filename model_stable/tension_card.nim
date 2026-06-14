@@ -47,7 +47,7 @@ type TensionCard* = object
 proc getTensionCards*(db: DbConn, filterIds: openArray[int] = @[]): seq[TensionCard] =
   let whereSql =
     if filterIds.len > 0:
-      "WHERE tensionCardId IN " & sqlIntTuple(filterIds)
+      "WHERE entityId IN " & sqlIntTuple(filterIds)
     else:
       ""
 
