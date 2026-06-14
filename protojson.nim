@@ -88,6 +88,18 @@ proc toJsonHook*(n: JsonNode): JsonNode =
     n
 
 
+proc fromJsonHook*(res: var int, n: JsonNode) =
+  res =
+    if n.isNil or n.kind == JNull:
+      0
+    else:
+      n.getInt()
+
+
+proc toJsonHook*(i: int): JsonNode =
+  %i
+
+
 macro genStringEnumHooks*(e: untyped): untyped =
   ## Macro that receives an enum type and generates a fromJsonHook and a toJsonHook that parses a JString.
   ## The fromJsonHook sets the result to the first value of the enum when receives an empty string.

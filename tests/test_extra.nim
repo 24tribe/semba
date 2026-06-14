@@ -129,6 +129,15 @@ proc testChallengeIdToCityId() =
   doAssert(cityIds.allIt(it == cityIdShinagawa))
 
 
+proc testNullOrdinalField() =
+  let x = %*{"asd": nil}
+  doAssert(x["asd"].kind == JNull)
+  type X = object
+    asd: int
+
+  doAssert(x.protoJsonTo(X).asd == 0)
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
@@ -141,3 +150,4 @@ proc testSuiteExtra*() =
   testSqliteMin()
   testJsonNodeFields()
   testChallengeIdToCityId()
+  testNullOrdinalField()
