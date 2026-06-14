@@ -150,6 +150,8 @@ proc getJsonResultStable*(
     result = tensionCard_LimitBreakEnhance(db, protoJsonTo(jsonReq, TensionCardLimitBreakEnhanceRequest)).toProtoJson
   elif uri == "/tension_card/lock":
     result = tensionCard_Lock(db, protoJsonTo(jsonReq, TensionCardLockRequest)).toProtoJson
+  elif uri == "/tension_card/enhance":
+    result = tensionCard_Enhance(db, protoJsonTo(jsonReq, TensionCardEnhanceRequest)).toProtoJson
 
   elif uri == "/tip/release":
     result = tip_Release(db, jsonReq)

@@ -14,6 +14,7 @@ import test_status
 import test_shop
 import test_happy_worker
 import test_dungeon
+import test_tension_card
 
 
 let saves_dir = paramStr(1)
@@ -31,3 +32,4 @@ testSuiteShop()
 testSuiteHappyWorker(saves_dir)
 testSuiteFollow()
 testSuiteDungeon()
+testSuiteTensionCard()

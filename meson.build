@@ -177,6 +177,7 @@ test_semba_depend_files = [
     'tests/utils.nim',
     'tests/test_graffiti_art.nim',
     'tests/test_dungeon.nim',
+    'tests/test_tension_card.nim',
 ]
 
 test_semba = custom_target(

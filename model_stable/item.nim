@@ -16,6 +16,8 @@ type Item* = object
 type ConsumedItem* = Item
 
 
+const tcExpItemId* = 2
+
 const lifeDataId* = 3
 const lifeDataExp* = 500
 
@@ -34,7 +36,7 @@ proc upsertItem*(db: DbConn, item: Item) =
     UPDATE SET quantity = excluded.quantity
   """, item.itemId, item.quantity)
 
-proc updateItems*(db: DbConn, items: seq[Item]) =
+proc updateItems*(db: DbConn, items: openArray[Item]) =
   for item in items:
     upsertItem(db, item)
 

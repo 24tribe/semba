@@ -1,11 +1,16 @@
-import std/json
+import std/options
 
 import ../db_connector/db_sqlite
 
-import ../model_stable/tension_card
 import ../model_stable/item
 import ../model_stable/resources
+import ../model_stable/tension_card
+import ../model_stable/status
 
+
+type TensionCardEnhanceRequest* = object
+  consumedItems*: seq[ConsumedItem]
+  entityId*: int
 
 type TensionCardLimitBreakEnhanceRequest* = object
   entityId*: int
@@ -42,3 +47,22 @@ proc tensionCard_Lock*(db: DbConn, req: TensionCardLockRequest): ChangedResource
 
   upsertTensionCards(db, tensionCards)
   result.changedResources.tensionCards = tensionCards
+
+
+proc tensionCard_Enhance*(db: DbConn, req: TensionCardEnhanceRequest): ChangedResourcesResponse =
+  var changedResources: Resources
+
+  let exp = req.consumedItems[0].quantity
+  let kane = (exp*3) div 10
+
+  var status = getUserStatusTypeSafe(db)
+  status.gold -= kane
+  setUserStatusTypeSafe(db, status)
+  changedResources.status = some(status)
+
+  var item = getItem(db, tcExpItemId).get(Item(itemId: tcExpItemId))
+  item.quantity -= exp
+  changedResources.items = @[item]
+  updateItems(db, changedResources.items)
+
+  result.changedResources = changedResources
