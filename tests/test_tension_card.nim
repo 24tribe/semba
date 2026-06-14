@@ -1,5 +1,6 @@
 import std/json
 import std/options
+import std/sequtils
 
 import utils
 
@@ -38,6 +39,12 @@ proc testTensionCardEnhance() =
 
   doAssert(changedResources.items[0].itemId == 2)
   doAssert(changedResources.items[0].quantity == tcExp - consumedTcExp)
+
+  let tcIndex = changedResources.tensionCards.findIt(it.entityId == tcEntityId)
+  doAssert(tcIndex != -1)
+
+  let tc = changedResources.tensionCards[tcIndex]
+  doAssert(tc.exp == beforeTensionCard.exp + consumedTcExp)
 
 
 proc testSuiteTensionCard*() =
