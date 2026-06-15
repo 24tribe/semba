@@ -12,6 +12,15 @@ import timestamp
 import city
 
 
+type DungeonAreaItem* = object
+  entityId*: int
+  dungeonAreaItemId*: int
+  dungeonPieceId*: int
+  dungeonPieceX*: int
+  dungeonPieceY*: int
+  dungeonPieceIndex*: int
+  acquiredAt*: Option[Timestamp]
+
 type Dungeon* = object
   dungeonId*: int
   isFinished*: bool

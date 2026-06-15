@@ -17,6 +17,12 @@ import ../model_stable/resources
 import ../model_stable/mission
 
 
+type DungeonStartResponse* = object
+  dungeonState*: DungeonState
+  dungeonEnemies*: seq[DungeonEnemy]
+  dungeonAreaItems*: seq[DungeonAreaItem]
+  changedResources*: Resources
+
 type DungeonBattleStartRequest = object
   dungeonDifficultyId: int
   entityIds: seq[int]
@@ -112,7 +118,7 @@ proc dungeon_Entry*(db: DbConn, jsonReq: JsonNode): JsonNode =
   }
 
 
-proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): JsonNode = 
+proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse = 
   let dungeonDifficultyId = jsonReq["dungeonDifficultyId"].getInt()
   let bulkConsumeCount = jsonReq["bulkConsumeCount"].getInt()
 
@@ -122,27 +128,16 @@ proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): JsonNode =
   let dungeonId = dungeonDifficultyIdToDungeonId(dungeonDifficultyId)
 
   let notGoalEnemyRateSetId = getNotGoalEnemyRateSetId(cityId, dungeonId)
-  let dungeonEnemies = genDungeonEnemies(
+  result.dungeonEnemies = genDungeonEnemies(
     db, notGoalEnemyRateSetId, dungeonDifficultyId, dungeonPieces, dungeonData
   )
 
-  let dungeonState = DungeonState(
+  result.dungeonState = DungeonState(
     dungeonDifficultyId: dungeonDifficultyId,
     dungeonPieces: dungeonPieces,
   )
 
-  updateDungeonEnemies(db, dungeonId, dungeonEnemies)
-  updateDungeonState(db, dungeonId, dungeonState)
+  updateDungeonEnemies(db, dungeonId, result.dungeonEnemies)
+  updateDungeonState(db, dungeonId, result.dungeonState)
 
-  return %*{
-    "dungeonState": dungeonState,
-    "dungeonEnemies": dungeonEnemies,
-    "changedResources": {
-      "dungeons": [
-        {
-          "dungeonId": dungeonId
-        }
-      ]
-    },
-    "dungeonAreaItems": [],
-  }
+  result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId)]
