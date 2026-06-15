@@ -4,11 +4,9 @@ import std/options
 
 import ../db_connector/db_sqlite
 
-import ../model_stable/area_object
 import ../model_stable/mission
 import ../model_stable/resources
 import ../model_stable/reward
-import ../model_stable/status
 
 
 type MissionReceiveRequest* = object
