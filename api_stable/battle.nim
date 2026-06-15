@@ -165,6 +165,7 @@ proc battle_Finish*(
     let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
 
     var missions = getChangedAttackTestMissions(db, characters, cityId)
+    missions.insert(getChangedDefenseTestMissions(db, characters, cityId), missions.len)
 
     let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
 

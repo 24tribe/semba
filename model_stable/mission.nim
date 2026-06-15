@@ -77,6 +77,11 @@ proc getAttackTestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   return getMissionsForCity(db, missionIds, cityId)
 
 
+proc getDefenseTestMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
+  const missionIds = [1041045, 1041046, 1041047, 1041048, 1041336, 1041347, 1041348, 1041441, 1041442, 1041443]
+  return getMissionsForCity(db, missionIds, cityId)
+
+
 proc getVictorsRightsMissionsForCity*(db: DbConn, cityId: int): seq[MdMission] =
   const missionIds = [1041031, 1041032, 1041033]
   return getMissionsForCity(db, missionIds, cityId)
@@ -111,6 +116,13 @@ proc getAttackTestMissionMinChars*(missionId: int): int =
   case missionId:
   of 1041041: 1
   of 1041042: 2
+  else: 3
+
+
+proc getDefenseTestMissionMinChars*(missionId: int): int =
+  case missionId:
+  of 1041045: 1
+  of 1041046: 2
   else: 3
 
 
