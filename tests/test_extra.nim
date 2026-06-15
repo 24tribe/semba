@@ -8,6 +8,7 @@ import ../protojson
 import ../db_connector/db_sqlite
 import ../extsqlite
 import ../enum_ex
+import ../model_stable/area_object
 import ../model_stable/battle_enum
 import ../model_stable/area
 import ../model_stable/city
@@ -138,6 +139,16 @@ proc testNullOrdinalField() =
   doAssert(x.protoJsonTo(X).asd == 0)
 
 
+proc testGetTheHighestPriority() =
+  let aobs = [
+    MdAreaObjectBehavior(id: 1, priority: 100),
+    MdAreaObjectBehavior(id: 2, priority: 200),
+    MdAreaObjectBehavior(id: 3, priority: 50),
+  ]
+  
+  doAssert(getTheHighestPriority(aobs).id == 2)
+
+
 proc testSuiteExtra*() =
   test_null()
   test_bool_is_not_zero_or_one()
@@ -151,3 +162,4 @@ proc testSuiteExtra*() =
   testJsonNodeFields()
   testChallengeIdToCityId()
   testNullOrdinalField()
+  testGetTheHighestPriority()
