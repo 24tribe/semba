@@ -16,7 +16,17 @@ import ../model_stable/battle
 import ../model_stable/status
 import ../model_stable/resources
 import ../model_stable/mission
+import ../model_stable/reward
 
+
+type DungeonAcquireAreaItemRequest* = object
+  dungeonDifficultyId*: int
+  entityId*: int
+
+type DungeonAcquireAreaItemResponse* = object
+  rewards*: seq[Rewards]
+  changedResources*: Resources
+  dungeonAreaItem*: DungeonAreaItem
 
 type DungeonStartResponse* = object
   dungeonState*: DungeonState
@@ -145,3 +155,7 @@ proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse =
   setDungeonAreaItems(db, dungeonId, result.dungeonAreaItems)
 
   result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId)]
+
+
+proc dungeon_AcquireAreaItem*(db: DbConn, req: DungeonAcquireAreaItemRequest): DungeonAcquireAreaItemResponse =
+  discard

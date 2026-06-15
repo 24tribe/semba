@@ -74,6 +74,8 @@ proc getJsonResultStable*(
   elif uri == "/character/enhance":
     result = toProtoJson(character_Enhance(db, protoJsonTo(jsonReq, CharacterEnhanceRequest)))
 
+  elif uri == "/dungeon/acquire_area_item":
+    result = dungeon_AcquireAreaItem(db, jsonReq.protoJsonTo(DungeonAcquireAreaItemRequest)).toProtoJson
   elif uri == "/dungeon/entry":
     result = dungeon_Entry(db, jsonReq)
   elif uri == "/dungeon/start":
