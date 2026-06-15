@@ -436,6 +436,7 @@ proc getTheHighestPriority*(aobs: openArray[MdAreaObjectBehavior]): MdAreaObject
 
 proc toAreaObject*(aob: MdAreaObjectBehavior): AreaObject =
   AreaObject(
+    areaObjectBehaviorId: some(aob.id),
     areaObjectId: aob.areaObjectId,
     areaPointId: aob.areaPointId,
     action: aob.action,
