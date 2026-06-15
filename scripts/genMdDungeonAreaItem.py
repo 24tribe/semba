@@ -21,10 +21,10 @@ def main():
 def gen_md_dungeon_area_item(dungeon_area_item, f):
     xprint = lambda *args: print(*args, file=f)
 
-    xprint("INSERT INTO mdDungeonAreaItem (id, areaItemRewardIds) VALUES")
+    xprint("INSERT INTO mdDungeonAreaItem (id, areaItemRewardIds, areaItemBaseId) VALUES")
 
     write_rows(xprint, f, [
-        (dai["id"], dai["area_item_reward_ids"]) for dai in dungeon_area_item
+        (dai["id"], dai["area_item_reward_ids"], dai["area_item_base_id"]) for dai in dungeon_area_item
     ])
 
     xprint(";")
