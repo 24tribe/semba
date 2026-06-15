@@ -3,6 +3,7 @@ import std/strutils
 import std/options
 import std/sets
 import std/sequtils
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -14,6 +15,8 @@ type AreaObjectBehaviorConditionType* = enum
   areaObjectConditionTypeStartedChallengeProgress = 1
   areaObjectConditionTypeClearedChallengeProgress = 2
   areaObjectConditionTypeClearedChallengeTask = 3
+  areaObjectConditionTypeAreaObjectState = 4
+  areaObjectConditionTypeFlowerMark = 11
 
 type AreaObjectAction* = object
   `type`*: int
@@ -35,6 +38,20 @@ type AreaObject* = object
   areaObjectBehaviorId*: Option[int]
   areaEnemyRateSetId*: Option[int]
   action*: Option[AreaObjectAction]
+
+type MdAreaObjectBehaviorCondition* = object
+  areaObjectId*: Option[int]
+  areaObjectState*: Option[int]
+  id*: Option[int]
+  `type`*: int
+
+type MdAreaObjectBehavior* = object
+  id*: int
+  areaObjectId*: Option[int]
+  areaPointId*: int
+  condition*: Option[MdAreaObjectBehaviorCondition]
+  action*: Option[AreaObjectAction]
+  priority*: int
 
 
 proc getAreaObjects*(db: DbConn): seq[JsonNode] =
@@ -208,6 +225,39 @@ proc getAreaObjectsForState*(db: DbConn, areaObjectId: int, areaObjectState: int
     ))
 
 
+proc getAreaObjectsRelatedTo*(
+  db: DbConn, areaObjects: seq[AreaObject]
+): Table[int, seq[MdAreaObjectBehavior]] =
+  for areaObject in areaObjects:
+    result[areaObject.areaPointId] = db.getAllRows(sql"""
+      SELECT mdAreaObjectBehavior.id, mdAreaObjectBehavior.areaObjectId,
+        mdAreaObjectBehaviorCondition.type, mdAreaObjectBehaviorCondition.id,
+        mdAreaObjectBehaviorCondition.areaObjectId, mdAreaObjectBehaviorCondition.areaObjectState,
+        mdAreaObjectBehavior.priority
+      FROM mdAreaObjectBehavior
+      INNER JOIN mdAreaObjectBehaviorCondition
+      ON mdAreaObjectBehavior.id = mdAreaObjectBehaviorCondition.areaObjectBehaviorId
+      WHERE mdAreaObjectBehavior.areaPointId = ?
+    """, areaObject.areaPointId).mapIt(MdAreaObjectBehavior(
+      areaPointId: areaObject.areaPointId,
+      `id`: parseInt(it[0]),
+      areaObjectId: tryParseInt(it[1]),
+      condition: (
+        if it[2] != "":
+          some(MdAreaObjectBehaviorCondition(
+            `type`: parseInt(it[2]),
+            id: tryParseInt(it[3]),
+            areaObjectId: tryParseInt(it[4]),
+            areaObjectState: tryParseInt(it[5]),
+          ))
+        else:
+          none(MdAreaObjectBehaviorCondition)
+      ),
+      action: getAreaObjectAction(db, parseInt(it[0])),
+      priority: tryParseInt(it[6]).get(1),
+    ))
+
+
 proc getAreaObjectsWithCondition*(
   db: DbConn, conditionType: AreaObjectBehaviorConditionType, id: int
 ): seq[AreaObject] =
@@ -359,3 +409,34 @@ proc deleteAreaObjectsWithIds*(db: DbConn, areaObjectIds: openArray[int]) =
   db.exec(sql("""
     DELETE FROM areaObjects WHERE areaObjectId IN """ & sqlIntTuple(areaObjectIds)
   ))
+
+
+proc checkAreaObjectBehaviorCondition*(
+  maybeAobc: Option[MdAreaObjectBehaviorCondition], areaObjectId: int, areaObjectState: int, flowerMarks: int
+): bool =
+  if maybeAobc.isSome:
+    let aobc = maybeAobc.get()
+    case aobc.`type`:
+    of areaObjectConditionTypeAreaObjectState.int:
+      # TODO: we should also check in the db but we don't save the area object states (yet?)
+      return aobc.areaObjectId.get() == areaObjectId and aobc.areaObjectState.get() == areaObjectState
+    of areaObjectConditionTypeFlowerMark.int:
+      return flowerMarks >= aobc.id.get()
+    else:
+      # Assume it doesn't pass the check
+      return false
+  else:
+    # no condition means OK
+    return true
+
+
+proc getTheHighestPriority*(aobs: openArray[MdAreaObjectBehavior]): MdAreaObjectBehavior =
+  aobs.max(proc (a, b: MdAreaObjectBehavior): int = a.priority - b.priority)
+
+
+proc toAreaObject*(aob: MdAreaObjectBehavior): AreaObject =
+  AreaObject(
+    areaObjectId: aob.areaObjectId,
+    areaPointId: aob.areaPointId,
+    action: aob.action,
+  )

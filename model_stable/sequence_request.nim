@@ -3,6 +3,7 @@ import std/strutils
 import std/sequtils
 import std/sugar
 import std/options
+import std/tables
 
 import ../db_connector/db_sqlite
 
@@ -194,3 +195,22 @@ proc getReplaySequenceFromNineSequenceId*(db: DbConn, nineSequenceId: int): (Opt
     removeProblematicResources(changedResources.get())
 
   result = (changedResources, areaObjects)
+
+
+proc handleSequenceRequestsAreaObjectsExperimental*(db: DbConn, seqReqIds: openArray[int]): seq[AreaObject] =
+  let flowerMarks = getUserStatusTypeSafe(db).flowerMark.get(0)
+  let mdSequenceRequest = getMdSequenceRequests(db, seqReqIds)
+
+  result = collect:
+    for seqReq in mdSequenceRequest:
+      if seqReq.kind == seqReqAreaObjectState:
+        let areaObjects = getAreaObjectsForState(db, seqReq.areaObjectId, seqReq.areaObjectState)
+        let aobTable = getAreaObjectsRelatedTo(db, areaObjects)
+
+        for areaPointId, areaObjectBehaviors in aobTable.pairs:
+          let validAreaObjectBehaviors = areaObjectBehaviors.filterIt(
+            checkAreaObjectBehaviorCondition(it.condition, seqReq.areaObjectId, seqReq.areaObjectState, flowerMarks)
+          )
+
+          if validAreaObjectBehaviors.len > 0:
+            validAreaObjectBehaviors.getTheHighestPriority.toAreaObject
