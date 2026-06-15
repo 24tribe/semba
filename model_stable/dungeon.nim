@@ -239,7 +239,7 @@ proc parseBlocks(blocksJson: JsonNode): seq[Block] =
     ))
 
 proc getDungeonData*(db: DbConn): DungeonData =
-  let rows = db.getAllRows(sql"SELECT id, name, blocks, angle, canHaveMobs FROM dungeonData")
+  let rows = db.getAllRows(sql"SELECT id, name, blocks, angle, maxEnemies, maxAreaItems FROM dungeonData")
 
   for row in rows:
     let blocks = parseBlocks(parseJson(row[2]))
@@ -248,7 +248,8 @@ proc getDungeonData*(db: DbConn): DungeonData =
       name: row[1],
       blocks: blocks,
       angle: parseInt(row[3]),
-      canHaveMobs: parseInt(row[4]) == 1
+      maxEnemies: parseInt(row[4]),
+      maxAreaItems: parseInt(row[5]),
     ))
 
 proc getDungeonEnemy*(db: DbConn, dungeonId: int, entityId: int): DungeonEnemy =
@@ -298,18 +299,19 @@ proc genDungeonEnemies*(
     if foundDungeonPart.isNone():
       raise newException(SembaError, "Couldn't find dungeonPiece blocks len")
 
-    if foundDungeonPart.get().canHaveMobs:
-      for j in 0 ..< foundDungeonPart.get().blocks.len:
-        result.add(DungeonEnemy(
-          entityId: entityId,
-          dungeonEnemyRateId: notGoalEnemyRates[rand(0 ..< notGoalEnemyRates.len)].id,
-          dungeonPieceId: dungeonPiece.dungeonPieceId,
-          dungeonPieceX: dungeonPiece.x,
-          dungeonPieceY: dungeonPiece.y,
-          dungeonPieceIndex: j,
-        ))
+    let dungeonPart = foundDungeonPart.get()
 
-        entityId += 1
+    for j in 0 ..< dungeonPart.maxEnemies:
+      result.add(DungeonEnemy(
+        entityId: entityId,
+        dungeonEnemyRateId: notGoalEnemyRates[rand(0 ..< notGoalEnemyRates.len)].id,
+        dungeonPieceId: dungeonPiece.dungeonPieceId,
+        dungeonPieceX: dungeonPiece.x,
+        dungeonPieceY: dungeonPiece.y,
+        dungeonPieceIndex: j,
+      ))
+
+      entityId += 1
 
   let lastDungeonPiece = dungeonPieces[dungeonPieces.len - 1]
 

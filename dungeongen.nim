@@ -40,7 +40,8 @@ type DungeonPart* = ref object
     name*: string
     blocks*: seq[Block]
     angle*: int
-    canHaveMobs*: bool
+    maxEnemies*: int
+    maxAreaItems*: int
 
 type DungeonData* = seq[DungeonPart]
 
@@ -252,7 +253,7 @@ proc getPossibleParts(
 
 proc filterPartsThatCanHaveMobs(possibleParts: seq[DungeonPart]): seq[DungeonPart] =
     for part in possibleParts:
-        if part.canHaveMobs:
+        if part.maxEnemies > 0:
             result.add(part)
 
 
