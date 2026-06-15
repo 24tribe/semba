@@ -52,7 +52,3 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   result.changedResources = updateResourcesFromRewardsTypeSafe(db, rewards, unused)
   result.changedResources.missions = changedMissions
   result.rewards = rewards
-
-  result.changedResources.status.map(proc (status: Status) =
-    unlockFullMarksGates(db, status.flowerMark.get(0))
-  )
