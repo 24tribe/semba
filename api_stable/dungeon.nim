@@ -9,6 +9,7 @@ import ../model_stable/battle_enum
 import ../model_stable/character
 import ../model_stable/tension_card
 import ../model_stable/dungeon
+import ../model_stable/dungeon_area_item
 import ../model_stable/challenge_progress
 import ../model_stable/timestamp
 import ../model_stable/battle
@@ -128,18 +129,19 @@ proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse =
   let dungeonId = dungeonDifficultyIdToDungeonId(dungeonDifficultyId)
 
   let notGoalEnemyRateSetId = getNotGoalEnemyRateSetId(cityId, dungeonId)
+
   result.dungeonEnemies = genDungeonEnemies(
     db, notGoalEnemyRateSetId, dungeonDifficultyId, dungeonPieces, dungeonData
   )
+  updateDungeonEnemies(db, dungeonId, result.dungeonEnemies)
 
   result.dungeonState = DungeonState(
     dungeonDifficultyId: dungeonDifficultyId,
     dungeonPieces: dungeonPieces,
   )
+  updateDungeonState(db, dungeonId, result.dungeonState)
 
   result.dungeonAreaItems = genDungeonAreaItems(db, cityId, dungeonPieces, dungeonData)
-
-  updateDungeonEnemies(db, dungeonId, result.dungeonEnemies)
-  updateDungeonState(db, dungeonId, result.dungeonState)
+  setDungeonAreaItems(db, dungeonId, result.dungeonAreaItems)
 
   result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId)]

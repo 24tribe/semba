@@ -5,7 +5,7 @@ import std/sequtils
 import ../protojson
 import ../model_stable/resources
 import ../model_stable/mission
-import ../model_stable/dungeon
+import ../model_stable/dungeon_area_item
 import ../model_stable/city
 import utils
 

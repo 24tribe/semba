@@ -68,6 +68,7 @@ semba_core_files = [
     'model_stable/character_piece.nim',
     'model_stable/city.nim',
     'model_stable/dungeon.nim',
+    'model_stable/dungeon_area_item.nim',
     'model_stable/enemy.nim',
     'model_stable/entity.nim',
     'model_stable/follow.nim',

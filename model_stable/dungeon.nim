@@ -11,20 +11,8 @@ import ../semba_error
 import ../protojson
 import timestamp
 import city
+import dungeon_area_item
 
-
-type MdDungeonAreaItem* = object
-  dungeonAreaItemId*: int
-  areaItemRewardIds*: seq[int]
-
-type DungeonAreaItem* = object
-  entityId*: int
-  dungeonAreaItemId*: int
-  dungeonPieceId*: int
-  dungeonPieceX*: int
-  dungeonPieceY*: int
-  dungeonPieceIndex*: int
-  acquiredAt*: Option[Timestamp]
 
 type Dungeon* = object
   dungeonId*: int
@@ -297,16 +285,6 @@ proc findDungeonPart(dungeonData: openArray[DungeonPart], dungeonPieceId: int): 
     raise newException(SembaError, "Couldn't find dungeonPart for dungeonPieceId " & $dungeonPieceId)
 
   dungeonData[dungeonPartIndex]
-
-
-proc getMdDungeonAreaItemsForCity*(db: DbConn, cityId: int): seq[MdDungeonAreaItem] =
-  db.getAllRows(sql"""
-    SELECT id, areaItemRewardIds FROM mdDungeonAreaItem
-    WHERE id/1000 = CAST(? as INTEGER) OR id/1000 = CAST(? as INTEGER)
-  """, cityId, 300 + cityId).mapIt(MdDungeonAreaItem(
-    dungeonAreaItemId: parseInt(it[0]),
-    areaItemRewardIds: protoJsonTo(parseJson(it[1]), seq[int]),
-  ))
 
 
 proc genDungeonAreaItems*(
