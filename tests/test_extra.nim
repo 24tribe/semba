@@ -10,7 +10,6 @@ import ../extsqlite
 import ../enum_ex
 import ../model_stable/area_object
 import ../model_stable/battle_enum
-import ../model_stable/area
 import ../model_stable/city
 import utils
 
