@@ -43,8 +43,8 @@ proc character_LimitBreak*(db: DbConn, jsonReq: JsonNode): CharacterLimitBreakRe
   let limitBreakCount = jsonReq["limitBreakCount"].getInt()
 
   var character = getCharacter(db, characterId)
-  character.limitBreak = character.limitBreak.map(proc (x: int): int = x + limitBreakCount)
-  addCharacterLimitBreak(db, characterId, character.limitBreak.get(0))
+  character.limitBreak += limitBreakCount
+  addCharacterLimitBreak(db, characterId, character.limitBreak)
 
   var characterPiece = getCharacterPiece(db, characterId)
   characterPiece.quantity = max(0, characterPiece.quantity - 1)

@@ -257,10 +257,10 @@ proc getChangedAttackTestMissions*(db: DbConn, characters: seq[Character], cityI
     let minChars = getAttackTestMissionMinChars(mdMission.id)
 
     let targetAttack = mdMission.steps[0].count
-    let charactersWithMoreAttack = characters.filterIt(it.attack.get(0) >= targetAttack).toSeq()
+    let charactersWithMoreAttack = characters.filterIt(it.attack >= targetAttack).toSeq()
 
     if charactersWithMoreAttack.len >= minChars:
-      result = some(charactersWithMoreAttack.mapIt(it.attack.get(0)).min())
+      result = some(charactersWithMoreAttack.mapIt(it.attack).min())
   )
 
 
@@ -271,10 +271,10 @@ proc getChangedDefenseTestMissions*(db: DbConn, characters: seq[Character], city
     let minChars = getDefenseTestMissionMinChars(mdMi.id)
 
     let targetDef = mdMi.steps[0].count
-    let charactersWithMoreDef = characters.filterIt(it.defense.get(0) >= targetDef)
+    let charactersWithMoreDef = characters.filterIt(it.defense >= targetDef)
 
     if charactersWithMoreDef.len >= minChars:
-      result = some(charactersWithMoreDef.mapIt(it.defense.get(0)).min())
+      result = some(charactersWithMoreDef.mapIt(it.defense).min())
   )
 
 

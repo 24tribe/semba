@@ -55,47 +55,47 @@ type MdCharacterLevel* = object
 
 type Character* = object
   characterId*: int
-  exp*: Option[int]
-  limitBreak*: Option[int]
-  hp*: Option[int]
-  attack*: Option[int]
-  defense*: Option[int]
-  maxHp*: Option[int]
+  exp*: int
+  limitBreak*: int
+  hp*: int
+  attack*: int
+  defense*: int
+  maxHp*: int
   gearSlot1*: Option[int]
   gearSlot2*: Option[int]
   gearSlot3*: Option[int]
   receivedAt*: Timestamp
-  characterOwnershipType*: Option[int]
+  characterOwnershipType*: int
   dishId*: Option[int]
-  dishEffectCount*: Option[int]
+  dishEffectCount*: int
   dishEffectExpiredAt*: Option[Timestamp]
-  rank*: Option[int]
-  criticalRate*: Option[float]
-  criticalDamageRate*: Option[float]
-  supportPowerRate*: Option[int]
-  movementSpeed*: Option[float]
-  powerRate*: Option[float]
-  dodgeSpeed*: Option[float]
-  damageInflictedRate*: Option[float]
-  tensionIncreaseRate*: Option[float]
-  cpRecastRate*: Option[float]
-  recoveryGivenRate*: Option[float]
-  spGaugeIncreaseRate*: Option[float]
-  attackSpeed*: Option[float]
+  rank*: int
+  criticalRate*: float
+  criticalDamageRate*: float
+  supportPowerRate*: int
+  movementSpeed*: float
+  powerRate*: float
+  dodgeSpeed*: float
+  damageInflictedRate*: float
+  tensionIncreaseRate*: float
+  cpRecastRate*: float
+  recoveryGivenRate*: float
+  spGaugeIncreaseRate*: float
+  attackSpeed*: float
   characterCostumeId*: Option[int]
-  characterSkillPanel1Level*: Option[int]
-  characterSkillPanel2Level*: Option[int]
-  characterSkillPanel3Level*: Option[int]
-  characterSkillPanel4Level*: Option[int]
-  characterSkillPanel5Level*: Option[int]
+  characterSkillPanel1Level*: int
+  characterSkillPanel2Level*: int
+  characterSkillPanel3Level*: int
+  characterSkillPanel4Level*: int
+  characterSkillPanel5Level*: int
   abnormalityParamSet*: JsonNode # FIXME: use AbnormalityParamSet
-  trainingScore*: Option[int]
-  trainingScoreLevelScore*: Option[int]
-  trainingScoreRankScore*: Option[int]
-  actionPointMax*: Option[int]
-  actionPointRate*: Option[float]
-  actionPointConsumption*: Option[float]
-  damageTakenRate*: Option[float]
+  trainingScore*: int
+  trainingScoreLevelScore*: int
+  trainingScoreRankScore*: int
+  actionPointMax*: int
+  actionPointRate*: float
+  actionPointConsumption*: float
+  damageTakenRate*: float
 
 type CharacterCostume* = object
   characterCostumeId: int
@@ -150,13 +150,13 @@ proc addCharacterTypeSafe*(db: DbConn, character: Character) =
       trainingScoreLevelScore = excluded.trainingScoreLevelScore,
       trainingScoreRankScore = excluded.trainingScoreRankScore,
       gearSlot1 = excluded.gearSlot1, gearSlot2 = excluded.gearSlot2, gearSlot3 = excluded.gearSlot3
-  """, character.characterId, character.exp.get(0), character.hp.get(0), character.receivedAt,
-    character.characterOwnershipType.get(0), character.characterCostumeId.get(0),
-    character.trainingScoreLevelScore.get(0), character.trainingScoreRankScore.get(0),
+  """, character.characterId, character.exp, character.hp, character.receivedAt,
+    character.characterOwnershipType, character.characterCostumeId.get(0),
+    character.trainingScoreLevelScore, character.trainingScoreRankScore,
     optionToSqlArg(character.gearSlot1), optionToSqlArg(character.gearSlot2), optionToSqlArg(character.gearSlot3)
   )
 
-  addCharacterLimitBreak(db, character.characterId, character.limitBreak.get(0))
+  addCharacterLimitBreak(db, character.characterId, character.limitBreak)
 
 
 proc addCharacter*(db: DbConn, character: JsonNode) =
@@ -314,48 +314,31 @@ proc getMdCharacterLevelFromExp(db: DbConn, exp: int): MdCharacterLevel =
 proc applyStatus(db: DbConn, character: var Character, originalChar: Character, statusEffect: MdStatusEffect) =
   case statusEffect.`type`:
   of statusEffectDamageCutRate:
-    let damageTakenRate = character.damageTakenRate.get(0)
-    character.damageTakenRate = some(damageTakenRate - statusEffect.value)
+    character.damageTakenRate -= statusEffect.value
   of statusEffectMaximumStamina:
-    let actionPointMax = character.actionPointMax.get(0)
-    character.actionPointMax = some(actionPointMax + statusEffect.value.int)
+    character.actionPointMax += statusEffect.value.int
   of statusEffectMovingSpeed:
-    let origMovementSpeed = originalChar.movementSpeed.get(0)
-    let movementSpeed = character.movementSpeed.get(0)
-    character.movementSpeed = some(movementSpeed + (statusEffect.value - 1.0)*origMovementSpeed)
+    character.movementSpeed += (statusEffect.value - 1.0)*originalChar.movementSpeed
   of statusEffectDefense:
-    let origDef = originalChar.defense.get(0).float
-    let def = character.defense.get(0).float
-    character.defense = some(ceil(def + (statusEffect.value - 1.0)*origDef).int)
+    character.defense = ceil(character.defense.float + (statusEffect.value - 1.0)*originalChar.defense.float).int
   of statusEffectAttack:
-    let origAttack = originalChar.attack.get(0).float
-    let attack = character.attack.get(0).float
-    let newAttack = ceil(attack + origAttack*(statusEffect.value - 1.0)).int
-    character.attack = some(newAttack)
+    character.attack = ceil(character.attack.float + (statusEffect.value - 1.0)*originalChar.attack.float).int
   of statusEffectMaximumHP:
-    let origMaxHp = originalChar.maxHp.get(0).float
-    let maxHp = character.maxHp.get(0).float
-    let newMaxHp = ceil(maxHp + origMaxHp*(statusEffect.value - 1.0)).int
-    character.maxHp = some(newMaxHp)
+    character.maxHp = ceil(character.maxHp.float + (statusEffect.value - 1.0)*originalChar.maxHp.float).int
   of statusEffectCriticalRate:
-    character.criticalRate = character.criticalRate.map(proc (cr: float): float =
-      cr + statusEffect.value
-    )
+    character.criticalRate += statusEffect.value
   of statusEffectCriticalDMGMultiplier:
-    character.criticalDamageRate = character.criticalDamageRate.map(proc (cdmg: float): float =
-      cdmg + statusEffect.value
-    )
+    character.criticalDamageRate += statusEffect.value
   of statusEffectFlatAtk:
-    character.attack = character.attack.map(proc (atk: int): int = atk + statusEffect.value.int)
+    character.attack += statusEffect.value.int
   of statusEffectFlatDef:
-    character.defense = character.defense.map(proc (def: int): int = def + statusEffect.value.int)
+    character.defense += statusEffect.value.int
   of statusEffectFlatHp:
-    character.maxHp = some(character.maxHp.get(0) + statusEffect.value.int)
+    character.maxHp += statusEffect.value.int
   of statusEffectSupport:
-    character.supportPowerRate = some(character.supportPowerRate.get(0) + ceil(statusEffect.value).int)
+    character.supportPowerRate += ceil(statusEffect.value).int
   of statusEffectGrantRecoveryEffect:
-    character.recoveryGivenRate = some(character.recoveryGivenRate.get(0) + statusEffect.value)
-
+    character.recoveryGivenRate += statusEffect.value
 
 
 proc applyGearSubstat(db: DbConn, character: var Character, originalChar: Character, substatId: int) =
@@ -439,45 +422,41 @@ proc getCharacter*(db: DbConn, characterId: int): Character =
   if row[0] == "":
     raise newException(SembaError, "Couldn't find character for characterId=" & $characterId)
 
-  let exp = parseInt(row[1])
-
   let mdChar = getMdCharacter(db, characterId)
+
+  let exp = parseInt(row[1])
   
   let mdCharacterLevel = getMdCharacterLevelFromExp(db, exp)
 
-  let attack = ceil(mdChar.baseAttack.float*mdCharacterLevel.statusFactor).int
-  let defense = ceil(mdChar.baseDefense.float*mdCharacterLevel.statusFactor).int
-  let maxHp = ceil(mdChar.baseHp.float*mdCharacterLevel.statusFactor).int
-
   result = Character(
     characterId: parseInt(row[0]),
-    exp: some(exp),
-    hp: some(parseInt(row[2])),
+    exp: exp,
+    hp: parseInt(row[2]),
     receivedAt: row[3].Timestamp,
-    characterOwnershipType: some(parseInt(row[4])),
+    characterOwnershipType: parseInt(row[4]),
     characterCostumeId: some(parseInt(row[5])),
-    limitBreak: tryParseInt(row[6]),
+    limitBreak: tryParseInt(row[6]).get(0),
     gearSlot1: tryParseInt(row[7]),
     gearSlot2: tryParseInt(row[8]),
     gearSlot3: tryParseInt(row[9]),
-    trainingScoreLevelScore: tryParseInt(row[10]),
-    trainingScoreRankScore: tryParseInt(row[11]),
-    damageTakenRate: some(charBaseDamageTakenRate),
-    attack: some(attack),
-    defense: some(defense),
-    maxHp: some(maxHp),
-    criticalRate: some(charBaseCriticalRate),
-    criticalDamageRate: some(charBaseCriticalDamageRate),
-    movementSpeed: some(if characterId == saizoCharId: saizoBaseMovementSpeed else: charBaseMovementSpeed),
-    damageInflictedRate: some(charBaseDamageInflictedRate),
-    tensionIncreaseRate: some(charBaseTensionIncreaseRate),
-    cpRecastRate: some(charBaseCpRecastRate),
-    spGaugeIncreaseRate: some(charBaseSpGaugeIncreaseRate),
-    attackSpeed: some(charBaseAttackSpeed),
+    trainingScoreLevelScore: parseInt(row[10]),
+    trainingScoreRankScore: parseInt(row[11]),
+    damageTakenRate: charBaseDamageTakenRate,
+    attack: ceil(mdChar.baseAttack.float*mdCharacterLevel.statusFactor).int,
+    defense: ceil(mdChar.baseDefense.float*mdCharacterLevel.statusFactor).int,
+    maxHp: ceil(mdChar.baseHp.float*mdCharacterLevel.statusFactor).int,
+    criticalRate: charBaseCriticalRate,
+    criticalDamageRate: charBaseCriticalDamageRate,
+    movementSpeed: if characterId == saizoCharId: saizoBaseMovementSpeed else: charBaseMovementSpeed,
+    damageInflictedRate: charBaseDamageInflictedRate,
+    tensionIncreaseRate: charBaseTensionIncreaseRate,
+    cpRecastRate: charBaseCpRecastRate,
+    spGaugeIncreaseRate: charBaseSpGaugeIncreaseRate,
+    attackSpeed: charBaseAttackSpeed,
     abnormalityParamSet: getAbnormalityParamSet(),
-    actionPointMax: some(charBaseActionPointMax),
-    actionPointRate: some(charBaseActionPointRate),
-    actionPointConsumption: some(charBaseActionPointConsumption),
+    actionPointMax: charBaseActionPointMax,
+    actionPointRate: charBaseActionPointRate,
+    actionPointConsumption: charBaseActionPointConsumption,
   )
 
   applyGearStats(db, result)
@@ -563,8 +542,8 @@ proc healCharactersTypeSafe*(db: DbConn): seq[Character] =
   var characters = getCharactersTypeSafe(db)
 
   for character in characters.mitems():
-    if character.hp.get(0) != character.maxHp.get(0):
-      setCharacterHp(db, character.characterId, character.maxHp.get(0))
+    if character.hp != character.maxHp:
+      setCharacterHp(db, character.characterId, character.maxHp)
       character.hp = character.maxHp
       result.add(character)
 

@@ -27,10 +27,10 @@ proc testCharacterStatsDependOnLevel() =
 
   proc checkYo(character: Character): bool =
     result = character.characterId == yoCharId and
-      character.exp.get(0) == yoLevel2Exp and
-      character.maxHp.get(0) == yoLevel2MaxHp and
-      character.attack.get(0) == yoLevel2Attack and
-      character.defense.get(0) == yoLevel2Defense
+      character.exp == yoLevel2Exp and
+      character.maxHp == yoLevel2MaxHp and
+      character.attack == yoLevel2Attack and
+      character.defense == yoLevel2Defense
 
   const irohaLevel1MaxHp = 452
   const irohaLevel1Attack = 109
@@ -39,10 +39,10 @@ proc testCharacterStatsDependOnLevel() =
 
   proc checkIroha(character: Character): bool =
     result = character.characterId == irohaCharId and
-      character.exp.get(0) == irohaLevel1Exp and
-      character.maxHp.get(0) == irohaLevel1MaxHp and
-      character.attack.get(0) == irohaLevel1Attack and
-      character.defense.get(0) == irohaLevel1Defense
+      character.exp == irohaLevel1Exp and
+      character.maxHp == irohaLevel1MaxHp and
+      character.attack == irohaLevel1Attack and
+      character.defense == irohaLevel1Defense
 
   setCharacterExp(ctx.db, irohaCharId, irohaLevel1Exp)
   setCharacterExp(ctx.db, yoCharId, yoLevel2Exp)
@@ -103,8 +103,8 @@ proc checkStats(original: Character, newChar: Character) =
   doAssert(original.maxHp == newChar.maxHp)
   doAssert(original.criticalRate == newChar.criticalRate)
   doAssert(original.criticalDamageRate == newChar.criticalDamageRate)
-  doAssert(original.supportPowerRate.get(0) == newChar.supportPowerRate.get(0))
-  doAssert(original.recoveryGivenRate.get(0) == newChar.recoveryGivenRate.get(0))
+  doAssert(original.supportPowerRate == newChar.supportPowerRate)
+  doAssert(original.recoveryGivenRate == newChar.recoveryGivenRate)
 
 
 proc testCharacterGearStats() =
@@ -140,41 +140,41 @@ proc testCharacterGearStats() =
     addGear(ctx.db, gear)
 
   var yo = getCharacter(ctx.db, yoCharId)
-  yo.exp = some(2797)
+  yo.exp = 2797
   yo.gearSlot2 = some(2)
   yo.gearSlot3 = some(6)
 
   var iroha = getCharacter(ctx.db, irohaCharId)
-  iroha.exp = some(2745)
+  iroha.exp = 2745
   iroha.gearSlot1 = some(7)
   iroha.gearSlot2 = some(1)
   iroha.gearSlot3 = some(3)
 
   var koishi = getCharacter(ctx.db, koishiCharId)
-  koishi.exp = some(2745)
+  koishi.exp = 2745
   koishi.gearSlot2 = some(5)
 
   updateCharacters(ctx.db, @[%*yo, %*iroha, %*koishi])
 
-  yo.attack = some(147)
-  yo.defense = some(125)
-  yo.maxHp = some(836)
-  yo.criticalDamageRate = some(70.0)
-  yo.recoveryGivenRate = some(8.33)
+  yo.attack = 147
+  yo.defense = 125
+  yo.maxHp = 836
+  yo.criticalDamageRate = 70.0
+  yo.recoveryGivenRate = 8.33
 
-  iroha.attack = some(175)
-  iroha.defense = some(135)
-  iroha.maxHp = some(666)
-  iroha.criticalRate = some(9.5)
-  iroha.criticalDamageRate = some(80.0)
-  iroha.supportPowerRate = some(17)
-  iroha.recoveryGivenRate = some(35.0)
+  iroha.attack = 175
+  iroha.defense = 135
+  iroha.maxHp = 666
+  iroha.criticalRate = 9.5
+  iroha.criticalDamageRate = 80.0
+  iroha.supportPowerRate = 17
+  iroha.recoveryGivenRate = 35.0
 
-  koishi.attack = some(100)
-  koishi.defense = some(141)
-  koishi.maxHp = some(786)
-  koishi.criticalRate = some(9.5)
-  koishi.criticalDamageRate = some(70.0)
+  koishi.attack = 100
+  koishi.defense = 141
+  koishi.maxHp = 786
+  koishi.criticalRate = 9.5
+  koishi.criticalDamageRate = 70.0
 
   let yoNew = getCharacter(ctx.db, yoCharId)
   checkStats(yo, yoNew)
@@ -217,7 +217,7 @@ proc testCharacterEnhance() =
   var changedResources = res.get().changedResources
 
   doAssert(changedResources.characters.len == 1)
-  doAssert(changedResources.characters[0].exp.get(0) == level10MinExp)
+  doAssert(changedResources.characters[0].exp == level10MinExp)
 
   let ld = getItem(ctx.db, lifeDataId)
   doAssert(ld.isSome() and ld.get().quantity == 0)

@@ -432,14 +432,14 @@ proc checkCharactersHpIsMax(db: DbConn, charIds: openArray[int], changedResource
   var changedCharacters = changedResources.characters.filterIt(it.characterId in charIds)
   changedCharacters.sort(cmpCharacters)
 
-  var changedHps = changedCharacters.mapIt((it.characterId, it.hp.get(0))).toSeq()
+  var changedHps = changedCharacters.mapIt((it.characterId, it.hp)).toSeq()
 
   var dbChars = getCharactersWithId(db, charIds)
   dbChars.sort(cmpCharacters)
 
-  var dbHps = dbChars.mapIt((it.characterId, it.hp.get(0))).toSeq()
+  var dbHps = dbChars.mapIt((it.characterId, it.hp)).toSeq()
 
-  let expectedHps = dbChars.mapIt((it.characterId, it.maxHp.get(0))).toSeq()
+  let expectedHps = dbChars.mapIt((it.characterId, it.maxHp)).toSeq()
 
   doAssert(changedHps == expectedHps)
   doAssert(dbHps == expectedHps)
@@ -607,7 +607,7 @@ proc testUpdateCharacterStatus() =
   var changedResources = res.get().changedResources
   changedResources.characters.sort(proc (a, b: Character): int = cmp(a.characterId, b.characterId))
 
-  let charHps = changedResources.characters.mapIt((it.characterId, it.hp.get(0))).toSeq()
+  let charHps = changedResources.characters.mapIt((it.characterId, it.hp)).toSeq()
 
   doAssert(charHps == @[
     (100101, 20), (100201, 10), (100501, 30)
