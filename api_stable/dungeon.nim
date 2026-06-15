@@ -137,6 +137,8 @@ proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse =
     dungeonPieces: dungeonPieces,
   )
 
+  result.dungeonAreaItems = genDungeonAreaItems(db, cityId, dungeonPieces, dungeonData)
+
   updateDungeonEnemies(db, dungeonId, result.dungeonEnemies)
   updateDungeonState(db, dungeonId, result.dungeonState)
 

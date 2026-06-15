@@ -2,6 +2,7 @@ import std/options
 import std/strutils
 import std/json
 import std/random
+import std/sequtils
 
 import ../db_connector/db_sqlite
 
@@ -11,6 +12,10 @@ import ../protojson
 import timestamp
 import city
 
+
+type MdDungeonAreaItem* = object
+  dungeonAreaItemId*: int
+  areaItemRewardIds*: seq[int]
 
 type DungeonAreaItem* = object
   entityId*: int
@@ -284,11 +289,47 @@ proc dungeonDifficultyIdToDungeonId*(dungeonDifficultyId: int): int = dungeonDif
 proc dungeonDifficultyIdToCityId*(dungeonDifficultyId: int): int = dungeonDifficultyId div 1_000_000
 proc dungeonPieceIdToDungeonPartId(dungeonPieceId: int): int = dungeonPieceId mod 10_000
 
-proc findDungeonPart(dungeonData: seq[DungeonPart], dungeonPieceId: int): Option[DungeonPart] =
-  for dungeonPart in dungeonData:
-    if dungeonPart.id == dungeonPieceIdToDungeonPartId(dungeonPieceId):
-      result = some(dungeonPart)
-      break
+
+proc findDungeonPart(dungeonData: openArray[DungeonPart], dungeonPieceId: int): DungeonPart =
+  let dungeonPartIndex = dungeonData.findIt(it.id == dungeonPieceIdToDungeonPartId(dungeonPieceId))
+
+  if dungeonPartIndex == -1:
+    raise newException(SembaError, "Couldn't find dungeonPart for dungeonPieceId " & $dungeonPieceId)
+
+  dungeonData[dungeonPartIndex]
+
+
+proc getMdDungeonAreaItemsForCity*(db: DbConn, cityId: int): seq[MdDungeonAreaItem] =
+  db.getAllRows(sql"""
+    SELECT id, areaItemRewardIds FROM mdDungeonAreaItem
+    WHERE id/1000 = CAST(? as INTEGER) OR id/1000 = CAST(? as INTEGER)
+  """, cityId, 300 + cityId).mapIt(MdDungeonAreaItem(
+    dungeonAreaItemId: parseInt(it[0]),
+    areaItemRewardIds: protoJsonTo(parseJson(it[1]), seq[int]),
+  ))
+
+
+proc genDungeonAreaItems*(
+  db: DbConn, cityId: int, dungeonPieces: openArray[DungeonPiece], dungeonData: openArray[DungeonPart]
+): seq[DungeonAreaItem] =
+  let areaItemPool = getMdDungeonAreaItemsForCity(db, cityId)
+
+  var entityId = 1
+
+  for i in 1 ..< dungeonPieces.len - 1:
+    let dungeonPiece = dungeonPieces[i]
+    let dungeonPart = findDungeonPart(dungeonData, dungeonPiece.dungeonPieceId)
+
+    for j in 0 ..< dungeonPart.maxAreaItems:
+      result.add(DungeonAreaItem(
+        entityId: entityId,
+        dungeonAreaItemId: areaItemPool.sample().dungeonAreaItemId,
+        dungeonPieceId: dungeonPiece.dungeonPieceId,
+        dungeonPieceX: dungeonPiece.x,
+        dungeonPieceY: dungeonPiece.y,
+        dungeonPieceIndex: j,
+      ))
+
 
 proc genDungeonEnemies*(
   db: DbConn, notGoalEnemyRateSetId: int, dungeonDifficultyId: int,
@@ -303,12 +344,7 @@ proc genDungeonEnemies*(
   for i in 1 ..< dungeonPieces.len - 1:
     let dungeonPiece = dungeonPieces[i]
 
-    let foundDungeonPart = findDungeonPart(dungeonData, dungeonPiece.dungeonPieceId)
-
-    if foundDungeonPart.isNone():
-      raise newException(SembaError, "Couldn't find dungeonPiece blocks len")
-
-    let dungeonPart = foundDungeonPart.get()
+    let dungeonPart = findDungeonPart(dungeonData, dungeonPiece.dungeonPieceId)
 
     for j in 0 ..< dungeonPart.maxEnemies:
       result.add(DungeonEnemy(
