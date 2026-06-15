@@ -94,6 +94,12 @@ proc adventure_ReleaseEventLift*(jsonReq: JsonNode): JsonNode =
 
 
 proc adventure_AreaObject*(db: DbConn, jsonReq: JsonNode): AdventureAreaObjectResponse =
+  const fullMarksTutorialNineSequenceId = 95011001
+
+  if getNineSequence(db, fullMarksTutorialNineSequenceId).isSome:
+    let status = getUserStatusTypeSafe(db)
+    unlockFullMarksGates(db, status.flowerMark.get(0))
+
   let areaId = jsonReq["areaId"].getInt()
 
   result.areaObjects = getAreaObjectsInArea(db, areaId);

@@ -31,7 +31,7 @@ proc getNineSequences*(db: DbConn): seq[JsonNode] =
     result.add(content)
 
 
-proc getNineSequence(db: DbConn, nineSequenceId: int): Option[NineSequence] =
+proc getNineSequence*(db: DbConn, nineSequenceId: int): Option[NineSequence] =
   let row = db.getRow(
     sql"SELECT content FROM nineSequences WHERE nineSequenceId = ?", nineSequenceId
   )
