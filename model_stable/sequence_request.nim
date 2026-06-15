@@ -21,6 +21,10 @@ import status
 import wallet
 
 
+const fullMarksGateTutorialSeqReqId* = 108369011
+const fullMarksGateTutorialSeqId* = 10836901
+
+
 type MdSequenceRequestKind* = enum
   seqReqInvalid = 0
   seqReqCosts = 1

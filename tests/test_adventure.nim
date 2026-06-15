@@ -7,6 +7,7 @@ import std/sequtils
 import ../db_connector/db_sqlite
 
 import utils
+import ../semba
 import ../protojson
 import ../api_stable/adventure
 import ../model_stable/area_object_lock
@@ -20,6 +21,7 @@ import ../model_stable/mission
 import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
+import ../model_stable/sequence_request
 import ../model_stable/timestamp
 import ../model_stable/warp_point
 
@@ -710,6 +712,60 @@ proc testLinkedSignpostsMission(saves_dir: string) =
   doAssert(mission.count.get(0) == 4)
 
 
+proc readFullMarksTutorialSequence(ctx: var SembaExContext): Option[AdventureReadSequenceResponse] =
+  ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ fullMarksGateTutorialSeqReqId ],
+    "nineSequences": [{ "id": 95011001, "choices": "{\"Selections\":[]}" } ],
+    "currentLocation": {
+      "areaType": 1, "direction": 1, "positionCoordinates": { "x": 3.1437361, "y": 18.041668, "z": 3.9609683 },
+      "areaKeyId": 101103
+    },
+    "areaType": 1, "areaKeyId": 101103
+  }).protoJsonTo(Option[AdventureReadSequenceResponse])
+
+
+proc checkGateActionIs(res: AdventureReadSequenceResponse, `type`: AreaObjectActionType, id: int): bool =
+  let areaObjects = res.areaObjects
+
+  let aoIndex = areaObjects.findIt(it.areaPointId == 101103801)
+
+  doAssert(aoIndex != -1)
+
+  let gateAO = areaObjects[aoIndex]
+
+  let action = gateAO.action.get()
+
+  case `type`:
+  of areaObjectActionTypeSequence:
+    action.`type` == areaObjectActionTypeSequence.int and action.sequenceId.get() == id
+  of areaObjectActionTypeDisabled:
+    action.`type` == areaObjectActionTypeDisabled.int and action.id.get() == 1
+
+
+proc testFullMarksGateTutorialWithNotEnoughAmount(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "skybridge marine biology research center door")
+
+  let res = ctx.readFullMarksTutorialSequence()
+
+  doAssert(res.isSome)
+
+  doAssert(checkGateActionIs(res.get(), areaObjectActionTypeSequence, fullMarksGateTutorialSeqId.int))
+
+
+proc testFullMarksGateTutorialWithEnoughAmount(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "17 full mark stickers")
+
+  let res = ctx.readFullMarksTutorialSequence()
+
+  doAssert(res.isSome)
+
+  doAssert(checkGateActionIs(res.get(), areaObjectActionTypeDisabled, 1))
+
+
 proc testSuiteAdventure*(saves_dir: string) =
   test_talk_with_enoki_first(saves_dir)
   test_talk_to_miu_after_enonki_read_sequence(saves_dir)
@@ -729,3 +785,5 @@ proc testSuiteAdventure*(saves_dir: string) =
   testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir)
   testFieldResearchMission()
   testLinkedSignpostsMission(saves_dir)
+  testFullMarksGateTutorialWithNotEnoughAmount(saves_dir)
+  testFullMarksGateTutorialWithEnoughAmount(saves_dir)

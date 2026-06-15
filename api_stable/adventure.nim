@@ -183,7 +183,6 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
 
     const talkWithEnokiSeqReqId = 80100431
     const talkWithMiuSeqReqId = 80100432
-    const fullMarksGateTutorialSeqReqId = 108369011
 
     if seqReqId in [80100421, 80100422, talkWithEnokiSeqReqId, talkWithMiuSeqReqId]:
       changeReadSequenceResponse(db, seqReqId, result.changedResources, result.areaObjects)

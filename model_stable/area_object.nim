@@ -18,6 +18,10 @@ type AreaObjectBehaviorConditionType* = enum
   areaObjectConditionTypeAreaObjectState = 4
   areaObjectConditionTypeFlowerMark = 11
 
+type AreaObjectActionType* = enum
+  areaObjectActionTypeSequence = 3
+  areaObjectActionTypeDisabled = 7
+
 type AreaObjectAction* = object
   `type`*: int
   id*: Option[int]
