@@ -1,7 +1,6 @@
 import std/json
 import std/options
 import std/sequtils
-import std/tables
 
 import ../db_connector/db_sqlite
 
