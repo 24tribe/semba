@@ -32,13 +32,20 @@ def main():
 
     print(subprocess.check_output(["nimble", "-v"]))
 
-    output = subprocess.check_output(['nimble'] + nimble_args).decode("utf-8")
+    res = subprocess.run(['nimble'] + nimble_args, capture_output=True)
 
-    print(output)
+    print("Stdout:")
+    stdout = res.stdout.decode("utf-8")
+    print(stdout)
 
-    if "Success: Execution finished" in output:
+    print("Stderr:")
+    print(res.stderr.decode("utf-8"))
+
+    res.check_returncode()
+
+    if "Success: Execution finished" in stdout:
         sys.exit(0)
-    elif "Error:  Execution failed with exit code" in output:
+    elif "Error:  Execution failed with exit code" in stdout:
         sys.exit(1)
     else:
         assert False
