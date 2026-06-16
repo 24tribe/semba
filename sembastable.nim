@@ -85,7 +85,7 @@ proc getJsonResultStable*(
   elif uri == "/dungeon/battle_start" or uri == "/dungeon/battle/start":
     result = dungeon_BattleStart(db, jsonReq, lastBattleInfo)
   elif uri == "/dungeon/resume":
-    result = dungeon_Resume(db, jsonReq)
+    result = dungeon_Resume(db, jsonReq.protoJsonTo(DungeonResumeRequest)).toProtoJson
 
   elif uri == "/event/list_node":
     result = event_ListNode(db)

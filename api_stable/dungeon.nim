@@ -41,13 +41,13 @@ type DungeonBattleStartRequest = object
   advantageType: BattleAdvantageType
   isAttackHit: bool
 
-type DungeonResumeRequest = object
-  dungeonDifficultyId: int
+type DungeonResumeRequest* = object
+  dungeonDifficultyId*: int
 
 type DungeonResumeResponse = object
-  dungeonState: DungeonState
-  dungeonEnemies: seq[DungeonEnemy]
-  dungeonAreaItems: seq[JsonNode]
+  dungeonState*: DungeonState
+  dungeonEnemies*: seq[DungeonEnemy]
+  dungeonAreaItems*: seq[DungeonAreaItem]
 
 
 proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
@@ -98,16 +98,12 @@ proc dungeon_BattleStart*(db: DbConn, jsonReq: JsonNode, lastBattleInfo: var Opt
   ))
 
 
-proc dungeon_Resume*(db: DbConn, jsonReq: JsonNode): JsonNode =
-  let req = protoJsonTo(jsonReq, DungeonResumeRequest)
+proc dungeon_Resume*(db: DbConn, req: DungeonResumeRequest): DungeonResumeResponse =
   let dungeonId = dungeonDifficultyIdToDungeonId(req.dungeonDifficultyId)
 
-  let res = DungeonResumeResponse(
-    dungeonEnemies: getDungeonEnemies(db, dungeonId),
-    dungeonState: getDungeonState(db, dungeonId),
-  )
-
-  result = %*res
+  result.dungeonEnemies = getDungeonEnemies(db, dungeonId)
+  result.dungeonState = getDungeonState(db, dungeonId)
+  result.dungeonAreaItems = getDungeonAreaItems(db, dungeonId)
 
 
 proc dungeon_Entry*(db: DbConn, jsonReq: JsonNode): JsonNode =
