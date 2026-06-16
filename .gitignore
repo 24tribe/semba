@@ -1,2 +1,5 @@
 .vscode
 scripts/__pycache__
+nimble.develop
+nimble.paths
+nimbledeps

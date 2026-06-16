@@ -1,0 +1,14 @@
+import std/json
+import std/assertions
+
+import ../../src/semba/model_stable/reward
+
+
+proc test_reward_field_name() =
+  let reward = Reward()
+  let rewardJson = %*reward
+  doAssert rewardJson.hasKey("type")
+
+
+proc testSuiteReward*(savesDir: string) =
+  test_reward_field_name()

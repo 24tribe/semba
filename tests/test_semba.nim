@@ -1,35 +1,34 @@
-import std/cmdline
-
-import test_adventure
-import test_battle
-import test_character
-import test_extra
-import test_follow
-import test_graffiti_art
-import test_reward
-import test_semba_private
-import test_tip
-import test_mission
-import test_status
-import test_shop
-import test_happy_worker
-import test_dungeon
-import test_tension_card
+import ./all/test_adventure
+import ./all/test_battle
+import ./all/test_character
+import ./all/test_dungeon
+import ./all/test_extra
+import ./all/test_follow
+import ./all/test_graffiti_art
+import ./all/test_happy_worker
+import ./all/test_mission
+import ./all/test_reward
+import ./all/test_semba_private
+import ./all/test_shop
+import ./all/test_status
+import ./all/test_tension_card
+import ./all/test_tip
 
 
-let saves_dir = paramStr(1)
-testSuiteExtra()
-testSuiteAdventure(saves_dir)
-testSuiteBattle(saves_dir)
-testSuiteCharacter()
-testSuiteReward()
-testSuiteSembaPrivate()
-testSuiteTip()
-testSuiteGraffitiArt()
-testSuiteMission(saves_dir)
-testSuiteStatus()
-testSuiteShop()
-testSuiteHappyWorker(saves_dir)
-testSuiteFollow()
-testSuiteDungeon()
-testSuiteTensionCard()
+when isMainModule:
+  let savesDir = "test_saves"
+  testSuiteAdventure(savesDir)
+  testSuiteBattle(savesDir)
+  testSuiteCharacter(savesDir)
+  testSuiteDungeon(savesDir)
+  testSuiteExtra(savesDir)
+  testSuiteFollow(savesDir)
+  testSuiteGraffitiArt(savesDir)
+  testSuiteHappy_worker(savesDir)
+  testSuiteMission(savesDir)
+  testSuiteReward(savesDir)
+  testSuiteSembaPrivate(savesDir)
+  testSuiteShop(savesDir)
+  testSuiteStatus(savesDir)
+  testSuiteTensionCard(savesDir)
+  testSuiteTip(savesDir)
