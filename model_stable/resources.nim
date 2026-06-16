@@ -10,6 +10,7 @@ import ../enum_ex
 import ../protojson
 import adventure_variable
 import area
+import area_item
 import area_change_lock
 import area_group
 import area_object
@@ -389,3 +390,23 @@ proc getChangedFieldResearchMissions*(db: DbConn, itemCounts: Table[int, int]): 
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
     some(mi.count.get(0) + itemCounts[missionItemIds[mi.missionId]])
   )
+
+
+proc acquireAreaItemRewards*(
+  db: DbConn, areaItemRewardIds: openArray[int], cityId: int, areaItemBaseId: int
+): (Resources, seq[Rewards]) =
+  var rewards = getAreaItemRewards(db, areaItemRewardIds)
+
+  var itemCounts: Table[int, int]
+
+  var changedResources = updateResourcesFromRewardsTypeSafe(db, rewards[0].contents, itemCounts)
+
+  var missions = getChangedFieldResearchMissions(db, itemCounts)
+
+  if isChestAreaItem(areaItemBaseId):
+    missions.insert(getChangedOpenChestMissions(db, cityId), missions.len)
+
+  updateMissions(db, missions)
+  changedResources.missions = missions
+
+  (changedResources, rewards)

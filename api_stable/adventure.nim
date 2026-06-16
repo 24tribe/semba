@@ -220,23 +220,13 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
 
 proc adventure_AcquireAreaItem*(db: DbConn, req: AdventureAcquireAreaItemRequest): AdventureAcquireAreaItemResponse =
   let areaItem = getMdAreaItem(db, req.areaItemId)
+  let cityId = areaIdToCityId(req.currentLocation.areaKeyId.get())
 
-  result.rewards = getAreaItemRewards(db, areaItem.areaItemRewardIds)
-
-  var itemCounts: Table[int, int]
-
-  result.changedResources = updateResourcesFromRewardsTypeSafe(db, result.rewards[0].contents, itemCounts)
-
-  var missions = getChangedFieldResearchMissions(db, itemCounts)
-
-  if isChestAreaItem(areaItem.areaItemBaseId):
-    let cityId = areaIdToCityId(req.currentLocation.areaKeyId.get())
-    missions.insert(getChangedOpenChestMissions(db, cityId), missions.len)
+  (result.changedResources, result.rewards) = acquireAreaItemRewards(
+    db, areaItem.areaItemRewardIds, cityId, areaItem.areaItemBaseId
+  )
 
   result.areaItem = AreaItem(areaItemId: req.areaItemId, acquired: true)
-
-  result.changedResources.missions = missions
-  updateMissions(db, missions)
 
 
 proc adventure_Hospital*(db: DbConn): ChangedResourcesResponse =

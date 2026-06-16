@@ -158,4 +158,19 @@ proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse =
 
 
 proc dungeon_AcquireAreaItem*(db: DbConn, req: DungeonAcquireAreaItemRequest): DungeonAcquireAreaItemResponse =
-  discard
+  let dungeonId = dungeonDifficultyIdToDungeonId(req.dungeonDifficultyId)
+  let cityId = dungeonDifficultyIdToCityId(req.dungeonDifficultyId)
+
+  let dungeonAreaItems = getDungeonAreaItems(db, dungeonId, @[req.entityId])
+  doAssert(dungeonAreaItems.len > 0)
+  var dungeonAreaItem = dungeonAreaItems[0]
+  dungeonAreaItem.acquiredAt = some(getTimestampNow())
+
+  result.dungeonAreaItem = dungeonAreaItem
+  upsertDungeonAreaItem(db, dungeonId, dungeonAreaItem)
+
+  let mdDungeonAreaItem = getMdDungeonAreaItem(db, dungeonAreaItem.dungeonAreaItemId)
+
+  (result.changedResources, result.rewards) = acquireAreaItemRewards(
+    db, mdDungeonAreaItem.areaItemRewardIds, cityId, mdDungeonAreaItem.areaItemBaseId
+  )

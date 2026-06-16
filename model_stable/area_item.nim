@@ -81,7 +81,7 @@ proc isChestAreaItem*(areaItemBaseId: int): bool =
     false
 
 
-proc getAreaItemRewards*(db: DbConn, areaItemRewardIds: seq[int]): seq[Rewards] =
+proc getAreaItemRewards*(db: DbConn, areaItemRewardIds: openArray[int]): seq[Rewards] =
   var rewards = newSeq[Reward]()
 
   for areaItemRewardId in areaItemRewardIds:
