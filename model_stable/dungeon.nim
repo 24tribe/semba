@@ -308,6 +308,8 @@ proc genDungeonAreaItems*(
         dungeonPieceIndex: j,
       ))
 
+      entityId += 1
+
 
 proc genDungeonEnemies*(
   db: DbConn, notGoalEnemyRateSetId: int, dungeonDifficultyId: int,
