@@ -3,3 +3,4 @@ scripts/__pycache__
 nimble.develop
 nimble.paths
 nimbledeps
+tests/test_semba.exe
