@@ -30,6 +30,8 @@ def main():
 
     os.chdir(nimble_dir)
 
+    print(subprocess.check_output(["nimble", "-v"]))
+
     output = subprocess.check_output(['nimble'] + nimble_args).decode("utf-8")
 
     print(output)
