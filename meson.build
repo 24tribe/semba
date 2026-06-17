@@ -6,12 +6,12 @@ nimble = find_program('nimble', required : true)
 
 python = find_program('python', required : true)
 
-sqlite3_c = fs.copyfile('src/sqlite3.c')
+sqlite3_c = fs.copyfile('sqlite3.c')
 
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required : false)
 
-sqlite3 = executable('sqlite3', 'src/shell.c', sqlite3_c, dependencies : m_dep)
+sqlite3 = executable('sqlite3', 'shell.c', sqlite3_c, dependencies : m_dep)
 
 nim_release_args = ['--cc:gcc', '--gcc.exe=cc', '--gcc.linkerexe=cc']
 
