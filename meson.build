@@ -71,5 +71,5 @@ libsemba = custom_target(
 
 semba_dep = declare_dependency(
     link_with : libsemba,
-    include_directories : include_directories('src')
+    include_directories : include_directories('.')
 )
