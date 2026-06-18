@@ -72,7 +72,7 @@ def rewrite_dungeon_data_sql(f, dungeonPartObjectCounts: dict[int, DungeonPartOb
 
 
 def piece_id_to_idx(piece_id):
-    return (piece_id%10000)//100
+    return piece_id%10000
 
 
 def gen_dungeon_part_object_counts_from_online_logs(online_logs: list[dict]) -> dict[int, DungeonPartObjectCount]:
