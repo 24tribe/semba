@@ -1,5 +1,6 @@
 import std/random
 import std/options
+import std/sequtils
 
 randomize()
 
@@ -269,8 +270,10 @@ proc pickPart(possibleParts: seq[DungeonPart]): DungeonPart =
     return possibleParts[getRandomInt(possibleParts.len)]
 
 
-proc genDungeon*(dungeonData: DungeonData, cityId: int): seq[DungeonPiece] =
-    let (startPart, middleParts, endPart) = splitDungeonParts(dungeonData)
+proc genDungeon*(dungeonData: DungeonData, cityId: int): seq[DungeonPiece] {.exportc: "semba_genDungeon".} =
+    const buggedPieceIds = [1101, 1201, 1301, 1401, 1403, 1501, 1503, 1601, 1602, 1604, 1801, 1803]
+
+    let (startPart, middleParts, endPart) = splitDungeonParts(dungeonData.filterIt(not (it.id in buggedPieceIds)))
 
     const gridWidth = 3
     const gridHeight = 6
