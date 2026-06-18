@@ -66,7 +66,8 @@ libsemba = custom_target(
         python, files('nimble_wrapper.py'), 'c', '-d:staticSqlite', app_arg, '--noMain:on', nim_release_args,
         '-o:@OUTPUT@', '@INPUT@'
     ],
-    build_by_default : true
+    build_by_default : true,
+    build_always_stale: true
 )
 
 semba_dep = declare_dependency(
