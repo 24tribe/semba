@@ -1,18 +1,28 @@
-import std/json
 import std/strutils
+import std/sequtils
+import std/options
 
 import db_connector/db_sqlite
 
-
-proc addTotalTask*(db: DbConn, totalTask: JsonNode) =
-  let conditionId = totalTask["conditionId"].getInt()
-  db.exec(sql"INSERT INTO totalTasks (conditionId) VALUES (?)", conditionId)
+import ../protojson
+import ../extsqlite
 
 
-proc getTotalTasks*(db: DbConn): seq[JsonNode] =
-  let totalTasksRows = db.getAllRows(sql"SELECT conditionId FROM totalTasks")
-  
-  for totalTaskRow in totalTasksRows:
-    let conditionId = parseInt(totalTaskRow[0])
+type TotalTask* = object
+  conditionId*: int
+  count*: ProtoJsonInt64
 
-    result.add(%*{"conditionId": conditionId})
+
+proc upsertTotalTask*(db: DbConn, totalTask: TotalTask) =
+  db.exec(sql"""
+    INSERT INTO totalTasks (conditionId, count) VALUES (?, ?)
+    ON CONFLICT (conditionId) DO
+    UPDATE SET count = excluded.count
+  """, totalTask.conditionId, totalTask.count)
+
+
+proc getTotalTasks*(db: DbConn): seq[TotalTask] =
+  db.getAllRows(sql"SELECT conditionId, count FROM totalTasks").mapIt(TotalTask(
+    conditionId: parseInt(it[0]),
+    count: tryParseInt(it[1]).get(0).ProtoJsonInt64,
+  ))
