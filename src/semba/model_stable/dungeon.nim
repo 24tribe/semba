@@ -240,19 +240,17 @@ proc parseBlocks(blocksJson: JsonNode): seq[Block] =
       left: blockJson["left"].getInt(),
     ))
 
-proc getDungeonData*(db: DbConn): DungeonData =
-  let rows = db.getAllRows(sql"SELECT id, name, blocks, angle, maxEnemies, maxAreaItems FROM dungeonData")
 
-  for row in rows:
-    let blocks = parseBlocks(parseJson(row[2]))
-    result.add(DungeonPart(
-      id: parseInt(row[0]),
-      name: row[1],
-      blocks: blocks,
-      angle: parseInt(row[3]),
-      maxEnemies: parseInt(row[4]),
-      maxAreaItems: parseInt(row[5]),
-    ))
+proc getDungeonData*(db: DbConn): DungeonData =
+  db.getAllRows(sql"SELECT id, name, blocks, angle, maxEnemies, maxAreaItems FROM dungeonData").mapIt(DungeonPart(
+    id: parseInt(it[0]),
+    name: it[1],
+    blocks: parseBlocks(parseJson(it[2])),
+    angle: parseInt(it[3]),
+    maxEnemies: parseInt(it[4]),
+    maxAreaItems: parseInt(it[5]),
+  ))
+
 
 proc getDungeonEnemy*(db: DbConn, dungeonId: int, entityId: int): DungeonEnemy =
   let row = db.getRow(sql"""
