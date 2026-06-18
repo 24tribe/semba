@@ -18,7 +18,7 @@ def main():
         output = get_output_path(arg)
         if output is not None:
             nimble_args[i] = f"-o:{os.path.realpath(output)}"
-        elif arg != "c" and not arg.startswith("-"):
+        elif arg not in ("c", "js") and not arg.startswith("-"):
             nimble_args[i] = os.path.realpath(arg)
             input_path = Path(arg).resolve()
 
