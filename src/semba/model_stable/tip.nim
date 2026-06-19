@@ -5,7 +5,7 @@ import std/sequtils
 
 import db_connector/db_sqlite
 
-import timestamp
+import ./timestamp
 
 
 type Tip* = object
@@ -21,6 +21,11 @@ proc addTip*(db: DbConn, tip: JsonNode) =
 
 proc addTipTypeSafe*(db: DbConn, tip: Tip) =
   db.exec(sql"INSERT INTO tips (tipId, releasedAt) VALUES (?, ?)", tip.tipId, tip.releasedAt)
+
+
+proc addTips*(db: DbConn, tips: openArray[Tip]) =
+  for tip in tips:
+    addTipTypeSafe(db, tip)
 
 
 proc getTips*(db: DbConn): seq[Tip] =

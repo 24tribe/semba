@@ -123,8 +123,7 @@ proc resetAreaObjects*(db: DbConn) =
 proc loadSaveFileVer3(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: bool) =
   db.exec(sql"DELETE FROM tips")
 
-  for tip in save.tips:
-    addTipTypeSafe(db, tip)
+  addTips(db, save.tips)
 
   if not dontDeleteAllAreaObjects:
     db.exec(sql"DELETE FROM areaObjects")
