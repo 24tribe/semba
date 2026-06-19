@@ -9,6 +9,7 @@ import ../../src/semba/protojson
 import ../../src/semba/api_stable/mission
 import ../../src/semba/model_stable/area_object
 import ../../src/semba/model_stable/area_object_lock
+import ../../src/semba/model_stable/challenge_progress
 import ../../src/semba/model_stable/city
 import ../../src/semba/model_stable/mission
 import ../../src/semba/model_stable/timestamp
@@ -136,6 +137,32 @@ proc testSaveFileWithBuggedHelpfulDemeanorMissions(saves_dir: string) =
   doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: some(4))))
 
 
+proc testMissionReceiveReturnsChallenges(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "16 fm can get one more")
+
+  let res = ctx.sembaCall("/mission/receive", %*{
+    "missionIds": [1041033, 1041034, 1041045, 1041046, 1041049]
+  }).protoJsonTo(Option[MissionReceiveResponse])
+
+  doAssert(res.isSome)
+  let changedResources = res.get().changedResources
+
+  let completeChaProgIndex = changedResources.challengeProgresses.findIt(it.challengeProgressId == 1010192)
+  doAssert(completeChaProgIndex != -1)
+  doAssert(changedResources.challengeProgresses[completeChaProgIndex].state == challengeProgressStateCleared.int)
+  doAssert(changedResources.challengeProgresses[completeChaProgIndex].clearedAt.isSome)
+
+  let nextChaProgIndex = changedResources.challengeProgresses.findIt(it.challengeProgressId == 1010201)
+  doAssert(nextChaProgIndex != -1)
+  doAssert(changedResources.challengeProgresses[nextChaProgIndex].state == challengeProgressStateStarted.int)
+
+  let ctIndex = changedResources.challengeTasks.findIt(it.challengeTaskId == 10101921)
+  doAssert(ctIndex != -1)
+  doAssert(changedResources.challengeTasks[ctIndex].clearedAt.isSome)
+
+
 proc testSuiteMission*(savesDir: string) =
   testMissionReceive()
   testUnlockFullMarkGates()
@@ -143,3 +170,4 @@ proc testSuiteMission*(savesDir: string) =
   testSaveFileWithBuggedGraffitiMissionsIsFixed(savesDir)
   testSaveFileWithBuggedMagicOrbsMissionsIsFixed(savesDir)
   testSaveFileWithBuggedHelpfulDemeanorMissions(savesDir)
+  testMissionReceiveReturnsChallenges(savesDir)
