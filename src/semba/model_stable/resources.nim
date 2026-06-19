@@ -151,7 +151,7 @@ proc updateResources*(db: DbConn, changedResources: var Resources) =
 
 proc getChangedResourcesForCompletedChallengeTask*(
   db: DbConn, challengeTask: MdChallengeTask
-): (seq[AreaObject], Resources) =
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask]) =
   var areaObjects = newSeq[AreaObject]()
   var challengeTasks = newSeq[ChallengeTask]()
   var challengeProgresses = newSeq[ChallengeProgress]()
@@ -202,13 +202,7 @@ proc getChangedResourcesForCompletedChallengeTask*(
       state: challengeProgressStateStarted.int,
     ))
 
-  let resources = Resources(
-    challengeTasks: challengeTasks,
-    challengeProgresses: challengeProgresses,
-    challenges: challenges,
-  )
-
-  result = (areaObjects, resources)
+  result = (areaObjects, challenges, challengeProgresses, challengeTasks)
 
 
 #[
@@ -220,17 +214,21 @@ proc changeReadSequenceResponse*(
 ) =
   areaObjects = @[]
 
+  changedResources.challenges = @[]
   changedResources.challengeTasks = @[]
   changedResources.challengeProgresses = @[]
 
   let challengeTask = getMdChallengeTaskForSequenceRequestId(db, seqReqId)
 
   if challengeTask.isSome():
-    let (newAreaObjects, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
-
-    changedResources.challengeTasks = resources.challengeTasks
-    changedResources.challengeProgresses = resources.challengeProgresses
-    areaObjects = newAreaObjects
+    (
+      areaObjects,
+      changedResources.challenges,
+      changedResources.challengeProgresses,
+      changedResources.challengeTasks
+    ) = getChangedResourcesForCompletedChallengeTask(
+      db, challengeTask.get()
+    )
 
 
 proc updateResourcesFromRewardsTypeSafe*(

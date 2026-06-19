@@ -170,18 +170,20 @@ proc battle_Finish*(
     let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
 
     if challengeTask.isSome():
-      let (_, resources) = getChangedResourcesForCompletedChallengeTask(db, challengeTask.get())
+      let (_, challenges, challengeProgresses, challengeTasks) = getChangedResourcesForCompletedChallengeTask(
+        db, challengeTask.get()
+      )
 
-      result.changedResources.challengeTasks = resources.challengeTasks
-      upsertChallengeTasks(db, resources.challengeTasks)
+      result.changedResources.challenges = challenges
+      upsertChallenges(db, challenges)
 
-      result.changedResources.challengeProgresses = resources.challengeProgresses
-      upsertChallengeProgresses(db, resources.challengeProgresses)
+      result.changedResources.challengeProgresses = challengeProgresses
+      upsertChallengeProgresses(db, challengeProgresses)
 
-      result.changedResources.challenges = resources.challenges
-      upsertChallenges(db, resources.challenges)
+      result.changedResources.challengeTasks = challengeTasks
+      upsertChallengeTasks(db, challengeTasks)
 
-      missions.insert(getChallengesChangedMissions(db, resources.challenges, cityId), missions.len)
+      missions.insert(getChallengesChangedMissions(db, challenges, cityId), missions.len)
 
     missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
     missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
