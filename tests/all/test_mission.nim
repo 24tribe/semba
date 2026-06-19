@@ -185,6 +185,7 @@ proc testBuggedSaveFileWithMissingTotalTaskChallengesIsFixed(saves_dir: string) 
   ctx.loadSaveFile(saves_dir, "marine biology research center entrance")
 
   doAssert(isChallengeProgressComplete(ctx.db, 1010192))
+  doAssert(isChallengeProgressComplete(ctx.db, 1010201))
 
 
 proc testSuiteMission*(savesDir: string) =
