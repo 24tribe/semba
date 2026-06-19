@@ -73,16 +73,6 @@ proc updateAdventureVariables*(db: DbConn, adventureVariables: seq[AdventureVari
     """, adventureVariable.adventureVariableId, adventureVariable.value)
 
 
-proc addAdventureVariable*(db: DbConn, adventureVariable: JsonNode) =
-  let adventureVariableId = adventureVariable["adventureVariableId"].getInt()
-  let value = adventureVariable["value"].getInt()
-
-  db.exec(
-    sql"INSERT INTO adventureVariables (adventureVariableId, value) VALUES (?, ?)",
-    adventureVariableId, value
-  )
-
-
 proc getAdventureVariables*(db: DbConn): seq[AdventureVariable] =
   db.getAllRows(sql"SELECT adventureVariableId, value FROM adventureVariables").mapIt(AdventureVariable(
     adventureVariableId: parseInt(it[0]),

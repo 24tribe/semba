@@ -6,7 +6,7 @@ import std/sugar
 import db_connector/db_sqlite
 
 import ../protojson
-import timestamp
+import ./timestamp
 
 type NineSequence* = object
   nineSequenceId*: int
@@ -79,14 +79,3 @@ proc updateNineSequences*(db: DbConn, nineSequences: seq[NineSequence]) =
       INSERT INTO nineSequences (nineSequenceId, content) VALUES (?, ?)
       ON CONFLICT (nineSequenceId) DO UPDATE SET content = excluded.content
     """, nineSequence.nineSequenceId, toProtoJson(nineSequence))
-
-
-proc addNineSequence*(db: DbConn, nineSequence: JsonNode) =
-  let nineSequenceId = nineSequence["nineSequenceId"].getInt()
-  let tmp = nineSequence.copy()
-  tmp.delete("nineSequenceId")
-  let content = $tmp
-  db.exec(
-    sql"INSERT INTO nineSequences (nineSequenceId, content) VALUES (?, ?)",
-    nineSequenceId, content
-  )

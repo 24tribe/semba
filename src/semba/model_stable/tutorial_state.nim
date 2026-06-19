@@ -26,17 +26,6 @@ proc upsertTutorialStates*(db: DbConn, tutorialStates: openArray[TutorialState])
     updateTutorialState(db, ts.tutorialStatusKey, ts.enabled)
 
 
-proc addTutorialState*(db: DbConn, tutorialState: JsonNode) =
-  let tutorialStatusKey = tutorialState["tutorialStatusKey"].getInt()
-  let enabledTmp = tutorialState.getOrDefault("enabled")
-  let enabled = if enabledTmp != nil: (if enabledTmp.getBool(): "true" else: "false") else: ""
-
-  db.exec(
-    sql"INSERT INTO tutorialStates (tutorialStatusKey, enabled) VALUES (?, ?)",
-    tutorialStatusKey, enabled
-  )
-
-
 proc getTutorialStates*(db: DbConn): seq[TutorialState] =
   db.getAllRows(sql"SELECT tutorialStatusKey, enabled FROM tutorialStates").mapIt(TutorialState(
     tutorialStatusKey: parseInt(it[0]),

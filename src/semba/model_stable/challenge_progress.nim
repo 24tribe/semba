@@ -31,17 +31,6 @@ proc isChallengeProgressComplete*(challengeProgress: JsonNode): bool =
   result = challengeProgress != nil and challengeProgress.getOrDefault("state").getInt() == 3
 
 
-proc addChallengeProgress*(db: DbConn, challengeProgress: JsonNode) =
-  let challengeProgressId = challengeProgress["challengeProgressId"].getInt()
-  let clearedAt = challengeProgress.getOrDefault("clearedAt").getStr()
-  let state = challengeProgress["state"].getInt()
-
-  db.exec(sql"""
-    INSERT INTO challengeProgresses (challengeProgressId, clearedAt, state)
-    VALUES (?, ?, ?)
-  """, challengeProgressId, clearedAt, state)
-
-
 proc getChallengeProgresses*(db: DbConn): seq[ChallengeProgress] =
   db.getAllRows(sql"""
     SELECT challengeProgressId, clearedAt, state
