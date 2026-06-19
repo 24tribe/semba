@@ -76,6 +76,16 @@ proc upsertChallengeTasks*(db: DbConn, challengeTasks: openArray[ChallengeTask])
     """, ct.challengeTaskId, optionToSqlArg(ct.clearedAt), optionToSqlArg(ct.count))
 
 
+proc upsertChallengeTasksIfNotComplete*(db: DbConn, challengeTasks: openArray[ChallengeTask]) =
+  for ct in challengeTasks:
+    db.exec(sql("""
+      INSERT INTO challengeTasks (challengeTaskId, clearedAt, count)
+      VALUES (?, ?, ?)
+      ON CONFLICT (challengeTaskId) DO UPDATE SET clearedAt = excluded.clearedAt, count = excluded.count
+      WHERE challengeTasks.clearedAt IS NULL
+    """), ct.challengeTaskId, optionToSqlArg(ct.clearedAt), optionToSqlArg(ct.count))
+
+
 proc getChallengeTaskIdsForChallengeProgressIds*(db: DbConn, challengeProgressIds: openArray[int]): seq[int] =
   let rows = db.getAllRows(sql("""
     SELECT id FROM mdChallengeTask WHERE challengeProgressId IN """ & sqlIntTuple(challengeProgressIds)

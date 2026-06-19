@@ -63,6 +63,16 @@ proc upsertChallengeProgresses*(db: DbConn, challengeProgresses: openArray[Chall
     """, chalProg.challengeProgressId, optionToSqlArg(chalProg.clearedAt), chalProg.state)
 
 
+proc upsertChallengeProgressesIfNotComplete*(db: DbConn, challengeProgresses: openArray[ChallengeProgress]) =
+  for chalProg in challengeProgresses:
+    db.exec(sql("""
+      INSERT INTO challengeProgresses (challengeProgressId, clearedAt, state)
+      VALUES (?, ?, ?)
+      ON CONFLICT (challengeProgressId) DO UPDATE SET clearedAt = excluded.clearedAt, state = excluded.state
+      WHERE challengeProgresses.state != """ & $(challengeProgressStateCleared.int)
+    ), chalProg.challengeProgressId, optionToSqlArg(chalProg.clearedAt), chalProg.state)
+
+
 proc getChallengeProgressIds*(db: DbConn, challengeId: int): seq[int] =
   let rows = db.getAllRows(sql"SELECT id FROM mdChallengeProgress WHERE challengeId = ?", challengeId)
   result = rows.mapIt(parseInt(it[0]))

@@ -314,9 +314,9 @@ proc fixTotalTaskChallenges(db: DbConn, save: SembaSave) =
     db, [TotalTask(conditionId: flowerMarksTotalTaskConditionId, count: save.status.flowerMark.ProtoJsonInt64)]
   )
 
-  upsertChallenges(db, challenges)
-  upsertChallengeProgresses(db, challengeProgresses)
-  upsertChallengeTasks(db, challengeTasks)
+  upsertChallengesIfNotComplete(db, challenges)
+  upsertChallengeProgressesIfNotComplete(db, challengeProgresses)
+  upsertChallengeTasksIfNotComplete(db, challengeTasks)
 
 
 proc sanityChecks(db: DbConn, save: var SembaSave) =

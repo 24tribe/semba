@@ -52,6 +52,19 @@ proc upsertChallenges*(db: DbConn, challenges: openArray[Challenge]) =
     """, chal.challengeId, chal.state, optionToSqlArg(chal.clearedAt), optionToSqlArg(chal.expiresAt))
 
 
+proc upsertChallengesIfNotComplete*(db: DbConn, challenges: openArray[Challenge]) =
+  for chal in challenges:
+    db.exec(sql("""
+      INSERT INTO challenges (challengeId, state, clearedAt, expiresAt)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT (challengeId) DO
+      UPDATE SET state = excluded.state,
+                 clearedAt = excluded.clearedAt,
+                 expiresAt = excluded.expiresAt
+      WHERE challenges.state != """ & $(challengeStateCompleted.int)
+    ), chal.challengeId, chal.state, optionToSqlArg(chal.clearedAt), optionToSqlArg(chal.expiresAt))
+
+
 proc getChallengeFirstProgressId*(db: DbConn, challengeId: int): int =
   let row = db.getRow(sql"SELECT firstProgressId FROM mdChallenge WHERE id = ?", challengeId)
 
