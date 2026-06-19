@@ -298,6 +298,7 @@ proc updateResourcesFromRewardsTypeSafe*(
   result.totalTasks = @[TotalTask(
     conditionId: flowerMarksTotalTaskConditionId, count: status.flowerMark.ProtoJsonInt64
   )]
+  upsertTotalTasks(db, result.totalTasks)
 
   result.gears = gears
   result.items = items
