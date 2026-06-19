@@ -7,11 +7,13 @@ import std/tables
 import ./utils
 import ../../src/semba/protojson
 import ../../src/semba/api_stable/mission
+import ../../src/semba/model_stable/area_object
 import ../../src/semba/model_stable/area_object_lock
 import ../../src/semba/model_stable/city
 import ../../src/semba/model_stable/mission
 import ../../src/semba/model_stable/timestamp
-import ../../src/semba/model_stable/area_object
+import ../../src/semba/model_stable/total_task
+
 
 proc testMissionReceive() =
   var ctx = getInMemorySembaCtx()
@@ -29,9 +31,11 @@ proc testMissionReceive() =
 
   let res = protoJsonTo(resJson, MissionReceiveResponse)
 
-  doAssert(res.changedResources.missions.len > 0)
+  let changedResources = res.changedResources
 
-  let missions = res.changedResources.missions.mapIt((it.missionId, it)).toTable()
+  doAssert(changedResources.missions.len > 0)
+
+  let missions = changedResources.missions.mapIt((it.missionId, it)).toTable()
 
   for missionId in missionIds:
     let mission = missions[missionId]
@@ -42,7 +46,13 @@ proc testMissionReceive() =
   )
 
   doAssert(res.rewards.len > 0)
-  doAssert(res.changedResources.status.get().flowerMark == 2)
+  doAssert(changedResources.status.get().flowerMark == 2)
+
+  let totalTaskIndex = changedResources.totalTasks.findIt(it.conditionId == flowerMarksTotalTaskConditionId)
+
+  doAssert(totalTaskIndex != -1)
+
+  doAssert(changedResources.totalTasks[totalTaskIndex].count == 2.ProtoJsonInt64)
 
 
 proc testUnlockFullMarkGates() =

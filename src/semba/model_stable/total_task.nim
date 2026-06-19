@@ -8,6 +8,9 @@ import ../protojson
 import ../extsqlite
 
 
+const flowerMarksTotalTaskConditionId* = 1016
+
+
 type TotalTask* = object
   conditionId*: int
   count*: ProtoJsonInt64
