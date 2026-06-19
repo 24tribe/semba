@@ -309,6 +309,16 @@ proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[C
   save.missions = missions.values().toSeq()
 
 
+proc fixTotalTaskChallenges(db: DbConn, save: SembaSave) =
+  let (_, challenges, challengeProgresses, challengeTasks) = getChangedResourcesFromTotalTasks(
+    db, [TotalTask(conditionId: flowerMarksTotalTaskConditionId, count: save.status.flowerMark.ProtoJsonInt64)]
+  )
+
+  upsertChallenges(db, challenges)
+  upsertChallengeProgresses(db, challengeProgresses)
+  upsertChallengeTasks(db, challengeTasks)
+
+
 proc sanityChecks(db: DbConn, save: var SembaSave) =
   # https://github.com/24tribe/zero/issues/24
   if (
@@ -342,6 +352,7 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
   let cityAreaObjectLockIds = ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
 
   fixMissions(db, save, cityAreaObjectLockIds)
+  fixTotalTaskChallenges(db, save)
 
 
 proc loadSembaSave*(db: DbConn, save: var SembaSave) =

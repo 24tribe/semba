@@ -63,7 +63,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   upsertChallenges(db, challenges)
 
   changedResources.challengeProgresses = challengeProgresses
-  upsertchallengeProgresses(db, challengeProgresses)
+  upsertChallengeProgresses(db, challengeProgresses)
 
   changedResources.challengeTasks = challengeTasks
   upsertChallengeTasks(db, challengeTasks)
