@@ -51,7 +51,6 @@ type ResourceEntities* = object
   gearEntityIds*: seq[int]
   tensionCardEntityIds*: seq[int]
 
-
 type Resources* = object
   adventureVariables*: seq[AdventureVariable]
   areas*: seq[Area]

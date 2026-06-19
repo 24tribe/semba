@@ -1,5 +1,3 @@
-import std/options
-
 import db_connector/db_sqlite
 
 import gacha
