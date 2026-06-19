@@ -179,6 +179,14 @@ proc testMissionReceiveDoesntReturnFinishedChallenges(saves_dir: string) =
   doAssert(alreadyCompletedChaProgIndex == -1)
 
 
+proc testBuggedSaveFileWithMissingTotalTaskChallengesIsFixed(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "marine biology research center entrance")
+
+  doAssert(isChallengeProgressComplete(ctx.db, 1010192))
+
+
 proc testSuiteMission*(savesDir: string) =
   testMissionReceive()
   testUnlockFullMarkGates()
@@ -188,3 +196,4 @@ proc testSuiteMission*(savesDir: string) =
   testSaveFileWithBuggedHelpfulDemeanorMissions(savesDir)
   testMissionReceiveReturnsChallenges(savesDir)
   testMissionReceiveDoesntReturnFinishedChallenges(savesDir)
+  testBuggedSaveFileWithMissingTotalTaskChallengesIsFixed(savesDir)
