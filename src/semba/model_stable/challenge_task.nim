@@ -67,19 +67,6 @@ proc isChallengeTaskComplete*(db: DbConn, challengeTaskId: int): bool =
   result = row[0] != ""
 
 
-proc updateChallengeTasks*(db: DbConn, challengeTasks: JsonNode) =
-  for challengeTask in challengeTasks:
-    let challengeTaskId = challengeTask["challengeTaskId"].getInt()
-    let clearedAt = challengeTask["clearedAt"].getStr()
-    let count = challengeTask["count"].getInt()
-
-    db.exec(sql"""
-      INSERT INTO challengeTasks (challengeTaskId, clearedAt, count)
-      VALUES (?, ?, ?)
-      ON CONFLICT (challengeTaskId) DO UPDATE SET clearedAt = ?, count = ?
-    """, challengeTaskId, clearedAt, count, clearedAt, count)
-
-
 proc upsertChallengeTasks*(db: DbConn, challengeTasks: openArray[ChallengeTask]) =
   for ct in challengeTasks:
     db.exec(sql"""
