@@ -295,6 +295,10 @@ proc updateResourcesFromRewardsTypeSafe*(
 
   setUserStatusTypeSafe(db, status)
 
+  result.totalTasks = @[TotalTask(
+    conditionId: flowerMarksTotalTaskConditionId, count: status.flowerMark.ProtoJsonInt64
+  )]
+
   result.gears = gears
   result.items = items
   result.status = some(status)
