@@ -163,6 +163,22 @@ proc testMissionReceiveReturnsChallenges(saves_dir: string) =
   doAssert(changedResources.challengeTasks[ctIndex].clearedAt.isSome)
 
 
+proc testMissionReceiveDoesntReturnFinishedChallenges(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "after fixed mission receive_can receive again")
+
+  let res = ctx.sembaCall("/mission/receive", %*{
+    "missionIds": [1041033, 1041050, 1041062, 1041067, 1041070]
+  }).protoJsonTo(Option[MissionReceiveResponse])
+
+  doAssert(res.isSome)
+  let changedResources = res.get().changedResources
+
+  let alreadyCompletedChaProgIndex = changedResources.challengeProgresses.findIt(it.challengeProgressId == 1010192)
+  doAssert(alreadyCompletedChaProgIndex == -1)
+
+
 proc testSuiteMission*(savesDir: string) =
   testMissionReceive()
   testUnlockFullMarkGates()
@@ -171,3 +187,4 @@ proc testSuiteMission*(savesDir: string) =
   testSaveFileWithBuggedMagicOrbsMissionsIsFixed(savesDir)
   testSaveFileWithBuggedHelpfulDemeanorMissions(savesDir)
   testMissionReceiveReturnsChallenges(savesDir)
+  testMissionReceiveDoesntReturnFinishedChallenges(savesDir)
