@@ -28,7 +28,7 @@ proc mail_List*(db: DbConn): MailListResponse =
   let mailList = getMails(db)
 
   result.list = mailList
-  result.changedResources.notifications = some(Notifications(mail: some(mailList.hasUnopenedMails())))
+  result.changedResources.notifications = some(Notifications(mail: mailList.hasUnopenedMails()))
 
 
 proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
@@ -45,4 +45,4 @@ proc mail_Open*(db: DbConn, req: MailOpenRequest): MailOpenResponse =
   result.list = mailList
   result.rewards = rewards
   result.changedResources = changedResources
-  result.changedResources.notifications = some(Notifications(mail: some(mailList.hasUnopenedMails())))
+  result.changedResources.notifications = some(Notifications(mail: mailList.hasUnopenedMails()))

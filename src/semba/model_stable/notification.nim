@@ -5,8 +5,8 @@ import gacha
 
 type Notifications* = object
   gacha*: GachaNotification
-  mail*: Option[bool]
-  itemRequest*: Option[bool]
+  mail*: bool
+  itemRequest*: bool
 
 
 proc getNotifications*(db: DbConn): Notifications =
