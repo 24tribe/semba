@@ -128,7 +128,7 @@ proc updateResources*(db: DbConn, changedResources: var Resources) =
 
   updateNineSequences(db, changedResources.nineSequences)
   updateAdventureVariables(db, changedResources.adventureVariables)
-  updateChallengeProgresses(db, changedResources.challengeProgresses)
+  upsertChallengeProgresses(db, changedResources.challengeProgresses)
   upsertChallengeTasks(db, changedResources.challengeTasks)
   upsertChallenges(db, changedResources.challenges)
 
@@ -343,7 +343,7 @@ proc completeMainStoryRiftTutorialChallenge*(db: DbConn): (seq[ChallengeProgress
     ChallengeProgress(challengeProgressId: 1010181, state: 2)
   ]
 
-  updateChallengeProgresses(db, challengeProgresses)
+  upsertChallengeProgresses(db, challengeProgresses)
 
   let challengeTasks = @[ChallengeTask(challengeTaskId: 10101731, clearedAt: rightNow, count: some(1))]
 

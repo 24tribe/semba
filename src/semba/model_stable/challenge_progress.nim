@@ -54,15 +54,6 @@ proc getNextChallengeProgress*(db: DbConn, challengeProgressId: int): Option[int
     result = some(parseInt(row[0]))
 
 
-proc updateChallengeProgresses*(db: DbConn, challengeProgresses: openArray[ChallengeProgress]) =
-  for challengeProgress in challengeProgresses:
-    db.exec(sql"""
-      INSERT INTO challengeProgresses (challengeProgressId, clearedAt, state)
-      VALUES (?, ?, ?)
-      ON CONFLICT (challengeProgressId) DO UPDATE SET clearedAt = excluded.clearedAt, state = excluded.state
-    """, challengeProgress.challengeProgressId, optionToSqlArg(challengeProgress.clearedAt), challengeProgress.state)
-
-
 proc upsertChallengeProgresses*(db: DbConn, challengeProgresses: openArray[ChallengeProgress]) =
   for chalProg in challengeProgresses:
     db.exec(sql"""
