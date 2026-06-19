@@ -1,14 +1,15 @@
-import std/json
+import std/options
 
 import db_connector/db_sqlite
 
 import gacha
 
 
-proc getNotifications*(db: DbConn): JsonNode =
-  let gacha = getGachaNotification(db)
-  return %*{
-    "gacha": gacha,
-    "mail": true,
-    "itemRequest": false
-  }
+type Notifications* = object
+  gacha*: GachaNotification
+  mail*: Option[bool]
+  itemRequest*: Option[bool]
+
+
+proc getNotifications*(db: DbConn): Notifications =
+  result.gacha = getGachaNotification(db)

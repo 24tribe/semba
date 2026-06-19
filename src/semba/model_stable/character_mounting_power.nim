@@ -1,9 +1,6 @@
-import std/options
-
-
 type CharacterMountingPower* = object
-  characterId: int
-  value: Option[int]
+  characterId*: int
+  value*: int
 
 type CharacterMountingPowerCommon* = object
-  value: Option[int]
+  value*: int

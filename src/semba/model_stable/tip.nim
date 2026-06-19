@@ -1,6 +1,7 @@
 import std/json
 import std/strutils
 import std/options
+import std/sequtils
 
 import db_connector/db_sqlite
 
@@ -18,26 +19,22 @@ proc addTip*(db: DbConn, tip: JsonNode) =
   db.exec(sql"INSERT INTO tips (tipId, releasedAt) VALUES (?, ?)", tipId, releasedAt)
 
 
-proc getTips*(db: DbConn): seq[JsonNode] =
-  let tipsRows = db.getAllRows(sql"""
+proc addTipTypeSafe*(db: DbConn, tip: Tip) =
+  db.exec(sql"INSERT INTO tips (tipId, releasedAt) VALUES (?, ?)", tip.tipId, tip.releasedAt)
+
+
+proc getTips*(db: DbConn): seq[Tip] =
+  result = db.getAllRows(sql"""
     SELECT tipId, releasedAt
     FROM tips
-  """)
+  """).mapIt(Tip(
+    tipId: parseInt(it[0]),
+    releasedAt: it[1].Timestamp,
+  ))
 
   # Lux Phantasma first tip
-  result.add(%*{
-    "tipId": 3027,
-    "releasedAt": "2025-09-10T02:17:06Z"
-  })
+  result.add(Tip(tipId: 3027, releasedAt: "2025-09-10T02:17:06Z".Timestamp))
 
-  for tipRow in tipsRows:
-    let tipId = parseInt(tipRow[0])
-    let releasedAt = tipRow[1]
-
-    result.add(%*{
-      "tipId": tipId,
-      "releasedAt": releasedAt
-    })
 
 proc getFirstTipIdNotInDb*(db: DbConn, tipIds: openArray[int]): Option[int] = 
   for tipId in tipIds:

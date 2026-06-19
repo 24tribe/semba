@@ -132,13 +132,13 @@ proc readSequenceMiniGame*(
 
   let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
 
-  result[0].areaObjectLocks = areaObjectLockId.map(proc (areaObjectLockId: int): seq[AreaObjectLock] =
-    @[AreaObjectLock(areaObjectLockId: areaObjectLockId, count: some(1))]
-  )
+  result[0].areaObjectLocks =
+    if areaObjectLockId.isSome:
+      @[AreaObjectLock(areaObjectLockId: areaObjectLockId.get(), count: some(1))]
+    else:
+      @[]
 
-  result[0].areaObjectLocks.map(proc (areaObjectLocks: seq[AreaObjectLock]) =
-    upsertAreaObjectLocks(db, areaObjectLocks)
-  )
+  upsertAreaObjectLocks(db, result[0].areaObjectLocks)
 
   result[0].status = some(getUserStatusTypeSafe(db))
 

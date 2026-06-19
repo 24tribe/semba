@@ -1,6 +1,7 @@
 import std/json
 import std/strutils
 import std/options
+import std/sequtils
 
 import db_connector/db_sqlite
 
@@ -9,7 +10,7 @@ import ../semba_error
 
 type Area* = object
   areaId*: int
-  isDark*: Option[bool]
+  isDark*: bool
 
 type AreaBgm* = object
   id*: int
@@ -111,12 +112,11 @@ proc getActionSequenceId*(db: DbConn, areaId: int): int =
   result = if row[0] != "": parseInt(row[0]) else: 0
 
 
-proc getAreas*(db: DbConn): seq[JsonNode] =
-  for row in db.getAllRows(sql"SELECT areaId FROM areas"):
-    let areaId = parseInt(row[0])
-    result.add(%*{
-      "areaId": areaId
-    })
+proc getAreas*(db: DbConn): seq[Area] =
+  # FIXME: save/load isDark
+  db.getAllRows(sql"SELECT areaId FROM areas").mapIt(Area(
+    areaId: parseInt(it[0]),
+  ))
 
 
 proc updateActionSequenceId*(db: DbConn, areaId: int, actionSequenceId: int) =

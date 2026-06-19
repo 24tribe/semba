@@ -153,7 +153,7 @@ proc battle_Finish*(
 
     let areaObjectLocks = handleWonBattleTriggers(db, battleTriggers, dungeonId, status.currentAreaKeyId.get(0))
     upsertAreaObjectLocks(db, areaObjectLocks)
-    result.changedResources.areaObjectLocks = some(areaObjectLocks)
+    result.changedResources.areaObjectLocks = areaObjectLocks
 
     var allRewards = collectEnemyRewards(db, req.encounteredEnemyIds)
     result.rewards = @[Rewards(`type`: some(6), contents: allRewards)]

@@ -4,6 +4,7 @@ import std/random
 import std/tables
 import std/options
 import std/sugar
+import std/sequtils
 
 import db_connector/db_sqlite
 
@@ -19,7 +20,7 @@ import ../extsqlite
 
 type GachaNotification* = object
   latestGachaStartAt*: Option[Timestamp]
-  executableGachaIds*: Option[seq[int]]
+  executableGachaIds*: seq[int]
 
 type GachaButton* = enum
   gachaButtonSingle = 1,
@@ -42,16 +43,8 @@ const tutorialGachaSql = slurp("../tutorialGacha.sql")
 const tutorialSkipGachaSql = slurp("../tutorialSkipGacha.sql")
 
 
-proc getGachaNotification*(db: DbConn): JsonNode =
-  let rows = db.getAllRows(sql"SELECT gachaId FROM gachas")
-  var ids = newSeq[int]()
-
-  for row in rows:
-    ids.add(parseInt(row[0]))
-
-  return %*{
-    "executableGachaIds": ids
-  }
+proc getGachaNotification*(db: DbConn): GachaNotification =
+  result.executableGachaIds = db.getAllRows(sql"SELECT gachaId FROM gachas").mapIt(parseInt(it[0]))
 
 
 proc getGachaCharacterIds(db: DbConn): seq[int] =

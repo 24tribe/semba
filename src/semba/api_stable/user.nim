@@ -1,4 +1,5 @@
 import std/json
+import std/options
 
 import db_connector/db_sqlite
 
@@ -23,6 +24,7 @@ import ../model_stable/magic_orb
 import ../model_stable/mission
 import ../model_stable/nine_sequence
 import ../model_stable/notification
+import ../model_stable/resources
 import ../model_stable/status
 import ../model_stable/shop
 import ../model_stable/tension_card
@@ -33,6 +35,12 @@ import ../model_stable/tutorial_state
 import ../model_stable/tutorial
 import ../model_stable/wallet
 import ../model_stable/warp_point
+
+
+type UserLogInResponse* = object
+  resources*: Resources
+  masterData*: MasterData
+  moveToAreaLocatorId*: Option[int]
 
 
 proc user_CrossDate*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -57,67 +65,44 @@ proc user_Notification*(db: DbConn): JsonNode =
   }
 
 
-proc user_LogIn*(db: DbConn): JsonNode =
+proc user_LogIn*(db: DbConn): UserLogInResponse =
   if isFirstLogin(db):
     setFirstLogin(db, false)
     if not getSkipTutorial(db):
       resetToTutorial(db)
 
-  let areaObjectLocks = getAreaObjectLocks(db)
-  let formations = getFormations(db)
-  let adventureVariables = getAdventureVariables(db)
-  let challengeTasks = getChallengeTasks(db)
-  let questStates = getQuestStates(db)
-  let challenges = getChallenges(db)
-  let warpPoints = getWarpPoints(db)
-  let areas = getAreas(db)
-  let areaGroups = getAreaGroups(db)
-  let cities = getCities(db)
-  let wallet = getWallet(db)
-  let characterPieces = getCharacterPieces(db)
-  let dungeons = getDungeons(db)
-  let items = getItems(db)
-  let magicOrbs = getMagicOrbs(db)
-  let areaChangeLocks = getAreaChangeLocks(db)
-  let missions = getMissions(db)
-  let gears = getGears(db)
-  let graffitiArts = getGraffitiArts(db)
-  let characters = getCharactersTypeSafe(db)
+  result.masterData.shopProducts = getShopProducts(db)
 
-  return %*{
-    "resources": {
-      "adventureVariables": adventureVariables,
-      "areaChangeLocks": areaChangeLocks,
-      "areaGroups": areaGroups,
-      "areaObjectLocks": areaObjectLocks,
-      "areas": areas,
-      "challengeProgresses": getChallengeProgresses(db),
-      "challengeTasks": challengeTasks,
-      "challenges": challenges,
-      "characterCostumes": getCharacterCostumes(db),
-      "characterMountingPowerCommon": {},
-      "characterPieces": characterPieces,
-      "characters": characters,
-      "cities": cities,
-      "dungeons": dungeons,
-      "formations": formations,
-      "gears": gears,
-      "graffitiArts": graffitiArts,
-      "items": items,
-      "magicOrbs": magicOrbs,
-      "missions": missions,
-      "nineSequences": getNineSequences(db),
-      "notifications": getNotifications(db),
-      "profile": {"name": "Yo Kuronaka3", "profileBannerId": 2010011, "characterLikabilityScale": 500},
-      "profileBanners": [{"profileBannerId": 2010011, "receivedAt": "2025-09-10T02:22:51Z"}],
-      "questStates": questStates,
-      "status": getUserStatusTypeSafe(db),
-      "tensionCards": getTensionCards(db),
-      "tips": getTips(db),
-      "totalTasks": getTotalTasks(db),
-      "tutorialStates": getTutorialStates(db),
-      "wallet": wallet,
-      "warpPoints": warpPoints,
-    },
-    "masterData": {"shopProducts": getShopProducts(db)}
-  }
+  result.resources = Resources(
+    adventureVariables: getAdventureVariables(db),
+    areaChangeLocks: getAreaChangeLocks(db),
+    areaGroups: getAreaGroups(db),
+    areaObjectLocks: getAreaObjectLocks(db),
+    areas: getAreas(db),
+    challengeProgresses: getChallengeProgresses(db),
+    challengeTasks: getChallengeTasks(db),
+    challenges: getChallenges(db),
+    characterCostumes: getCharacterCostumes(db),
+    characterPieces: getCharacterPieces(db),
+    characters: getCharactersTypeSafe(db),
+    cities: getCities(db),
+    dungeons: getDungeons(db),
+    formations: getFormations(db),
+    gears: getGears(db),
+    graffitiArts: getGraffitiArts(db),
+    items: getItems(db),
+    magicOrbs: getMagicOrbs(db),
+    missions: getMissions(db),
+    nineSequences: getNineSequences(db),
+    notifications: some(getNotifications(db)),
+    profile: some(%*{"name": "Yo Kuronaka3", "profileBannerId": 2010011, "characterLikabilityScale": 500}),
+    profileBanners: @[%*{"profileBannerId": 2010011, "receivedAt": "2025-09-10T02:22:51Z"}],
+    questStates: getQuestStates(db),
+    status: some(getUserStatusTypeSafe(db)),
+    tensionCards: getTensionCards(db),
+    tips: getTips(db),
+    totalTasks: getTotalTasks(db),
+    tutorialStates: getTutorialStates(db),
+    wallet: some(getWallet(db)),
+    warpPoints: getWarpPoints(db),
+  )

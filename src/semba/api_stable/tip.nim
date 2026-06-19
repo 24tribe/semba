@@ -7,6 +7,7 @@ import db_connector/db_sqlite
 import ../model_stable/resources
 import ../model_stable/tip
 import ../model_stable/timestamp
+import ../model_stable/battle_enum
 import ../semba_error
 
 
@@ -14,11 +15,11 @@ export timestamp
 
 
 type TipReleaseByBattleRequest* = object
-  battleResult: Option[string]
+  battleResult*: BattleResult
 
 
 proc tip_ReleaseByBattle*(db: DbConn, req: TipReleaseByBattleRequest): ChangedResourcesResponse =
-  if req.battleResult.isNone() or req.battleResult.get() != "lost":
+  if req.battleResult != BattleResult.lost:
     raise newException(SembaError, "battleResult != 'lost' !!!!") 
 
   let tipIds = [1014, 1048, 1049, 1050, 1051]
@@ -27,8 +28,8 @@ proc tip_ReleaseByBattle*(db: DbConn, req: TipReleaseByBattleRequest): ChangedRe
 
   if tipId.isSome():
     let tip = Tip(tipId: tipId.get(), releasedAt: getTimestampNow())
-    addTip(db, %*tip)
-    result.changedResources.tips = some(@[tip])
+    addTipTypeSafe(db, tip)
+    result.changedResources.tips = @[tip]
 
 
 proc tip_Release*(db: DbConn, jsonReq: JsonNode): JsonNode =

@@ -1,6 +1,7 @@
 import std/options
 import std/json
 import std/strutils
+import std/sugar
 
 import db_connector/db_sqlite
 
@@ -19,16 +20,12 @@ type NineSequenceRequest* = object
   choices*: string
 
 
-proc getNineSequences*(db: DbConn): seq[JsonNode] =
-  let nineSequencesRows = db.getAllRows(sql"SELECT nineSequenceId, content FROM nineSequences")
-
-  for nineSequenceRow in nineSequencesRows:
-    let nineSequenceId = parseInt(nineSequenceRow[0])
-    let content = parseJson(nineSequenceRow[1])
-
-    content["nineSequenceId"] = %*nineSequenceId
-    
-    result.add(content)
+proc getNineSequences*(db: DbConn): seq[NineSequence] =
+  collect:
+    for it in db.getAllRows(sql"SELECT nineSequenceId, content FROM nineSequences"):
+      var nineSeq = parseJson(it[1]).protoJsonTo(NineSequence)
+      nineSeq.nineSequenceId = parseInt(it[0])
+      nineSeq
 
 
 proc getNineSequence*(db: DbConn, nineSequenceId: int): Option[NineSequence] =

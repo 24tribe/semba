@@ -134,7 +134,7 @@ proc adventure_MoveToArea*(db: DbConn, req: AdventureMoveToAreaRequest): Adventu
   result.areaBgm = getAreaBgm(db, req.areaId)
   result.areaChangeLocks = getAreaChangeLocksForAreaId(db, req.areaId)
   result.changedResources.status = some(status)
-  result.changedResources.areas = some(changedAreas)
+  result.changedResources.areas = changedAreas
 
   let actionSequenceId = getActionSequenceId(db, req.areaId)
 
@@ -274,7 +274,7 @@ proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): Adv
 
   let graffitiArt = GraffitiArt(graffitiArtId: req.graffitiArtId)
   addGraffitiArt(db, graffitiArt)
-  result.changedResources.graffitiArts = some(@[graffitiArt])
+  result.changedResources.graffitiArts = @[graffitiArt]
 
   const graffitiFreeGems = 5
 

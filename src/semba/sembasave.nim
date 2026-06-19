@@ -76,7 +76,7 @@ import ./model_stable/warp_point
 type SembaSave* = object
   version*: int
   formations: seq[JsonNode]
-  tips: seq[JsonNode]
+  tips: seq[Tip]
   areaObjects: seq[JsonNode]
   areaEnemies: seq[JsonNode]
   status: Status
@@ -84,23 +84,23 @@ type SembaSave* = object
   areaBgms: seq[JsonNode]
   characters: seq[Character]
   tensionCards: seq[TensionCard]
-  challengeProgresses: seq[JsonNode]
-  nineSequences: seq[JsonNode]
-  totalTasks: seq[JsonNode]
-  tutorialStates: seq[JsonNode]
-  adventureVariables: seq[JsonNode]
+  challengeProgresses: seq[ChallengeProgress]
+  nineSequences: seq[NineSequence]
+  totalTasks: seq[TotalTask]
+  tutorialStates: seq[TutorialState]
+  adventureVariables: seq[AdventureVariable]
   challengeTasks: seq[ChallengeTask]
   areaActionSequenceIds: seq[JsonNode]
   questStates: seq[JsonNode]
   clearedAchievements: seq[JsonNode]
-  challenges: seq[JsonNode]
+  challenges: seq[Challenge]
   warpPoints: seq[WarpPoint]
-  areas: seq[JsonNode]
-  areaGroups: seq[JsonNode]
+  areas: seq[Area]
+  areaGroups: seq[AreaGroup]
   cities: seq[City]
   characterPieces: seq[CharacterPiece]
   userData: seq[JsonNode]
-  dungeons: seq[JsonNode]
+  dungeons: seq[Dungeon]
   magicOrbs: seq[MagicOrb]
   areaChangeLocks: seq[AreaChangeLock]
   items: seq[Item]
@@ -124,7 +124,7 @@ proc loadSaveFileVer3(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: boo
   db.exec(sql"DELETE FROM tips")
 
   for tip in save.tips:
-    addTip(db, tip)
+    addTipTypeSafe(db, tip)
 
   if not dontDeleteAllAreaObjects:
     db.exec(sql"DELETE FROM areaObjects")
@@ -155,7 +155,7 @@ proc loadSaveFileVer5(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: boo
   db.exec(sql"DELETE FROM characterLimitBreaks")
 
   for character in save.characters:
-    addCharacterTypeSafe(db, character) # FIXME: use type safe version of addCharacter
+    addCharacterTypeSafe(db, character)
 
   db.exec(sql"DELETE FROM tensionCards")
 
@@ -164,28 +164,23 @@ proc loadSaveFileVer5(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: boo
 
   db.exec(sql"DELETE FROM challengeProgresses")
 
-  for challengeProgress in save.challengeProgresses:
-    addChallengeProgress(db, challengeProgress)
+  upsertChallengeProgresses(db, save.challengeProgresses)
 
   db.exec(sql"DELETE FROM nineSequences")
 
-  for nineSequence in save.nineSequences:
-    addNineSequence(db, nineSequence)
+  updateNineSequences(db, save.nineSequences)
 
   db.exec(sql"DELETE FROM totalTasks")
 
-  for totalTask in save.totalTasks:
-    addTotalTask(db, totalTask)
+  upsertTotalTasks(db, save.totalTasks)
 
   db.exec(sql"DELETE FROM tutorialStates")
 
-  for tutorialState in save.tutorialStates:
-    addTutorialState(db, tutorialState)
+  upsertTutorialStates(db, save.tutorialStates)
 
   db.exec(sql"DELETE FROM adventureVariables")
 
-  for adventureVariable in save.adventureVariables:
-    addAdventureVariable(db, adventureVariable)
+  updateAdventureVariables(db, save.adventureVariables)
 
   db.exec(sql"DELETE FROM challengeTasks")
 
@@ -217,12 +212,12 @@ proc loadSaveFileVer8(db: DbConn, save: SembaSave) =
   db.exec(sql"DELETE FROM areas")
 
   for area in save.areas:
-    addArea(db, area["areaId"].getInt())
+    addArea(db, area.areaId)
 
   db.exec(sql"DELETE FROM areaGroups")
 
   for areaGroup in save.areaGroups:
-    addAreaGroup(db, areaGroup["areaGroupId"].getInt())
+    addAreaGroup(db, areaGroup.areaGroupId)
 
   db.exec(sql"DELETE FROM cities")
 
@@ -388,7 +383,7 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
     loadSaveFileVer5(db, save, dontDeleteAllAreaObjects)
 
   if save.version >= 7:
-    updateChallenges(db, save.challenges)
+    upsertChallenges(db, save.challenges)
 
   if save.version >= 8:
     loadSaveFileVer8(db, save)
@@ -397,7 +392,7 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
 
   if save.version >= 10:
     for dungeon in save.dungeons:
-      addDungeon(db, dungeon)
+      addDungeonTypeSafe(db, dungeon)
 
   db.exec(sql"DELETE FROM magicOrbs")
   db.exec(sql"DELETE FROM items")

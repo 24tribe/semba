@@ -206,7 +206,7 @@ proc testBattleWithAreaObjectLock() =
     "taskConditionResult": {}
   }), BattleFinishResponse)
 
-  doAssert(res.changedResources.areaObjectLocks.get() == @[AreaObjectLock(areaObjectLockId: 30500702, count: some(1))])
+  doAssert(res.changedResources.areaObjectLocks == @[AreaObjectLock(areaObjectLockId: 30500702, count: some(1))])
 
 
 proc testBattleWithZeroSenseiMission(saves_dir: string) =

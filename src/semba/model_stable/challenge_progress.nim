@@ -42,28 +42,15 @@ proc addChallengeProgress*(db: DbConn, challengeProgress: JsonNode) =
   """, challengeProgressId, clearedAt, state)
 
 
-proc getChallengeProgresses*(db: DbConn): seq[JsonNode] =
-  let challengeProgressesRows = db.getAllRows(sql"""
+proc getChallengeProgresses*(db: DbConn): seq[ChallengeProgress] =
+  db.getAllRows(sql"""
     SELECT challengeProgressId, clearedAt, state
     FROM challengeProgresses
-  """)
-
-  for challengeProgressRow in challengeProgressesRows:
-    let challengeProgressId = parseInt(challengeProgressRow[0])
-    let clearedAt = challengeProgressRow[1]
-    let state = parseInt(challengeProgressRow[2])
-
-    if clearedAt != "":
-      result.add(%*{
-        "challengeProgressId": challengeProgressId,
-        "clearedAt": clearedAt,
-        "state": state
-      })
-    else:
-      result.add(%*{
-        "challengeProgressId": challengeProgressId,
-        "state": state
-      })
+  """).mapIt(ChallengeProgress(
+    challengeProgressId: parseInt(it[0]),
+    clearedAt: tryParseTimestamp(it[1]),
+    state: parseInt(it[2]),
+  ))
 
 
 proc getNextChallengeProgress*(db: DbConn, challengeProgressId: int): Option[int] =

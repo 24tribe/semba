@@ -126,7 +126,7 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
 
   let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10030)
-  doAssert(adventureVariables[0].value.get(0) == 2)
+  doAssert(adventureVariables[0].value == 2)
 
 
 proc test_talk_hoimi_read_sequence(saves_dir: string) =
@@ -173,7 +173,7 @@ proc test_talk_hoimi_read_sequence(saves_dir: string) =
 
   let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10030)
-  doAssert(adventureVariables[0].value.get(0) == 1)
+  doAssert(adventureVariables[0].value == 1)
 
 
 proc test_talk_with_enoki_first(saves_dir: string) =
@@ -248,7 +248,7 @@ proc test_talk_with_enoki_first(saves_dir: string) =
 
   let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10031)
-  doAssert(adventureVariables[0].value.get(0) == 1)
+  doAssert(adventureVariables[0].value == 1)
 
 
 proc test_talk_to_miu_after_enonki_read_sequence(saves_dir: string) =
@@ -321,7 +321,7 @@ proc test_talk_to_miu_after_enonki_read_sequence(saves_dir: string) =
 
   let adventureVariables = protoJsonTo(changedResources["adventureVariables"], seq[AdventureVariable])
   doAssert(adventureVariables[0].adventureVariableId == 10031)
-  doAssert(adventureVariables[0].value.get(0) == 2)
+  doAssert(adventureVariables[0].value == 2)
 
 
 proc sameReward(r1: Reward, r2: Reward): bool =
@@ -495,7 +495,7 @@ proc testMiniGameWithAreaObjectLock() =
     "miniGameId": 105016, "areaType": 1, "areaKeyId": 101001
   }), AdventureReadSequenceResponse)
 
-  let areaObjectLocks = res.changedResources.areaObjectLocks.get(@[])
+  let areaObjectLocks = res.changedResources.areaObjectLocks
 
   doAssert(areaObjectLocks == @[AreaObjectLock(areaObjectLockId: 10504502, count: some(1))])
 

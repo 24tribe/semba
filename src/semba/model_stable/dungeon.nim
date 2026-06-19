@@ -195,20 +195,12 @@ proc getNotGoalEnemyRateSetId*(cityId: int, dungeonId: int): int =
     result = (dungeonId div 100) * 10000 + 1
 
 
-proc parseDungeonRow(row: Row): JsonNode =
-  let dungeonId = parseInt(row[0])
-  let isFinished = if parseInt(row[1]) == 1: true else: false
-  result = %*{
-    "dungeonId": dungeonId,
-    "isFinished": isFinished,
-  }
+proc getDungeons*(db: DbConn): seq[Dungeon] =
+  db.getAllRows(sql"SELECT dungeonId, isFinished FROM dungeons").mapIt(Dungeon(
+    dungeonId: parseInt(it[0]),
+    isFinished: parseInt(it[1]) == 1,
+  ))
 
-proc getDungeons*(db: DbConn): seq[JsonNode] =
-  let rows = db.getAllRows(sql"SELECT dungeonId, isFinished FROM dungeons")
-
-  for row in rows:
-    let dungeon = parseDungeonRow(row)
-    result.add(dungeon)
 
 proc getDungeon*(db: DbConn, dungeonId: int): JsonNode =
   let row = db.getRow(sql"SELECT dungeonId, isFinished FROM dungeons WHERE dungeonId = ?", dungeonId)
@@ -220,6 +212,7 @@ proc getDungeon*(db: DbConn, dungeonId: int): JsonNode =
       "isFinished": isFinished,
     }
 
+
 proc addDungeon*(db: DbConn, dungeon: JsonNode) =
   let dungeonId = dungeon["dungeonId"].getInt()
   let isFinished = if dungeon.getOrDefault("isFinished").getBool(): 1 else: 0
@@ -228,6 +221,15 @@ proc addDungeon*(db: DbConn, dungeon: JsonNode) =
     ON CONFLICT (dungeonId) DO
     UPDATE SET isFinished = excluded.isFinished
   """, dungeonId, isFinished)
+
+
+proc addDungeonTypeSafe*(db: DbConn, dungeon: Dungeon) =
+  db.exec(sql"""
+    INSERT INTO dungeons (dungeonId, isFinished) VALUES (?, ?)
+    ON CONFLICT (dungeonId) DO
+    UPDATE SET isFinished = excluded.isFinished
+  """, dungeon.dungeonId, if dungeon.isFinished: 1 else: 0)
+
 
 proc parseBlocks(blocksJson: JsonNode): seq[Block] =
   for blockJson in blocksJson:

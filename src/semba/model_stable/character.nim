@@ -521,20 +521,14 @@ proc updateCharacterExps*(db: DbConn, characterExps: openArray[CharacterExp]) =
     updateCharacterExp(db, characterExp.dropExp, characterExp.characterId, maxExp)
 
 
-proc getCharacterCostumes*(db: DbConn): seq[JsonNode] =
-  let characterCostumesRows = db.getAllRows(sql"""
+proc getCharacterCostumes*(db: DbConn): seq[CharacterCostume] =
+  db.getAllRows(sql"""
     SELECT characterCostumeId, receivedAt
     FROM characterCostumes
-  """)
-
-  for characterCostumeRow in characterCostumesRows:
-    let characterCostumeId = parseInt(characterCostumeRow[0])
-    let receivedAt = characterCostumeRow[1]
-
-    result.add(%*{
-      "characterCostumeId": characterCostumeId,
-      "receivedAt": receivedAt
-    })
+  """).mapIt(CharacterCostume(
+    characterCostumeId: parseInt(it[0]),
+    receivedAt: it[1].Timestamp,
+  ))
 
 
 # Set the characters hp to max in the database and return the characters that changed hp.

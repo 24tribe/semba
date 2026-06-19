@@ -7,6 +7,7 @@ import db_connector/db_sqlite
 import ../model_stable/mail
 import ../model_stable/resources
 import ../model_stable/reward
+import ../model_stable/notification
 
 
 type MailListResponse = object

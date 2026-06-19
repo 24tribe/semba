@@ -21,6 +21,11 @@ proc upsertTotalTask*(db: DbConn, totalTask: TotalTask) =
   """, totalTask.conditionId, totalTask.count)
 
 
+proc upsertTotalTasks*(db: DbConn, totalTasks: openArray[TotalTask]) =
+  for tt in totalTasks:
+    upsertTotalTask(db, tt)
+
+
 proc getTotalTasks*(db: DbConn): seq[TotalTask] =
   db.getAllRows(sql"SELECT conditionId, count FROM totalTasks").mapIt(TotalTask(
     conditionId: parseInt(it[0]),

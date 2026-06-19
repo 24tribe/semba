@@ -1,6 +1,7 @@
 import std/json
 import std/strutils
 import std/options
+import std/sequtils
 
 import db_connector/db_sqlite
 
@@ -60,27 +61,13 @@ proc getChallengeFirstProgressId*(db: DbConn, challengeId: int): int =
   result = parseInt(row[0])
 
 
-proc getChallenges*(db: DbConn): seq[JsonNode] =
-  let query = sql"SELECT challengeId, state, clearedAt, expiresAt FROM challenges"
-
-  for row in db.getAllRows(query):
-    let challengeId = parseInt(row[0])
-    let state = parseInt(row[1])
-    let clearedAt = row[2]
-    let expiresAt = row[3]
-
-    let challenge = %*{
-      "challengeId": challengeId,
-      "state": state
-    }
-
-    if clearedAt != "":
-      challenge["clearedAt"] = %*clearedAt
-
-    if expiresAt != "":
-      challenge["expiresAt"] = %*expiresAt
-
-    result.add(challenge)
+proc getChallenges*(db: DbConn): seq[Challenge] =
+  db.getAllRows(sql"SELECT challengeId, state, clearedAt, expiresAt FROM challenges").mapIt(Challenge(
+    challengeId: parseInt(it[0]),
+    state: parseInt(it[1]),
+    clearedAt: tryParseTimestamp(it[2]),
+    expiresAt: tryParseTimestamp(it[3]),
+  ))
 
 
 proc isCityChallenge*(db: DbConn, challengeId: int): bool =

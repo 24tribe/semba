@@ -35,6 +35,9 @@ type ShopProductState* = object
   purchasedCount*: int
   nextResetAt*: Timestamp
 
+type MasterData* = object
+  shopProducts*: seq[ShopProduct]
+
 
 proc getShopProducts*(db: DbConn): seq[ShopProduct] =
   db.getAllRows(sql"SELECT val FROM shopProducts").mapIt(protoJsonTo(parseJson(it[0]), ShopProduct))

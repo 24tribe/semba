@@ -1,5 +1,6 @@
 import std/json
 import std/strutils
+import std/sequtils
 
 import db_connector/db_sqlite
 
@@ -20,6 +21,11 @@ proc updateTutorialState*(db: DbConn, tutorialStatusKey: int, enabled: bool) =
   """, tutorialStatusKey, $enabled)
 
 
+proc upsertTutorialStates*(db: DbConn, tutorialStates: openArray[TutorialState]) =
+  for ts in tutorialStates:
+    updateTutorialState(db, ts.tutorialStatusKey, ts.enabled)
+
+
 proc addTutorialState*(db: DbConn, tutorialState: JsonNode) =
   let tutorialStatusKey = tutorialState["tutorialStatusKey"].getInt()
   let enabledTmp = tutorialState.getOrDefault("enabled")
@@ -31,19 +37,11 @@ proc addTutorialState*(db: DbConn, tutorialState: JsonNode) =
   )
 
 
-proc getTutorialStates*(db: DbConn): seq[JsonNode] =
-  let tutorialStatesRows = db.getAllRows(sql"SELECT tutorialStatusKey, enabled FROM tutorialStates")
-
-  for tutorialStateRow in tutorialStatesRows:
-    let tutorialStatusKey = parseInt(tutorialStateRow[0])
-    let enabled = tutorialStateRow[1]
-
-    let tutorialState = %*{"tutorialStatusKey": tutorialStatusKey}
-
-    if enabled == "true" or enabled == "false":
-      tutorialState["enabled"] = %*(if enabled == "true": true else: false)
-
-    result.add(tutorialState)
+proc getTutorialStates*(db: DbConn): seq[TutorialState] =
+  db.getAllRows(sql"SELECT tutorialStatusKey, enabled FROM tutorialStates").mapIt(TutorialState(
+    tutorialStatusKey: parseInt(it[0]),
+    enabled: it[1] == "true",
+  ))
 
 
 proc getTutorialState*(db: DbConn, tutorialStatusKey: int): bool =

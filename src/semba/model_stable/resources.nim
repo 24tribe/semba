@@ -8,41 +8,42 @@ import db_connector/db_sqlite
 
 import ../enum_ex
 import ../protojson
-import adventure_variable
-import area
-import area_item
-import area_change_lock
-import area_group
-import area_object
-import area_object_lock
-import challenge
-import challenge_progress
-import challenge_task
-import character
-import character_likability
-import character_mounting_power
-import character_piece
-import city
-import dungeon
-import formation
-import gear
-import graffiti_art
-import gacha
-import happy_worker
-import item
-import magic_orb
-import mission
-import nine_sequence
-import reward
-import status
-import shop
-import tutorial_state
-import tip
-import tension_card
-import lux_phantasma
-import timestamp
-import wallet
-import warp_point
+import ./adventure_variable
+import ./area
+import ./area_item
+import ./area_change_lock
+import ./area_group
+import ./area_object
+import ./area_object_lock
+import ./challenge
+import ./challenge_progress
+import ./challenge_task
+import ./character
+import ./character_likability
+import ./character_mounting_power
+import ./character_piece
+import ./city
+import ./dungeon
+import ./formation
+import ./gear
+import ./graffiti_art
+import ./happy_worker
+import ./item
+import ./magic_orb
+import ./mission
+import ./nine_sequence
+import ./notification
+import ./reward
+import ./status
+import ./shop
+import ./total_task
+import ./tutorial_state
+import ./tip
+import ./tension_card
+import ./lux_phantasma
+import ./timestamp
+import ./wallet
+import ./warp_point
 
 
 type ResourceEntities* = object
@@ -50,27 +51,23 @@ type ResourceEntities* = object
   gearEntityIds*: seq[int]
   tensionCardEntityIds*: seq[int]
 
-type Notifications* = object
-  gacha*: Option[GachaNotification]
-  mail*: Option[bool]
-  itemRequest*: Option[bool]
 
 type Resources* = object
   adventureVariables*: seq[AdventureVariable]
-  areas*: Option[seq[Area]]
-  areaChangeLocks: seq[AreaChangeLock]
-  areaGroups: seq[AreaGroup]
-  areaObjectLocks*: Option[seq[AreaObjectLock]]
+  areas*: seq[Area]
+  areaChangeLocks*: seq[AreaChangeLock]
+  areaGroups*: seq[AreaGroup]
+  areaObjectLocks*: seq[AreaObjectLock]
   challenges*: seq[Challenge]
   challengeProgresses*: seq[ChallengeProgress]
   challengeTasks*: seq[ChallengeTask]
   characters*: seq[Character]
-  characterCostumes: seq[CharacterCostume]
+  characterCostumes*: seq[CharacterCostume]
   characterLikabilities: Option[seq[CharacterLikability]]
-  characterMountingPowers: Option[seq[CharacterMountingPower]]
-  characterMountingPowerCommon: Option[CharacterMountingPowerCommon]
+  characterMountingPowers*: Option[seq[CharacterMountingPower]]
+  characterMountingPowerCommon*: Option[CharacterMountingPowerCommon]
   characterPieces*: seq[CharacterPiece]
-  cities: seq[City]
+  cities*: seq[City]
   cycleUpdateShopStates: Option[seq[JsonNode]] # FIXME: CycleUpdateShopState
   dailyPassStates: Option[seq[JsonNode]] # FIXME: DailyPassState
   dungeons*: seq[Dungeon]
@@ -79,8 +76,8 @@ type Resources* = object
   follows: Option[seq[JsonNode]] # FIXME: Follow
   formations*: seq[JsonNode] # FIXME: Formation
   fractalVises: Option[seq[JsonNode]] # FIXME: FractalVise
-  gears*: Option[seq[Gear]]
-  graffitiArts*: Option[seq[GraffitiArt]]
+  gears*: seq[Gear]
+  graffitiArts*: seq[GraffitiArt]
   guestCharacters: Option[seq[JsonNode]] # FIXME: GuestCharacter
   items*: seq[Item]
   loginBonuses: Option[seq[JsonNode]] # FIXME: LoginBonus
@@ -89,18 +86,18 @@ type Resources* = object
   missionCountRewardStates: Option[seq[JsonNode]] # FIXME: MissionCountRewardState
   nineSequences*: seq[NineSequence]
   notifications*: Option[Notifications]
-  profile: Option[JsonNode] # FIXME: Profile
+  profile*: Option[JsonNode] # FIXME: Profile
   profileBadges: Option[seq[JsonNode]] # FIXME: ProfileBadge
-  profileBanners: Option[seq[JsonNode]] # FIXME: ProfileBanner
-  questStates: Option[seq[JsonNode]] # FIXME: QuestState
+  profileBanners*: seq[JsonNode] # FIXME: ProfileBanner
+  questStates*: seq[JsonNode] # FIXME: QuestState
   seasonPasses: Option[seq[JsonNode]] # FIXME: SeasonPass
   seasonPassTierStates: Option[seq[JsonNode]] # FIXME: SeasonPassTierState
   shopProductStates*: Option[seq[ShopProductState]]
   status*: Option[Status]
   synthesisRecipes: Option[seq[JsonNode]] # FIXME: SynthesisRecipe
   tensionCards*: seq[TensionCard]
-  tips*: Option[seq[Tip]]
-  totalTasks: Option[seq[JsonNode]] # FIXME: TotalTask
+  tips*: seq[Tip]
+  totalTasks*: seq[TotalTask]
   trialBattleStates: Option[seq[JsonNode]] # FIXME: TrialBattleState
   tutorialStates*: seq[TutorialState]
   wallet*: Option[Wallet]
@@ -298,7 +295,7 @@ proc updateResourcesFromRewardsTypeSafe*(
 
   setUserStatusTypeSafe(db, status)
 
-  result.gears = some(gears)
+  result.gears = gears
   result.items = items
   result.status = some(status)
   result.characters = characters

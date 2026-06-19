@@ -1,6 +1,7 @@
 import std/json
 import std/options
 import std/strutils
+import std/sequtils
 
 import db_connector/db_sqlite
 
@@ -16,7 +17,7 @@ type AdventureVariableChange = object
 
 type AdventureVariable* = object
   adventureVariableId*: int
-  value*: Option[int]
+  value*: int
 
 
 proc getVariableChanges(db: DbConn, sequenceRequestIds: seq[int]): seq[AdventureVariableChange] =
@@ -42,7 +43,7 @@ proc getAdventureVariable(db: DbConn, adventureVariableId: int): Option[Adventur
   if row[0] != "":
     result = some(AdventureVariable(
       adventureVariableId: adventureVariableId,
-      value: some(parseInt(row[0]))
+      value: parseInt(row[0]),
     ))
 
 
@@ -53,14 +54,13 @@ proc getSequenceAdventureVariables*(db: DbConn, sequenceRequestIds: seq[int]): s
   for varChange in getVariableChanges(db, sequenceRequestIds):
     var adventureVar = getAdventureVariable(db, varChange.adventureVariableId).get(AdventureVariable(
       adventureVariableId: varChange.adventureVariableId,
-      value: some(0)
     ))
 
     case varChange.variableOperator:
       of variableOperatorAdd:
-        adventureVar.value = some(adventureVar.value.get(0) + varChange.variableChangeValue)
+        adventureVar.value += varChange.variableChangeValue
       of variableOperatorUnknown: # Assume it's the opposite
-        adventureVar.value = some(adventureVar.value.get(0) - varChange.variableChangeValue)
+        adventureVar.value -= varChange.variableChangeValue
 
     result.add(adventureVar)
 
@@ -70,7 +70,7 @@ proc updateAdventureVariables*(db: DbConn, adventureVariables: seq[AdventureVari
     db.exec(sql"""
       INSERT INTO adventureVariables (adventureVariableId, value) VALUES (?, ?)
       ON CONFLICT (adventureVariableId) DO UPDATE SET value = excluded.value
-    """, adventureVariable.adventureVariableId, adventureVariable.value.get(0))
+    """, adventureVariable.adventureVariableId, adventureVariable.value)
 
 
 proc addAdventureVariable*(db: DbConn, adventureVariable: JsonNode) =
@@ -83,14 +83,8 @@ proc addAdventureVariable*(db: DbConn, adventureVariable: JsonNode) =
   )
 
 
-proc getAdventureVariables*(db: DbConn): seq[JsonNode] =
-  let adventureVariablesRows = db.getAllRows(sql"SELECT adventureVariableId, value FROM adventureVariables")
-
-  for row in adventureVariablesRows:
-    let adventureVariableId = parseInt(row[0])
-    let value = parseInt(row[1])
-
-    result.add(%*{
-      "adventureVariableId": adventureVariableId,
-      "value": value
-    })
+proc getAdventureVariables*(db: DbConn): seq[AdventureVariable] =
+  db.getAllRows(sql"SELECT adventureVariableId, value FROM adventureVariables").mapIt(AdventureVariable(
+    adventureVariableId: parseInt(it[0]),
+    value: parseInt(it[1]),
+  ))

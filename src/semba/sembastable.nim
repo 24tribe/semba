@@ -163,7 +163,7 @@ proc getJsonResultStable*(
   elif uri == "/user/cross_date":
     result = user_CrossDate(db, jsonReq)
   elif uri == "/user/log_in":
-    result = user_LogIn(db)
+    result = user_LogIn(db).toProtoJson
   
   elif uri == "/xb/formation":
     result = xb_Formation(db, jsonReq)
