@@ -312,13 +312,13 @@ proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[C
 proc sanityChecks(db: DbConn, save: var SembaSave) =
   # https://github.com/24tribe/zero/issues/24
   if (
-    isChallengeProgressComplete(getChallengeProgress(db, 1010071)) and
-    not isChallengeProgressComplete(getChallengeProgress(db, 1010081))
+    isChallengeProgressComplete(db, 1010071) and
+    not isChallengeProgressComplete(db, 1010081)
   ):
     updateActionSequenceId(db, 101311, 8010081)
 
   # https://github.com/24tribe/zero/issues/26
-  if isChallengeProgressComplete(getChallengeProgress(db, 1010042)):
+  if isChallengeProgressComplete(db, 1010042):
     updateAreaObjects(db, %*[
       {
         "areaObjectId": 700058, "areaPointId": 101312102, "areaObjectBehaviorId": 7010712,
@@ -331,7 +331,7 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
     ])
 
   # https://github.com/24tribe/zero/issues/28
-  if isChallengeProgressComplete(getChallengeProgress(db, clearHealthyOutlawsChallengeProgressId)):
+  if isChallengeProgressComplete(db, clearHealthyOutlawsChallengeProgressId):
     updateAreaObjects(db, %*[
       {
         "areaObjectId": 700110, "areaPointId": 101001101, "areaObjectBehaviorId": 7010709,
@@ -411,7 +411,7 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
   db.exec(sql"DELETE FROM missions")
   updateMissions(db, save.missions)
 
-  if isChallengeProgressComplete(getChallengeProgress(db, lastTutorialChallengeProgressId)):
+  if isChallengeProgressComplete(db, lastTutorialChallengeProgressId):
     setAfterTutorialGacha(db)
   else:
     setTutorialGacha(db)

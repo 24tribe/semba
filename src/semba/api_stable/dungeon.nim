@@ -54,8 +54,6 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   let dungeonDifficultyId = jsonReq["dungeonDifficultyId"].getInt()
   let dungeonId = dungeonDifficultyIdToDungeonId(dungeonDifficultyId)
 
-  let healthyOutlawsChallengeProgress = getChallengeProgress(db, clearHealthyOutlawsChallengeProgressId)
-
   # FIXME: save dungeons to db?
   result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: true)]
   result.changedResources.missions = getChangedRiftClearMissions(db, dungeonId)
@@ -63,7 +61,7 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
 
   if (
     dungeonId == healthyOutlawsDungeonId and
-    not isChallengeProgressComplete(healthyOutlawsChallengeProgress)
+    not isChallengeProgressComplete(db, clearHealthyOutlawsChallengeProgressId)
   ):
     let (challengeProgresses, challengeTasks) = completeMainStoryRiftTutorialChallenge(db)
     result.changedResources.challengeProgresses = challengeProgresses

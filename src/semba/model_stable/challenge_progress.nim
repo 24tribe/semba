@@ -27,8 +27,10 @@ const clearHealthyOutlawsChallengeProgressId* = 1010173
 const lastTutorialChallengeProgressId* = 1000161
 
 
-proc isChallengeProgressComplete*(challengeProgress: JsonNode): bool =
-  result = challengeProgress != nil and challengeProgress.getOrDefault("state").getInt() == 3
+proc isChallengeProgressComplete*(db: DbConn, challengeProgressId: int): bool =
+  db.getRow(sql"""
+    SELECT state FROM challengeProgresses WHERE challengeProgressId = ?
+  """, challengeProgressId)[0] == $(challengeProgressStateCleared.int)
 
 
 proc getChallengeProgresses*(db: DbConn): seq[ChallengeProgress] =
@@ -73,20 +75,6 @@ proc upsertChallengeProgresses*(db: DbConn, challengeProgresses: openArray[Chall
 proc getChallengeProgressIds*(db: DbConn, challengeId: int): seq[int] =
   let rows = db.getAllRows(sql"SELECT id FROM mdChallengeProgress WHERE challengeId = ?", challengeId)
   result = rows.mapIt(parseInt(it[0]))
-
-
-proc getChallengeProgress*(db: DbConn, challengeProgressId: int): JsonNode =
-  let row = db.getRow(sql"""
-    SELECT challengeProgressId, clearedAt, state FROM challengeProgresses
-    WHERE challengeProgressId = ?
-  """, challengeProgressId)
-
-  if row[0] != "":
-    let clearedAt = row[1]
-    let state = parseInt(row[2])
-    result = %*{"challengeProgressId": challengeProgressId, "state": state}
-    if clearedAt != "":
-      result["clearedAt"] = %*clearedAt
 
 
 proc getChallengeId*(db: DbConn, challengeProgressId: int): int =
