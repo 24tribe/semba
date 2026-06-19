@@ -47,6 +47,18 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   updateMissions(db, changedMissions)
 
   var unused: Table[int, int]
-  result.changedResources = updateResourcesFromRewardsTypeSafe(db, rewards, unused)
-  result.changedResources.missions = changedMissions
+
+  var changedResources = updateResourcesFromRewardsTypeSafe(db, rewards, unused)
+  changedResources.missions = changedMissions
+
+  # TODO: do something with the area objects?
+  let (_, challenges, challengeProgresses, challengeTasks) = getChangedResourcesFromTotalTasks(
+    db, changedResources.totalTasks
+  )
+
+  changedResources.challenges = challenges
+  changedResources.challengeProgresses = challengeProgresses
+  changedResources.challengeTasks = challengeTasks
+
+  result.changedResources = changedResources
   result.rewards = rewards

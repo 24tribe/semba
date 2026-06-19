@@ -409,3 +409,32 @@ proc acquireAreaItemRewards*(
   changedResources.missions = missions
 
   (changedResources, rewards)
+
+
+proc getChangedResourcesFromTotalTask(
+  db: DbConn, totalTask: TotalTask
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask]) =
+  let mdChallengeTasks = getMdChallengeTasksWithTotalTask(db, totalTask)
+
+  for mdChallengeTask in mdChallengeTasks:
+    let (areaObjects, challenges, challengeProgresses, challengeTasks) = getChangedResourcesForCompletedChallengeTask(
+      db, mdChallengeTask
+    )
+
+    result[0].insert(areaObjects)
+    result[1].insert(challenges)
+    result[2].insert(challengeProgresses)
+    result[3].insert(challengeTasks)
+
+
+proc getChangedResourcesFromTotalTasks*(
+  db: DbConn, totalTasks: openArray[TotalTask]
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask]) =
+  for totalTask in totalTasks:
+    let (areaObjects, challenges, challengeProgresses, challengeTasks) = getChangedResourcesFromTotalTask(
+      db, totalTask
+    )
+    result[0].insert(areaObjects)
+    result[1].insert(challenges)
+    result[2].insert(challengeProgresses)
+    result[3].insert(challengeTasks)

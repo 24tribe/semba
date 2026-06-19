@@ -6,7 +6,8 @@ import std/sequtils
 import db_connector/db_sqlite
 
 import ../extsqlite
-import timestamp
+import ./timestamp
+import ./total_task
 
 
 type TaskConditionType* = enum
@@ -137,3 +138,26 @@ proc getMdChallengeTaskForSequenceRequestId*(db: DbConn, seqReqId: int): Option[
 
 proc getMdChallengeTaskForBattleEntryId*(db: DbConn, battleEntryId: int): Option[MdChallengeTask] =
   result = getMdChallengeTaskWithCondition(db, taskConditionTypeBattleFinish, battleEntryId)
+
+
+proc getMdChallengeTasksWithTotalTask*(
+  db: DbConn, totalTask: TotalTask
+): seq[MdChallengeTask] =
+  db.getAllRows(sql"""
+    SELECT challengeProgressId, taskConditionKeyId, id, summaryChallengeId, targetAreaObjectBehaviorId,
+           targetAreaPointId, targetNineSequenceId, targetRadius, taskConditionType, mdChallengeTask.count
+    FROM mdChallengeTask LEFT JOIN challengeTasks ON mdChallengeTask.id = challengeTasks.challengeTaskId
+    WHERE totalTaskConditionId = ? AND ? >= mdChallengeTask.count AND challengeTasks.clearedAt IS NULL
+  """, totalTask.conditionId, totalTask.count).mapIt(MdChallengeTask(
+    challengeProgressId: parseInt(it[0]),
+    taskConditionKeyId: tryParseInt(it[1]),
+    id: parseInt(it[2]),
+    summaryChallengeId: tryParseInt(it[3]),
+    targetAreaObjectBehaviorId: tryParseInt(it[4]),
+    targetAreaPointId: tryParseInt(it[5]),
+    targetNineSequenceId: tryParseInt(it[6]),
+    targetRadius: tryParseInt(it[7]),
+    taskConditionType: tryParseInt(it[8]),
+    count: tryParseInt(it[9]),
+    totalTaskConditionId: some(totalTask.conditionId),
+  ))

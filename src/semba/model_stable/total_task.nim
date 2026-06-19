@@ -7,6 +7,8 @@ import db_connector/db_sqlite
 import ../protojson
 import ../extsqlite
 
+export protojson
+
 
 const flowerMarksTotalTaskConditionId* = 1016
 
