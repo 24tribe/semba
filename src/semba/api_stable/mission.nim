@@ -4,6 +4,9 @@ import std/options
 
 import db_connector/db_sqlite
 
+import ../model_stable/challenge
+import ../model_stable/challenge_progress
+import ../model_stable/challenge_task
 import ../model_stable/mission
 import ../model_stable/resources
 import ../model_stable/reward
@@ -57,8 +60,13 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   )
 
   changedResources.challenges = challenges
+  upsertChallenges(db, challenges)
+
   changedResources.challengeProgresses = challengeProgresses
+  upsertchallengeProgresses(db, challengeProgresses)
+
   changedResources.challengeTasks = challengeTasks
+  upsertChallengeTasks(db, challengeTasks)
 
   result.changedResources = changedResources
   result.rewards = rewards
