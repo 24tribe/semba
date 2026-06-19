@@ -37,7 +37,7 @@ type Status* = object
   trackingFieldBossId*: Option[int]
   trackingDungeonId*: Option[int]
   enemyForcedRespawnAt*: Option[Timestamp]
-  flowerMark*: Option[int]
+  flowerMark*: int
   dishId*: Option[int]
   dishEffectExpiredAt*: Option[Timestamp]
   dishEffectBaseGearEntityId*: Option[int]

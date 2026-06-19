@@ -269,7 +269,7 @@ proc updateResourcesFromRewardsTypeSafe*(
     of rewardGold:
       status.gold += reward.quantity
     of rewardFlowerMark:
-      status.flowerMark = some(status.flowerMark.get(0) + reward.quantity)
+      status.flowerMark += reward.quantity
     of rewardCharacterExp:
       let formationNumber = status.formationNumber.get(0)
       let members = getFormationMembers(db, formationNumber)

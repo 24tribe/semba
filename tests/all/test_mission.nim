@@ -42,7 +42,7 @@ proc testMissionReceive() =
   )
 
   doAssert(res.rewards.len > 0)
-  doAssert(res.changedResources.status.get().flowerMark.get(0) == 2)
+  doAssert(res.changedResources.status.get().flowerMark == 2)
 
 
 proc testUnlockFullMarkGates() =

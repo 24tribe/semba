@@ -202,7 +202,7 @@ proc getReplaySequenceFromNineSequenceId*(db: DbConn, nineSequenceId: int): (Opt
 
 
 proc handleSequenceRequestsAreaObjectsExperimental*(db: DbConn, seqReqIds: openArray[int]): seq[AreaObject] =
-  let flowerMarks = getUserStatusTypeSafe(db).flowerMark.get(0)
+  let flowerMarks = getUserStatusTypeSafe(db).flowerMark
   let mdSequenceRequest = getMdSequenceRequests(db, seqReqIds)
 
   result = collect:

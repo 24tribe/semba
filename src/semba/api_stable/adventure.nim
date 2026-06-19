@@ -97,7 +97,7 @@ proc adventure_AreaObject*(db: DbConn, jsonReq: JsonNode): AdventureAreaObjectRe
 
   if getNineSequence(db, fullMarksTutorialNineSequenceId).isSome:
     let status = getUserStatusTypeSafe(db)
-    unlockFullMarksGates(db, status.flowerMark.get(0))
+    unlockFullMarksGates(db, status.flowerMark)
 
   let areaId = jsonReq["areaId"].getInt()
 

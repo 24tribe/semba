@@ -477,12 +477,11 @@ proc getCharactersTypeSafe*(db: DbConn): seq[Character] =
 
 proc getCharacterMaxLevel*(db: DbConn): int =
   let status = getUserStatusTypeSafe(db)
-  let flowerMarks = status.flowerMark.get(0)
-
+  
   let flowerMarkLevels = getFlowerMarkLevels(db)
 
   for flowerMarkLevel in flowerMarkLevels:
-    if flowerMarks >= flowerMarkLevel.requiredFlowerMark:
+    if status.flowerMark >= flowerMarkLevel.requiredFlowerMark:
       return flowerMarkLevel.characterMaxLevel
 
   raise newException(SembaError, "Got to unreachable part in getCharacterMaxLevel")
