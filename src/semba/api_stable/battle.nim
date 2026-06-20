@@ -169,8 +169,10 @@ proc battle_Finish*(
 
     let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
 
+    const heroJammedBattleEntryIds = [4009004, 4009015, 4009016]
+
     if challengeTask.isSome():
-      let (_, challenges, challengeProgresses, challengeTasks) = getChangedResourcesForCompletedChallengeTask(
+      let (areaObjects, challenges, challengeProgresses, challengeTasks) = getChangedResourcesForCompletedChallengeTask(
         db, challengeTask.get()
       )
 
@@ -185,6 +187,8 @@ proc battle_Finish*(
 
       missions.insert(getChallengesChangedMissions(db, challenges, cityId), missions.len)
 
+      result.areaObjects = areaObjects
+
     missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
     missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
     missions.insert(getBattleTaskTopicsMissions(db, req.battleTaskTopics, cityId), missions.len)
@@ -192,5 +196,7 @@ proc battle_Finish*(
     result.changedResources.missions = missions
     updateMissions(db, missions)
 
-    result.areaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
+    if not (battleEntryIds[0] in heroJammedBattleEntryIds):
+      result.areaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
+    
     updateAreaObjectsEx(db, result.areaObjects)
