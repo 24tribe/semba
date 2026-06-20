@@ -11,6 +11,9 @@ import ../protojson
 import ../extsqlite
 
 
+const heroJammedDroneAreaObjectBehaviorIds* = [10005404, 10005405, 10005406]
+
+
 type AreaObjectBehaviorConditionType* = enum
   areaObjectConditionTypeStartedChallengeProgress = 1
   areaObjectConditionTypeClearedChallengeProgress = 2

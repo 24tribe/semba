@@ -766,6 +766,18 @@ proc testFullMarksGateTutorialWithEnoughAmount(saves_dir: string) =
   doAssert(checkGateActionIs(res.get(), areaObjectActionTypeDisabled, 1))
 
 
+proc testDronesAreNotInAreaBeforeAcceptingChallenge(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "meiou isle after graffiti")
+
+  let areaObjects = getAreaObjectsInArea(ctx.db, 100421).filterIt(
+    it.areaObjectBehaviorId.get(0) in heroJammedDroneAreaObjectBehaviorIds
+  )
+
+  doAssert(areaObjects.len == 0)
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -787,3 +799,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testLinkedSignpostsMission(savesDir)
   testFullMarksGateTutorialWithNotEnoughAmount(savesDir)
   testFullMarksGateTutorialWithEnoughAmount(savesDir)
+  testDronesAreNotInAreaBeforeAcceptingChallenge(savesDir)
