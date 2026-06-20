@@ -310,13 +310,14 @@ proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[C
 
 
 proc fixTotalTaskChallenges(db: DbConn, save: SembaSave) =
-  let (_, challenges, challengeProgresses, challengeTasks) = getChangedResourcesFromTotalTasks(
+  let (_, challenges, challengeProgresses, challengeTasks, nineSequences) = getChangedResourcesFromTotalTasks(
     db, [TotalTask(conditionId: flowerMarksTotalTaskConditionId, count: save.status.flowerMark.ProtoJsonInt64)]
   )
 
   upsertChallengesIfNotComplete(db, challenges)
   upsertChallengeProgressesIfNotComplete(db, challengeProgresses)
   upsertChallengeTasksIfNotComplete(db, challengeTasks)
+  updateNineSequences(db, nineSequences)
 
 
 proc sanityChecks(db: DbConn, save: var SembaSave) =

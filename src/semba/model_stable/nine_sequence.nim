@@ -6,7 +6,9 @@ import std/sugar
 import db_connector/db_sqlite
 
 import ../protojson
+import ../extsqlite
 import ./timestamp
+
 
 type NineSequence* = object
   nineSequenceId*: int
@@ -79,3 +81,7 @@ proc updateNineSequences*(db: DbConn, nineSequences: seq[NineSequence]) =
       INSERT INTO nineSequences (nineSequenceId, content) VALUES (?, ?)
       ON CONFLICT (nineSequenceId) DO UPDATE SET content = excluded.content
     """, nineSequence.nineSequenceId, toProtoJson(nineSequence))
+
+
+proc getNineTrigger*(db: DbConn, chalProgId: int): Option[int] =
+  db.getRow(sql"SELECT id FROM mdNineTrigger WHERE challengeProgressId = ?", chalProgId)[0].tryParseInt

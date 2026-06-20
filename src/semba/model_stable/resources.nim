@@ -150,11 +150,12 @@ proc updateResources*(db: DbConn, changedResources: var Resources) =
 
 proc getChangedResourcesForCompletedChallengeTask*(
   db: DbConn, challengeTask: MdChallengeTask
-): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask]) =
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
   var areaObjects = newSeq[AreaObject]()
   var challengeTasks = newSeq[ChallengeTask]()
   var challengeProgresses = newSeq[ChallengeProgress]()
   var challenges = newSeq[Challenge]()
+  var nineSequences = newSeq[NineSequence]()
 
   challengeTasks.add(ChallengeTask(
     challengeTaskId: challengeTask.id, count: some(1), clearedAt: some(getTimestampNow())
@@ -185,6 +186,14 @@ proc getChangedResourcesForCompletedChallengeTask*(
         state: challengeProgressStateStarted.int,
       ))
 
+      let nineSequenceId = getNineTrigger(db, nextChallengeProgressId.get())
+
+      if nineSequenceId.isSome:
+        nineSequences.add(NineSequence(
+          nineSequenceId: nineSequenceId.get(),
+          lastReceiveAt: some(getTimestampNow()),
+        ))
+
       areaObjects.insert(getAreaObjectsWithCondition(
         db, areaObjectConditionTypeStartedChallengeProgress, nextChallengeProgressId.get()
       ), areaObjects.len)
@@ -201,7 +210,7 @@ proc getChangedResourcesForCompletedChallengeTask*(
       state: challengeProgressStateStarted.int,
     ))
 
-  result = (areaObjects, challenges, challengeProgresses, challengeTasks)
+  result = (areaObjects, challenges, challengeProgresses, challengeTasks, nineSequences)
 
 
 #[
@@ -224,7 +233,8 @@ proc changeReadSequenceResponse*(
       areaObjects,
       changedResources.challenges,
       changedResources.challengeProgresses,
-      changedResources.challengeTasks
+      changedResources.challengeTasks,
+      changedResources.nineSequences
     ) = getChangedResourcesForCompletedChallengeTask(
       db, challengeTask.get()
     )
@@ -413,11 +423,15 @@ proc acquireAreaItemRewards*(
 
 proc getChangedResourcesFromTotalTask(
   db: DbConn, totalTask: TotalTask
-): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask]) =
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
   let mdChallengeTasks = getMdChallengeTasksWithTotalTask(db, totalTask)
 
   for mdChallengeTask in mdChallengeTasks:
-    let (areaObjects, challenges, challengeProgresses, challengeTasks) = getChangedResourcesForCompletedChallengeTask(
+    let (
+      areaObjects,
+      challenges, challengeProgresses, challengeTasks,
+      nineSequences
+    ) = getChangedResourcesForCompletedChallengeTask(
       db, mdChallengeTask
     )
 
@@ -425,16 +439,22 @@ proc getChangedResourcesFromTotalTask(
     result[1].insert(challenges)
     result[2].insert(challengeProgresses)
     result[3].insert(challengeTasks)
+    result[4].insert(nineSequences)
 
 
 proc getChangedResourcesFromTotalTasks*(
   db: DbConn, totalTasks: openArray[TotalTask]
-): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask]) =
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
   for totalTask in totalTasks:
-    let (areaObjects, challenges, challengeProgresses, challengeTasks) = getChangedResourcesFromTotalTask(
+    let (
+      areaObjects,
+      challenges, challengeProgresses, challengeTasks,
+      nineSequences
+    ) = getChangedResourcesFromTotalTask(
       db, totalTask
     )
     result[0].insert(areaObjects)
     result[1].insert(challenges)
     result[2].insert(challengeProgresses)
     result[3].insert(challengeTasks)
+    result[4].insert(nineSequences)

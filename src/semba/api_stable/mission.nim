@@ -8,6 +8,7 @@ import ../model_stable/challenge
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
 import ../model_stable/mission
+import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
 
@@ -55,7 +56,11 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   changedResources.missions = changedMissions
 
   # TODO: do something with the area objects?
-  let (_, challenges, challengeProgresses, challengeTasks) = getChangedResourcesFromTotalTasks(
+  let (
+    _,
+    challenges, challengeProgresses, challengeTasks,
+    nineSequences
+  ) = getChangedResourcesFromTotalTasks(
     db, changedResources.totalTasks
   )
 
@@ -67,6 +72,9 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
 
   changedResources.challengeTasks = challengeTasks
   upsertChallengeTasks(db, challengeTasks)
+
+  changedResources.nineSequences = nineSequences
+  updateNineSequences(db, nineSequences)
 
   result.changedResources = changedResources
   result.rewards = rewards

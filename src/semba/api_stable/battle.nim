@@ -20,6 +20,7 @@ import ../model_stable/resources
 import ../model_stable/status
 import ../model_stable/warp_point
 import ../model_stable/mission
+import ../model_stable/nine_sequence
 import ../semba_error
 import ../protojson
 
@@ -172,7 +173,11 @@ proc battle_Finish*(
     const heroJammedBattleEntryIds = [4009004, 4009015, 4009016]
 
     if challengeTask.isSome():
-      let (areaObjects, challenges, challengeProgresses, challengeTasks) = getChangedResourcesForCompletedChallengeTask(
+      let (
+        areaObjects,
+        challenges, challengeProgresses, challengeTasks,
+        nineSequences
+      ) = getChangedResourcesForCompletedChallengeTask(
         db, challengeTask.get()
       )
 
@@ -184,6 +189,9 @@ proc battle_Finish*(
 
       result.changedResources.challengeTasks = challengeTasks
       upsertChallengeTasks(db, challengeTasks)
+
+      result.changedResources.nineSequences = nineSequences
+      updateNineSequences(db, nineSequences)
 
       missions.insert(getChallengesChangedMissions(db, challenges, cityId), missions.len)
 
