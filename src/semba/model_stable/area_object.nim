@@ -348,6 +348,11 @@ proc updateAreaObjects*(db: DbConn, areaObjects: JsonNode) =
 proc removeAreaObject*(db: DbConn, areaKeyId: int, triggerId: int) =
   db.exec(sql"DELETE FROM areaObjects WHERE areaId=? AND areaObjectBehaviorId=?", areaKeyId, triggerId);
 
+
+proc removeAreaObjects*(db: DbConn, areaObjectBehaviorIds: openArray[int]) =
+  db.exec(sql("DELETE FROM areaObjects WHERE areaObjectBehaviorId IN " & sqlIntTuple(areaObjectBehaviorIds)))
+
+
 proc removeAreaEnemy*(db: DbConn, areaKeyId: int, triggerId: int) =
   db.exec(sql"DELETE FROM areaEnemies WHERE areaId=? AND areaPointId=?", areaKeyId, triggerId);
 

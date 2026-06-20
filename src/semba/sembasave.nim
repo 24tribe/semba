@@ -320,6 +320,15 @@ proc fixTotalTaskChallenges(db: DbConn, save: SembaSave) =
   updateNineSequences(db, nineSequences)
 
 
+proc fixHeroJammedDrones(db: DbConn, save: SembaSave) =
+  let challs = save.challenges.mapIt((it.challengeId, it)).toTable
+
+  const heroJammedChallengeId = 100181
+
+  if not challs.hasKey(heroJammedChallengeId) or challs[heroJammedChallengeId].state == challengeStateNotStarted.int:
+    removeAreaObjects(db, heroJammedDroneAreaObjectBehaviorIds)
+
+
 proc sanityChecks(db: DbConn, save: var SembaSave) =
   # https://github.com/24tribe/zero/issues/24
   if (
@@ -354,6 +363,7 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
 
   fixMissions(db, save, cityAreaObjectLockIds)
   fixTotalTaskChallenges(db, save)
+  fixHeroJammedDrones(db, save)
 
 
 proc loadSembaSave*(db: DbConn, save: var SembaSave) =
