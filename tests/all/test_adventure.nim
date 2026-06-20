@@ -778,6 +778,17 @@ proc testDronesAreNotInAreaBeforeAcceptingChallenge(savesDir: string) =
   doAssert(areaObjects.len == 0)
 
 
+proc testHeroJammedBuggedSaveFileIsFixed(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "bugged drones save file")
+
+  let nineSequence = getNineSequence(ctx.db, heroJammedCompleteNineSequenceId)
+
+  doAssert(nineSequence.isSome)
+  doAssert(nineSequence.get().lastReceiveAt.isSome)
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -800,3 +811,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testFullMarksGateTutorialWithNotEnoughAmount(savesDir)
   testFullMarksGateTutorialWithEnoughAmount(savesDir)
   testDronesAreNotInAreaBeforeAcceptingChallenge(savesDir)
+  testHeroJammedBuggedSaveFileIsFixed(savesDir)

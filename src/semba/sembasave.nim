@@ -335,7 +335,7 @@ proc fixHeroJammedNineSequence(db: DbConn, save: SembaSave) =
   const nineTriggerChallProgId = 10018103
 
   if challProgs.hasKey(nineTriggerChallProgId) and challProgs[nineTriggerChallProgId].state != challengeProgressStateCleared.int:
-    updateNineSequences(db, @[NineSequence(nineSequenceId: 10018111, lastReceiveAt: some(getTimestampNow()))])
+    updateNineSequences(db, @[NineSequence(nineSequenceId: heroJammedCompleteNineSequenceId, lastReceiveAt: some(getTimestampNow()))])
 
 
 proc sanityChecks(db: DbConn, save: var SembaSave) =

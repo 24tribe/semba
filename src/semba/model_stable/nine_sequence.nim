@@ -10,6 +10,9 @@ import ../extsqlite
 import ./timestamp
 
 
+const heroJammedCompleteNineSequenceId* = 10018111
+
+
 type NineSequence* = object
   nineSequenceId*: int
   choices*: string
