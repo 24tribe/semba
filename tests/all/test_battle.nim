@@ -275,6 +275,53 @@ proc testBattleWithZeroSenseiMission(saves_dir: string) =
   doAssert(mission.count == some(1))
 
 
+proc testBattleFinishTriggersANineSequence(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(savesDir, "before beating third drone")
+
+  doAssert(ctx.sembaCall("/battle/start", %*{
+    "battleEntryIds": [ 4009016 ], "lineCharacterIds": [ 101101, 103001, 100201 ],
+    "battleTriggers": [ { "triggerType": "area_object", "triggerIds": [ 10005406 ] } ],
+    "advantageType": "advantage", "isAttackHit": true,
+    "currentLocation": {
+      "areaType": 1, "direction": 6,
+      "positionCoordinates": { "x": 2.2125483, "y": 0.515625, "z": 10.148214 },
+      "areaKeyId": 100421
+    },
+    "bloodStainLocation": {
+      "areaKeyId": 100421, "areaType": 1,
+      "positionCoordinates": { "x": 1.1184288, "y": 0.515625, "z": 10.825708 }
+    }
+  }) != nil)
+
+  let res = ctx.sembaCall("/battle/finish", %*{
+    "characterUpdates": [
+      { "characterId": 101101, "hp": 515 },
+      { "characterId": 103001, "hp": 494 },
+      { "characterId": 100201, "hp": 470 }
+    ],
+    "battleTaskTopics": [{ "type": "qte", "count": 10 }, { "type": "heal_hp", "count": 21 } ],
+    "encounteredEnemyIds": [ 250103 ], "battleTimeSecond": 41,
+    "taskConditionResult": {
+      "usedSkills": [
+        { "characterSkillId": 1011016, "count": 4 },
+        { "characterSkillId": 1030016, "count": 3 },
+        { "characterSkillId": 1002016, "count": 3 }
+      ],
+      "enemyStabilityBreaks": [ { "enemyId": 250103, "count": 4 } ]
+    }
+  }).protoJsonTo(Option[BattleFinishResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  let nineSeqIndex = changedResources.nineSequences.findIt(it.nineSequenceId == 10018111)
+  doAssert(nineSeqIndex != -1)
+  doAssert(changedResources.nineSequences[nineSeqIndex].lastReceiveAt.isSome)
+
+
 proc testSuiteBattle*(savesDir: string) =
   test_endrone_battle_start(savesDir)
   test_battle_finish_challenge_data(savesDir)
@@ -282,3 +329,4 @@ proc testSuiteBattle*(savesDir: string) =
   testBattleRetire(savesDir)
   testBattleWithAreaObjectLock()
   testBattleWithZeroSenseiMission(savesDir)
+  testBattleFinishTriggersANineSequence(savesDir)
