@@ -322,6 +322,23 @@ proc testBattleFinishTriggersANineSequence(savesDir: string) =
   doAssert(changedResources.nineSequences[nineSeqIndex].lastReceiveAt.isSome)
 
 
+proc testBattleSkip() =
+  var ctx = getInMemorySembaCtx()
+
+  let res = ctx.sembaCall("/battle/skip", %*{
+    "battleEntryId": 2000016,
+    "battleTrigger": { "triggerIds": [ 300401701] },
+    "currentLocation": {
+      "areaType": 1, "direction": 7,
+      "positionCoordinates": { "x": -1.3747799, "y": 53.607002, "z": -7.9262414 },
+      "areaKeyId": 300401
+    },
+    "lineCharacterIds": [ 101101, 100801, 100201 ],
+  }).protoJsonTo(Option[BattleSkipResponse])
+
+  doAssert(res.isSome)
+
+
 proc testSuiteBattle*(savesDir: string) =
   test_endrone_battle_start(savesDir)
   test_battle_finish_challenge_data(savesDir)
@@ -330,3 +347,4 @@ proc testSuiteBattle*(savesDir: string) =
   testBattleWithAreaObjectLock()
   testBattleWithZeroSenseiMission(savesDir)
   testBattleFinishTriggersANineSequence(savesDir)
+  testBattleSkip()
