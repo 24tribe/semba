@@ -26,10 +26,10 @@ import ../protojson
 
 
 type BattleFinishRequest* = object
-  battleResult: BattleResult
-  characterUpdates: seq[CharacterUpdate]
-  encounteredEnemyIds: seq[int]
-  battleTaskTopics: seq[BattleTaskTopic]
+  battleResult*: BattleResult
+  characterUpdates*: seq[CharacterUpdate]
+  encounteredEnemyIds*: seq[int]
+  battleTaskTopics*: seq[BattleTaskTopic]
 
 type BattleFinishResponse* = object
   rewards*: seq[Rewards]
