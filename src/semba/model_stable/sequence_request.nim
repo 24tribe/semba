@@ -112,13 +112,9 @@ proc getMdSequenceRequests*(db: DbConn, sequenceRequestIds: openArray[int]): seq
     result.add(seqReq)
 
 
-proc readSequenceMiniGame*(
-  db: DbConn, miniGameId: int, sequenceRequestIds: openArray[int], areaId: int
-): (Resources, seq[AreaObject]) =
-  ## Handles /adventure/read_sequence for a minigame.
-  ## Returns the changed resources and area objects in the db.
-
-  var changedResources = Resources()
+proc getSequenceRequestsChangedResources*(
+  db: DbConn, sequenceRequestIds: openArray[int]
+): (seq[AreaObject], seq[AreaChangeLock]) =
   var areaObjects = newSeq[AreaObject]()
   var areaChangeLocks = newSeq[AreaChangeLock]()
 
@@ -132,6 +128,19 @@ proc readSequenceMiniGame*(
       areaChangeLocks.add(AreaChangeLock(areaChangeLockId: seqReq.areaChangeLockId))
     else:
       discard
+
+  (areaObjects, areaChangeLocks)
+
+
+proc readSequenceMiniGame*(
+  db: DbConn, miniGameId: int, sequenceRequestIds: openArray[int], areaId: int
+): (Resources, seq[AreaObject]) =
+  ## Handles /adventure/read_sequence for a minigame.
+  ## Returns the changed resources and area objects in the db.
+
+  var changedResources = Resources()
+  
+  let (areaObjects, areaChangeLocks) = getSequenceRequestsChangedResources(db, sequenceRequestIds)
 
   updateAreaObjectsEx(db, areaObjects)
 
