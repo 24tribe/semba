@@ -39,6 +39,7 @@ import ./protojson
 import ./semba_error
 import ./enum_ex
 import ./api_stable/adventure
+import ./api_stable/battle
 import ./model_semba/offline_log
 import ./model_stable/adventure_variable
 import ./model_stable/area
@@ -230,36 +231,47 @@ proc tableToCounts(t: Table[CityId, HashSet[int]]): CountTable[CityId] =
     result[cityId] = areaObjectLocks.len
 
 
+proc handleReadSequence(db: DbConn, req: AdventureReadSequenceRequest): (CityId, Option[int], seq[AreaChangeLock]) =
+  if req.miniGameId.isSome():
+    let miniGameId = req.miniGameId.get()
+    let areaId = req.currentLocation.areaKeyId.get()
+    let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
+    let cityId = areaIdToCityId(areaId).intToEnum(CityId)
+
+    let seqReqs = getMdSequenceRequests(db, req.sequenceRequestIds.get(@[]))
+
+    var areaChangeLocks = newSeq[AreaChangeLock]()
+
+    for seqReq in seqReqs:
+      case seqReq.kind:
+      of seqReqAreaChangeLock:
+        areaChangeLocks.add(AreaChangeLock(areaChangeLockId: seqReq.areaChangeLockId))
+      else:
+        discard
+
+    result = (cityId, areaObjectLockId, areaChangeLocks)
+
+
 proc ensureAlreadyDoneMiniGameThingsAreUnlocked(db: DbConn, save: var SembaSave): CountTable[CityId]  =
   var areaObjectLocksForCity: Table[CityId, HashSet[int]]
   var areaObjectLockIds = save.areaObjectLocks.mapIt(it.areaObjectLockId).toHashSet()
   var areaChangeLocks = newSeq[AreaChangeLock]()
 
   for log in save.offlineLogs:
-    if log.uri == "/adventure/read_sequence":
-      let req = protoJsonTo(parseJson(log.req), AdventureReadSequenceRequest)
-      if req.miniGameId.isSome():
-        let miniGameId = req.miniGameId.get()
-        let areaId = req.currentLocation.areaKeyId.get()
-        let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
-        if areaObjectLockId.isSome():
-          let cityId = areaIdToCityId(areaId).intToEnum(CityId)
+    case log.uri:
+    of "/adventure/read_sequence":
+      let req = parseJson(log.req).protoJsonTo(AdventureReadSequenceRequest)
+      let (cityId, areaObjectLockId, newAreaChangeLocks) = handleReadSequence(db, req)
 
-          if not result.hasKey(cityId):
-            areaObjectLocksForCity[cityId] = initHashSet[int]()
+      if areaObjectLockId.isSome:
+        if not areaObjectLocksForCity.hasKey(cityId):
+          areaObjectLocksForCity[cityId] = initHashSet[int]()
 
-          areaObjectLocksForCity[cityId].incl(areaObjectLockId.get())
+        areaObjectLocksForCity[cityId].incl(areaObjectLockId.get())
 
-          areaObjectLockIds.incl(areaObjectLockId.get())
+        areaObjectLockIds.incl(areaObjectLockId.get())
 
-        let seqReqs = getMdSequenceRequests(db, req.sequenceRequestIds.get(@[]))
-
-        for seqReq in seqReqs:
-          case seqReq.kind:
-          of seqReqAreaChangeLock:
-            areaChangeLocks.add(AreaChangeLock(areaChangeLockId: seqReq.areaChangeLockId))
-          else:
-            discard
+      areaChangeLocks.insert(newAreaChangeLocks)
 
   updateAreaChangeLocks(db, areaChangeLocks)
 
