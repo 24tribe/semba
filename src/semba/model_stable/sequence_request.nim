@@ -117,40 +117,36 @@ proc readSequenceMiniGame*(
   ## Handles /adventure/read_sequence for a minigame.
   ## Returns the changed resources and area objects in the db.
 
+  var changedResources = Resources()
+  var areaObjects = newSeq[AreaObject]()
+
   let sequenceRequests = getMdSequenceRequests(db, sequenceRequestIds)
 
   for seqReq in sequenceRequests:
     case seqReq.kind:
     of seqReqAreaObjectState:
-      result[1].insert(
-        getAreaObjectsForState(db, seqReq.areaObjectId, seqReq.areaObjectState), result[1].len
-      )
+      areaObjects.insert(getAreaObjectsForState(db, seqReq.areaObjectId, seqReq.areaObjectState))
     else:
       discard
 
-  updateAreaObjectsEx(db, result[1])
+  updateAreaObjectsEx(db, areaObjects)
 
   let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
 
-  result[0].areaObjectLocks =
+  changedResources.areaObjectLocks =
     if areaObjectLockId.isSome:
       @[AreaObjectLock(areaObjectLockId: areaObjectLockId.get(), count: some(1))]
     else:
       @[]
 
-  upsertAreaObjectLocks(db, result[0].areaObjectLocks)
+  upsertAreaObjectLocks(db, changedResources.areaObjectLocks)
 
-  result[0].status = some(getUserStatusTypeSafe(db))
+  changedResources.status = some(getUserStatusTypeSafe(db))
 
-  let missions = getTroubleshooterMissionsForCity(db, areaIdToCityId(areaId))
+  changedResources.missions = getChangedTroubleshooterMissions(db, areaIdToCityId(areaId))
+  updateMissions(db, changedResources.missions)
 
-  let changedMissions = getMissionsWithNewCount(
-    db, missions, (mission, mdMission) => some(mission.count.get(0) + 1)
-  )
-
-  result[0].missions = changedMissions
-
-  updateMissions(db, changedMissions)
+  (changedResources, areaObjects)
 
 
 proc removeProblematicResources(changedResources: var Resources) =

@@ -269,6 +269,14 @@ proc getChangedCompleteCityChallengeMissions*(db: DbConn, cityId: int): seq[Miss
   )
 
 
+proc getChangedTroubleshooterMissions*(db: DbConn, cityId: int): seq[Mission] =
+  let mdMissions = getTroubleshooterMissionsForCity(db, cityId)
+
+  getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
+    some(mi.count.get(0) + 1)
+  )
+
+
 proc getFieldResearchMissionIdsWithItemIds*(db: DbConn, itemIds: openArray[int]): Table[int, int] =
   ## Returns a table mapping "Field Research" mission ids to the item ids in `itemIds`
 
