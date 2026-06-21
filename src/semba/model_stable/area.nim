@@ -6,6 +6,7 @@ import std/sequtils
 import db_connector/db_sqlite
 
 import ../semba_error
+import ./area_change_lock
 
 
 type Area* = object
@@ -70,18 +71,14 @@ proc getAreaBgm*(db: DbConn, areaId: int): AreaBgm =
     result.eventName = some(eventName)
 
 
-proc getAreaChangeLocksForAreaId*(db: DbConn, areaId: int): seq[JsonNode] =
-  let rows = db.getAllRows(sql"""
+proc getAreaChangeLocksForAreaId*(db: DbConn, areaId: int): seq[AreaChangeLock] =
+  db.getAllRows(sql"""
     SELECT areaChangeLockId
     FROM areaChangeLocks INNER JOIN mdAreaChangeLock ON areaChangeLockId = id
     WHERE areaId = ?;
-  """, areaId)
-
-  for row in rows:
-    let areaChangeLockId = parseInt(row[0])
-    result.add(%*{
-      "areaChangeLockId": areaChangeLockId
-    })
+  """, areaId).mapIt(AreaChangeLock(
+    areaChangeLockId: parseInt(it[0]),
+  ))
 
 
 proc getAreaActionSequenceIds*(db: DbConn): seq[JsonNode] =

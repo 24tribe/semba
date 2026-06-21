@@ -3,6 +3,7 @@ import std/assertions
 import std/json
 import std/options
 import std/sequtils
+import std/sets
 
 import db_connector/db_sqlite
 
@@ -10,6 +11,7 @@ import ./utils
 import ../../src/semba
 import ../../src/semba/protojson
 import ../../src/semba/api_stable/adventure
+import ../../src/semba/model_stable/area_change_lock
 import ../../src/semba/model_stable/area_object_lock
 import ../../src/semba/model_stable/adventure_variable
 import ../../src/semba/model_stable/area_object
@@ -789,6 +791,49 @@ proc testHeroJammedBuggedSaveFileIsFixed(savesDir: string) =
   doAssert(nineSequence.get().lastReceiveAt.isSome)
 
 
+proc testReadSequenceReturnsAreaChangeLock(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(saves_dir, "marine bio res center corridor")
+
+  block:
+    let res = ctx.sembaCall("/adventure/read_sequence", %*{
+      "sequenceRequestIds": [ 108194021, 109508011, 109509011, 10835801, 10835901, 10836001, 10836101 ],
+      "currentLocation": {
+        "areaType": 1, "direction": 1, "positionCoordinates": { "x": -8.248895, "y": 0.010416508, "z": 3.2314434 },
+        "areaKeyId": 101206
+      },
+      "miniGameId": 104002, "areaType": 1, "areaKeyId": 101206
+    }).protoJsonTo(Option[AdventureReadSequenceResponse])
+
+    doAssert(res.isSome)
+
+    let changedResources = res.get().changedResources
+
+    doAssert(changedResources.areaChangeLocks.toHashSet == [
+      AreaChangeLock(areaChangeLockId: 10950801),
+      AreaChangeLock(areaChangeLockId: 10950901),
+    ].toHashSet)
+
+    let areaChangeLocks = getAreaChangeLocks(ctx.db)
+    doAssert(areaChangeLocks.findIt(it.areaChangeLockId == 10950801) != -1)
+    doAssert(areaChangeLocks.findIt(it.areaChangeLockId == 10950901) != -1)
+
+  block:
+    let res = ctx.sembaCall("/adventure/move_to_area", %*{
+      "areaId": 101206,
+      "currentLocation": {
+        "areaType": 1, "direction": 1, "areaKeyId": 101206,
+        "positionCoordinates": { "x": -8.248895, "y": 0.010416508, "z": 3.2314434}
+      }
+    }).protoJsonTo(Option[AdventureMoveToAreaResponse])
+
+    doAssert(res.isSome)
+
+    let areaChangeLocks = res.get().areaChangeLocks
+    doAssert(areaChangeLocks == @[AreaChangeLock(areaChangeLockId: 10950901)])
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -812,3 +857,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testFullMarksGateTutorialWithEnoughAmount(savesDir)
   testDronesAreNotInAreaBeforeAcceptingChallenge(savesDir)
   testHeroJammedBuggedSaveFileIsFixed(savesDir)
+  testReadSequenceReturnsAreaChangeLock(savesDir)

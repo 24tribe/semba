@@ -6,6 +6,7 @@ import db_connector/db_sqlite
 
 import ../model_stable/adventure_variable
 import ../model_stable/area
+import ../model_stable/area_change_lock
 import ../model_stable/area_item
 import ../model_stable/area_object
 import ../model_stable/character
@@ -54,7 +55,7 @@ type AdventureMoveToAreaRequest* = object
 
 type AdventureMoveToAreaResponse* = object
   changedResources*: Resources
-  areaChangeLocks*: seq[JsonNode] # FIXME: use AreaChangeLock
+  areaChangeLocks*: seq[AreaChangeLock]
   areaBehavior*: Option[AreaBehavior]
   areaBgm*: AreaBgm
 
