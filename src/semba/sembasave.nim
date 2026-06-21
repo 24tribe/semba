@@ -47,6 +47,7 @@ import ./model_stable/area_change_lock
 import ./model_stable/area_group
 import ./model_stable/area_object
 import ./model_stable/area_object_lock
+import ./model_stable/battle_enum
 import ./model_stable/challenge
 import ./model_stable/challenge_progress
 import ./model_stable/challenge_task
@@ -257,6 +258,8 @@ proc ensureAlreadyDoneMiniGameThingsAreUnlocked(db: DbConn, save: var SembaSave)
   var areaObjectLockIds = save.areaObjectLocks.mapIt(it.areaObjectLockId).toHashSet()
   var areaChangeLocks = newSeq[AreaChangeLock]()
 
+  var lastBattleStart = none(BattleStartRequest)
+
   for log in save.offlineLogs:
     case log.uri:
     of "/adventure/read_sequence":
@@ -272,6 +275,18 @@ proc ensureAlreadyDoneMiniGameThingsAreUnlocked(db: DbConn, save: var SembaSave)
         areaObjectLockIds.incl(areaObjectLockId.get())
 
       areaChangeLocks.insert(newAreaChangeLocks)
+    of "/battle/start":
+      lastBattleStart = some(parseJson(log.req).protoJsonTo(BattleStartRequest))
+    of "/battle/finish":
+      let req = parseJson(log.req).protoJsonTo(BattleFinishRequest)
+      if lastBattleStart.isSome and req.battleResult == BattleResult.won:
+        for battleTrigger in lastBattleStart.get().battleTriggers:
+          if battleTrigger.triggerType == BattleTriggerType.areaObject:
+            for triggerId in battleTrigger.triggerIds:
+              let areaObjectLockId = getAreaObjectLockIdForBattle(db, triggerId)
+
+              if areaObjectLockId.isSome:
+                areaObjectLockIds.incl(areaObjectLockId.get())
 
   updateAreaChangeLocks(db, areaChangeLocks)
 
