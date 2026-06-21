@@ -10,15 +10,16 @@ import db_connector/db_sqlite
 import ../extsqlite
 import ../enum_ex
 import ../protojson
-import adventure_variable
-import area_object
-import area_object_lock
-import city
-import mission
-import resources
-import reward
-import status
-import wallet
+import ./area_change_lock
+import ./adventure_variable
+import ./area_object
+import ./area_object_lock
+import ./city
+import ./mission
+import ./resources
+import ./reward
+import ./status
+import ./wallet
 
 
 const fullMarksGateTutorialSeqReqId* = 108369011
@@ -119,6 +120,7 @@ proc readSequenceMiniGame*(
 
   var changedResources = Resources()
   var areaObjects = newSeq[AreaObject]()
+  var areaChangeLocks = newSeq[AreaChangeLock]()
 
   let sequenceRequests = getMdSequenceRequests(db, sequenceRequestIds)
 
@@ -126,10 +128,15 @@ proc readSequenceMiniGame*(
     case seqReq.kind:
     of seqReqAreaObjectState:
       areaObjects.insert(getAreaObjectsForState(db, seqReq.areaObjectId, seqReq.areaObjectState))
+    of seqReqAreaChangeLock:
+      areaChangeLocks.add(AreaChangeLock(areaChangeLockId: seqReq.areaChangeLockId))
     else:
       discard
 
   updateAreaObjectsEx(db, areaObjects)
+
+  changedResources.areaChangeLocks = areaChangeLocks
+  updateAreaChangeLocks(db, areaChangeLocks)
 
   let areaObjectLockId = getAreaObjectLockIdForMiniGame(db, areaId, miniGameId)
 
