@@ -224,7 +224,13 @@ proc loadSaveFileVer8(db: DbConn, save: SembaSave) =
     addCity(db, city)
 
 
-proc ensureAlreadyDoneMiniGameChestsAreUnlocked(db: DbConn, save: var SembaSave): Table[CityId, HashSet[int]] =
+proc tableToCounts(t: Table[CityId, HashSet[int]]): CountTable[CityId] =
+  for cityId, areaObjectLocks in t:
+    result[cityId] = areaObjectLocks.len
+
+
+proc ensureAlreadyDoneMiniGameChestsAreUnlocked(db: DbConn, save: var SembaSave): CountTable[CityId]  =
+  var areaObjectLocksForCity: Table[CityId, HashSet[int]]
   var areaObjectLockIds = save.areaObjectLocks.mapIt(it.areaObjectLockId).toHashSet()
 
   for log in save.offlineLogs:
@@ -238,25 +244,16 @@ proc ensureAlreadyDoneMiniGameChestsAreUnlocked(db: DbConn, save: var SembaSave)
           let cityId = areaIdToCityId(areaId).intToEnum(CityId)
 
           if not result.hasKey(cityId):
-            result[cityId] = initHashSet[int]()
+            areaObjectLocksForCity[cityId] = initHashSet[int]()
 
-          result[cityId].incl(areaObjectLockId.get())
+          areaObjectLocksForCity[cityId].incl(areaObjectLockId.get())
 
           areaObjectLockIds.incl(areaObjectLockId.get())
 
+  let areaObjectLockCounts = tableToCounts(areaObjectLocksForCity)
+  result = areaObjectLockCounts
+
   save.areaObjectLocks = areaObjectLockIds.mapIt(AreaObjectLock(areaObjectLockId: it, count: some(1)))
-
-
-proc fixTroubleshooterMissions(
-  missions: var Table[int, Mission], db: DbConn, cityAreaObjectLockIds: Table[CityId, HashSet[int]]
-) =
-  for cityId, areaObjectLockIds in cityAreaObjectLockIds.pairs():
-    let mdMissions = getTroubleshooterMissionsForCity(db, cityId.int)
-    for mission in mdMissions:
-      if not missions.hasKey(mission.id):
-        missions[mission.id] = Mission(missionId: mission.id)
-
-      missions[mission.id].count = some(areaObjectLockIds.len)
 
 
 proc fixMissionCounts(
@@ -273,6 +270,12 @@ proc fixMissionCounts(
       missions[mission.id].count = some(count)
 
 
+proc fixTroubleshooterMissions(
+  missions: var Table[int, Mission], db: DbConn, areaObjectLockCounts: CountTable[CityId]
+) =
+  fixMissionCounts(missions, db, areaObjectLockCounts, getTroubleshooterMissionsForCity)
+
+
 proc fixGraffitiMissions(missions: var Table[int, Mission], db: DbConn, graffitiArtCounts: CountTable[CityId]) =
   fixMissionCounts(missions, db, graffitiArtCounts, getGraffitiMissionsForCity)
 
@@ -287,7 +290,7 @@ proc fixClearCityChallengesMissions(
   fixMissionCounts(missions, db, cityChallengesCount, getCompleteCityChallengeMissionsForCityId)
 
 
-proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[CityId, HashSet[int]]) =
+proc fixMissions(db: DbConn, save: var SembaSave, areaObjectLockCounts: CountTable[CityId]) =
   var missions = save.missions.mapIt((it.missionId, it)).toTable()
 
   let graffitiArtCounts = save.graffitiArts.mapIt(
@@ -298,7 +301,7 @@ proc fixMissions(db: DbConn, save: var SembaSave, cityAreaObjectLockIds: Table[C
 
   let cityChallengesCount = getCityChallengesCount(db)
 
-  fixTroubleshooterMissions(missions, db, cityAreaObjectLockIds)
+  fixTroubleshooterMissions(missions, db, areaObjectLockCounts)
   fixGraffitiMissions(missions, db, graffitiArtCounts)
   fixMagicOrbMissions(missions, db, magicOrbCounts)
   fixClearCityChallengesMissions(missions, db, cityChallengesCount)
@@ -368,9 +371,9 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
       }
     ])
 
-  let cityAreaObjectLockIds = ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
+  let areaObjectLocksCounts = ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
 
-  fixMissions(db, save, cityAreaObjectLockIds)
+  fixMissions(db, save, areaObjectLocksCounts)
   fixTotalTaskChallenges(db, save)
   fixHeroJammedDrones(db, save)
   fixHeroJammedNineSequence(db, save)
