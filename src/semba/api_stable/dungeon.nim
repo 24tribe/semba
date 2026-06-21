@@ -76,7 +76,7 @@ proc dungeon_BattleStart*(db: DbConn, jsonReq: JsonNode, lastBattleInfo: var Opt
   let tensionCards = getEquippedTensionCards(db)
   let battleEntryIds = getBattleEntryIdsFromDungeonEntityIds(db, dungeonId, req.entityIds)
   let battleParameters = getBattleParametersFromBattleEntryIds(db, battleEntryIds)
-  let battleTriggers = @[BattleTrigger(triggerType: some("dungeon"), triggerIds: some(req.entityIds))]
+  let battleTriggers = @[BattleTrigger(triggerType: BattleTriggerType.dungeon, triggerIds: req.entityIds)]
 
   result = %*{
     "characters": characters,

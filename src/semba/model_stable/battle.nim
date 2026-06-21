@@ -24,8 +24,8 @@ type BattleTaskTopic* = object
   count*: int
 
 type BattleTrigger* = object
-  triggerType*: Option[string]
-  triggerIds*: Option[seq[int]]
+  triggerType*: BattleTriggerType
+  triggerIds*: seq[int]
 
 type BattleInfo* = object
   battleEntryIds*: seq[int]
@@ -300,24 +300,21 @@ proc handleWonBattleTriggers*(
   ## Return the changed area object locks
 
   for battleTrigger in battleTriggers:
-    var isAreaObject = battleTrigger.triggerType.get("") == "area_object"
-    var isActionSequence = battleTrigger.triggerType.get("") == "action_sequence"
-    var isDungeon = battleTrigger.triggerType.get("") == "dungeon"
+    for triggerId in battleTrigger.triggerIds:
+      case battleTrigger.triggerType:
+      of BattleTriggerType.dungeon:
+        removeDungeonEnemy(db, dungeonId.get(), triggerId)
+      of BattleTriggerType.areaObject:
+        let areaObjectLockId = getAreaObjectLockIdForBattle(db, triggerId)
 
-    if not isActionSequence:
-      for triggerId in battleTrigger.triggerIds.get(@[]):
-        if isDungeon:
-          removeDungeonEnemy(db, dungeonId.get(), triggerId)
-        else:
-          if isAreaObject:
-            let areaObjectLockId = getAreaObjectLockIdForBattle(db, triggerId)
+        if areaObjectLockId.isSome():
+          result.add(AreaObjectLock(areaObjectLockId: areaObjectLockId.get(), count: some(1)))
 
-            if areaObjectLockId.isSome():
-              result.add(AreaObjectLock(areaObjectLockId: areaObjectLockId.get(), count: some(1)))
-
-            removeAreaObject(db, areaId, triggerId)
-          else:
-            removeAreaEnemy(db, areaId, triggerId)
+        removeAreaObject(db, areaId, triggerId)
+      of BattleTriggerType.areaEnemy:
+        removeAreaEnemy(db, areaId, triggerId)
+      else:
+        discard
 
 
 proc applyCharacterUpdates*(db: DbConn, characterUpdates: openArray[CharacterUpdate]): seq[Character] =
