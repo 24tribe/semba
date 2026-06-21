@@ -834,6 +834,16 @@ proc testReadSequenceReturnsAreaChangeLock(savesDir: string) =
     doAssert(areaChangeLocks == @[AreaChangeLock(areaChangeLockId: 10950901)])
 
 
+proc testBuggedElevatorSaveFileIsFixed(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(savesDir, "bugged elevator")
+
+  let areaChangeLocks = getAreaChangeLocks(ctx.db)
+  doAssert(areaChangeLocks.findIt(it.areaChangeLockId == 10950801) != -1)
+  doAssert(areaChangeLocks.findIt(it.areaChangeLockId == 10950901) != -1)
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -858,3 +868,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testDronesAreNotInAreaBeforeAcceptingChallenge(savesDir)
   testHeroJammedBuggedSaveFileIsFixed(savesDir)
   testReadSequenceReturnsAreaChangeLock(savesDir)
+  testBuggedElevatorSaveFileIsFixed(savesDir)
