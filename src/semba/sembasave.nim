@@ -65,6 +65,7 @@ import ./model_stable/mission
 import ./model_stable/nine_sequence
 import ./model_stable/resources
 import ./model_stable/status
+import ./model_stable/sequence_request
 import ./model_stable/tension_card
 import ./model_stable/tip
 import ./model_stable/total_task
@@ -229,9 +230,10 @@ proc tableToCounts(t: Table[CityId, HashSet[int]]): CountTable[CityId] =
     result[cityId] = areaObjectLocks.len
 
 
-proc ensureAlreadyDoneMiniGameChestsAreUnlocked(db: DbConn, save: var SembaSave): CountTable[CityId]  =
+proc ensureAlreadyDoneMiniGameThingsAreUnlocked(db: DbConn, save: var SembaSave): CountTable[CityId]  =
   var areaObjectLocksForCity: Table[CityId, HashSet[int]]
   var areaObjectLockIds = save.areaObjectLocks.mapIt(it.areaObjectLockId).toHashSet()
+  var areaChangeLocks = newSeq[AreaChangeLock]()
 
   for log in save.offlineLogs:
     if log.uri == "/adventure/read_sequence":
@@ -250,8 +252,18 @@ proc ensureAlreadyDoneMiniGameChestsAreUnlocked(db: DbConn, save: var SembaSave)
 
           areaObjectLockIds.incl(areaObjectLockId.get())
 
-  let areaObjectLockCounts = tableToCounts(areaObjectLocksForCity)
-  result = areaObjectLockCounts
+        let seqReqs = getMdSequenceRequests(db, req.sequenceRequestIds.get(@[]))
+
+        for seqReq in seqReqs:
+          case seqReq.kind:
+          of seqReqAreaChangeLock:
+            areaChangeLocks.add(AreaChangeLock(areaChangeLockId: seqReq.areaChangeLockId))
+          else:
+            discard
+
+  updateAreaChangeLocks(db, areaChangeLocks)
+
+  result = tableToCounts(areaObjectLocksForCity)
 
   save.areaObjectLocks = areaObjectLockIds.mapIt(AreaObjectLock(areaObjectLockId: it, count: some(1)))
 
@@ -371,7 +383,7 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
       }
     ])
 
-  let areaObjectLocksCounts = ensureAlreadyDoneMiniGameChestsAreUnlocked(db, save)
+  let areaObjectLocksCounts = ensureAlreadyDoneMiniGameThingsAreUnlocked(db, save)
 
   fixMissions(db, save, areaObjectLocksCounts)
   fixTotalTaskChallenges(db, save)
