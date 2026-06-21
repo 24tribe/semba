@@ -80,6 +80,19 @@ type BattleStartResponse* = object
   guestCharacters: seq[JsonNode] # FIXME: use Character
   difficultyDecreaseCount: int
 
+type BattleSkipRequest* = object
+  battleEntryId*: int
+  battleTrigger*: BattleTrigger
+  currentLocation*: CurrentLocation
+  lineCharacterIds*: seq[int]
+
+type BattleSkipResponse* = object
+  rewards*: seq[Rewards]
+  ignoredRewards*: seq[Resource]
+  changedResources*: Resources
+  characterExps*: seq[CharacterExp]
+  areaObjects*: seq[AreaObject]
+
 
 proc battle_Start*(db: DbConn, lastBattleInfo: var Option[BattleInfo], jsonReq: JsonNode): BattleStartResponse =
   let lineCharacterIds = protoJsonTo(jsonReq["lineCharacterIds"], seq[int])
@@ -217,3 +230,7 @@ proc battle_Finish*(
       result.areaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
     
     updateAreaObjectsEx(db, result.areaObjects)
+
+
+proc battle_Skip*(db: DbConn, req: BattleSkipRequest): BattleSkipResponse =
+  discard

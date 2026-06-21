@@ -65,6 +65,8 @@ proc getJsonResultStable*(
     result = toProtoJson(battle_Finish(db, lastBattleInfo, protoJsonTo(jsonReq, BattleFinishRequest)))
   of "/battle/restart":
     result = toProtoJson(battle_Restart(db, lastBattleInfo, protoJsonTo(jsonReq, BattleRestartRequest)))
+  of "/battle/skip":
+    result = battle_Skip(db, jsonReq.protoJsonTo(BattleSkipRequest)).toProtoJson
 
   of "/character/costume_update":
     result = toProtoJson(character_CostumeUpdate(db, jsonReq))
