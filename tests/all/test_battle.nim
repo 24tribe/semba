@@ -339,6 +339,12 @@ proc testBattleSkip() =
   doAssert(res.isSome)
 
 
+proc testGetEnemyIdsFromBattleParameterIds() =
+  var ctx = getInMemorySembaCtx()
+
+  doAssert(getEnemyIdsFromBattleEntryIds(ctx.db, [2000016]) == @[224105, 224105])
+
+
 proc testSuiteBattle*(savesDir: string) =
   test_endrone_battle_start(savesDir)
   test_battle_finish_challenge_data(savesDir)
@@ -348,3 +354,4 @@ proc testSuiteBattle*(savesDir: string) =
   testBattleWithZeroSenseiMission(savesDir)
   testBattleFinishTriggersANineSequence(savesDir)
   testBattleSkip()
+  testGetEnemyIdsFromBattleParameterIds()
