@@ -58,6 +58,15 @@ type BattleRestartResponse = object
   guestCharacters: seq[JsonNode] # FIXME: use Character
   difficultyDecreaseCount: Option[int]
 
+type BattleStartRequest* = object
+  battleEntryIds*: seq[int]
+  lineCharacterIds*: seq[int]
+  battleTriggers*: seq[BattleTrigger]
+  advantageType*: BattleAdvantageType
+  isAttackHit*: bool
+  currentLocation*: CurrentLocation
+  bloodStainLocation*: Option[JsonNode] # FIXME: use BloodStainLocation
+
 type BattleStartResponse* = object
   characters: seq[Character]
   tensionCards: seq[TensionCard]
