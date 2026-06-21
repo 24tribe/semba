@@ -9,6 +9,7 @@ import std/tables
 import db_connector/db_sqlite
 
 import ../semba_error
+import ../extsqlite
 import ./area_object
 import ./area_object_lock
 import ./battle_enum
@@ -433,3 +434,14 @@ proc getWonBattleFinishChangedResources*(
   updateAreaObjectsEx(db, allAreaObjects)
 
   (changedResources, allAreaObjects, characterExps, rewards)
+
+
+proc getEnemyIdsFromBattleEntryIds*(db: DbConn, battleEntryIds: openArray[int]): seq[int] =
+  db.getAllRows(sql("""
+    SELECT mdBattleEnemy.enemyId
+    FROM mdBattleEntry
+      JOIN mdBattleParameterWave ON mdBattleParameterWave.battleParameterId = mdBattleEntry.battleParameterId
+      JOIN mdBattleWave ON mdBattleWave.id = mdBattleParameterWave.battleWaveId
+      JOIN mdBattleEnemy ON mdBattleEnemy.id = mdBattleWave.battleEnemyId
+    WHERE mdBattleEntry.id IN """ & sqlIntTuple(battleEntryIds)
+  )).mapIt(parseInt(it[0]))

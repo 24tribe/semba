@@ -173,4 +173,13 @@ proc battle_Finish*(
 
 
 proc battle_Skip*(db: DbConn, req: BattleSkipRequest): BattleSkipResponse =
-  discard
+  let status = getUserStatusTypeSafe(db)
+
+  let enemyIds = getEnemyIdsFromBattleEntryIds(db, @[req.battleEntryId])
+
+  (
+    result.changedResources, result.areaObjects, result.characterExps, result.rewards
+  ) = getWonBattleFinishChangedResources(
+    db, status, @[], req.lineCharacterIds, @[req.battleEntryId],
+    @[req.battleTrigger], none(int), enemyIds, @[]
+  )
