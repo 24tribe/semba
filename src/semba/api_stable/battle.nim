@@ -164,72 +164,12 @@ proc battle_Finish*(
     result.moveToAreaLocatorId = some(getLastWarpPoint(db).areaLocatorId)
 
   of BattleResult.won:
-    result.changedResources.status = some(status)
-
-    discard applyCharacterUpdates(db, req.characterUpdates)
-
-    result.characterExps = getCharacterExps(db, characterIds, battleEntryIds)
-    updateCharacterExps(db, result.characterExps)
-
-    let characters = getCharactersWithId(db, characterIds)
-    result.changedResources.characters = characters
-
-    let areaObjectLocks = handleWonBattleTriggers(db, battleTriggers, dungeonId, status.currentAreaKeyId.get(0))
-    upsertAreaObjectLocks(db, areaObjectLocks)
-    result.changedResources.areaObjectLocks = areaObjectLocks
-
-    var allRewards = collectEnemyRewards(db, req.encounteredEnemyIds)
-    result.rewards = @[Rewards(`type`: some(6), contents: allRewards)]
-
-    let (items, totalItems) = rewardsToChangedItems(db, allRewards)
-    updateItems(db, items)
-    result.changedResources.items = items
-
-    let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
-
-    var missions = getChangedAttackTestMissions(db, characters, cityId)
-    missions.insert(getChangedDefenseTestMissions(db, characters, cityId), missions.len)
-
-    let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
-
-    const heroJammedBattleEntryIds = [4009004, 4009015, 4009016]
-
-    if challengeTask.isSome():
-      let (
-        areaObjects,
-        challenges, challengeProgresses, challengeTasks,
-        nineSequences
-      ) = getChangedResourcesForCompletedChallengeTask(
-        db, challengeTask.get()
-      )
-
-      result.changedResources.challenges = challenges
-      upsertChallenges(db, challenges)
-
-      result.changedResources.challengeProgresses = challengeProgresses
-      upsertChallengeProgresses(db, challengeProgresses)
-
-      result.changedResources.challengeTasks = challengeTasks
-      upsertChallengeTasks(db, challengeTasks)
-
-      result.changedResources.nineSequences = nineSequences
-      updateNineSequences(db, nineSequences)
-
-      missions.insert(getChallengesChangedMissions(db, challenges, cityId), missions.len)
-
-      result.areaObjects = areaObjects
-
-    missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
-    missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
-    missions.insert(getBattleTaskTopicsMissions(db, req.battleTaskTopics, cityId), missions.len)
-
-    result.changedResources.missions = missions
-    updateMissions(db, missions)
-
-    if not (battleEntryIds[0] in heroJammedBattleEntryIds):
-      result.areaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
-    
-    updateAreaObjectsEx(db, result.areaObjects)
+    (
+      result.changedResources, result.areaObjects, result.characterExps, result.rewards
+    ) = getWonBattleFinishChangedResources(
+      db, status, req.characterUpdates, characterIds, battleEntryIds,
+      battleTriggers, dungeonId, req.encounteredEnemyIds, req.battleTaskTopics
+    )
 
 
 proc battle_Skip*(db: DbConn, req: BattleSkipRequest): BattleSkipResponse =

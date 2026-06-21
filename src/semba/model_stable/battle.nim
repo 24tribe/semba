@@ -9,14 +9,22 @@ import std/tables
 import db_connector/db_sqlite
 
 import ../semba_error
-import area_object
-import area_object_lock
-import battle_enum
-import character
-import dungeon
-import enemy
-import reward
-import mission
+import ./area_object
+import ./area_object_lock
+import ./battle_enum
+import ./challenge
+import ./challenge_progress
+import ./challenge_task
+import ./character
+import ./city
+import ./dungeon
+import ./enemy
+import ./item
+import ./mission
+import ./nine_sequence
+import ./resources
+import ./reward
+import ./status
 
 
 type BattleTaskTopic* = object
@@ -344,3 +352,84 @@ proc getBattleTaskTopicsMissions*(db: DbConn, battleTaskTopics: openArray[Battle
 
   if btt.hasKey(BattleTaskTopicType.healHp):
     result.insert(getChangedBattleBetweenTheRevivedMissions(db, cityId), result.len)
+
+
+proc getWonBattleFinishChangedResources*(
+  db: DbConn, status: Status, characterUpdates: openArray[CharacterUpdate],
+  characterIds: openArray[int], battleEntryIds: openArray[int],
+  battleTriggers: openArray[BattleTrigger], dungeonId: Option[int],
+  encounteredEnemyIds: openArray[int], battleTaskTopics: openArray[BattleTaskTopic]
+): (Resources, seq[AreaObject], seq[CharacterExp], seq[Rewards]) =
+  var changedResources = Resources()
+
+  changedResources.status = some(status)
+
+  discard applyCharacterUpdates(db, characterUpdates)
+
+  let characterExps = getCharacterExps(db, characterIds, battleEntryIds)
+  updateCharacterExps(db, characterExps)
+
+  let characters = getCharactersWithId(db, characterIds)
+  changedResources.characters = characters
+
+  let areaObjectLocks = handleWonBattleTriggers(db, battleTriggers, dungeonId, status.currentAreaKeyId.get(0))
+  upsertAreaObjectLocks(db, areaObjectLocks)
+  changedResources.areaObjectLocks = areaObjectLocks
+
+  var allRewards = collectEnemyRewards(db, encounteredEnemyIds)
+
+  let rewards = @[Rewards(`type`: some(6), contents: allRewards)]
+
+  let (items, totalItems) = rewardsToChangedItems(db, allRewards)
+  updateItems(db, items)
+  changedResources.items = items
+
+  let cityId = areaIdToCityId(status.currentAreaKeyId.get(0))
+
+  var missions = getChangedAttackTestMissions(db, characters, cityId)
+  missions.insert(getChangedDefenseTestMissions(db, characters, cityId), missions.len)
+
+  let challengeTask = getMdChallengeTaskForBattleEntryId(db, battleEntryIds[0])
+
+  const heroJammedBattleEntryIds = [4009004, 4009015, 4009016]
+
+  var allAreaObjects = newSeq[AreaObject]()
+
+  if challengeTask.isSome():
+    let (
+      areaObjects,
+      challenges, challengeProgresses, challengeTasks,
+      nineSequences
+    ) = getChangedResourcesForCompletedChallengeTask(
+      db, challengeTask.get()
+    )
+
+    changedResources.challenges = challenges
+    upsertChallenges(db, challenges)
+
+    changedResources.challengeProgresses = challengeProgresses
+    upsertChallengeProgresses(db, challengeProgresses)
+
+    changedResources.challengeTasks = challengeTasks
+    upsertChallengeTasks(db, challengeTasks)
+
+    changedResources.nineSequences = nineSequences
+    updateNineSequences(db, nineSequences)
+
+    missions.insert(getChallengesChangedMissions(db, challenges, cityId), missions.len)
+
+    allAreaObjects = areaObjects
+
+  missions.insert(getChangedVictorsRightsMissions(db, totalItems, cityId), missions.len)
+  missions.insert(getChangedBeAForeverWinnerMissions(db, cityId), missions.len)
+  missions.insert(getBattleTaskTopicsMissions(db, battleTaskTopics, cityId), missions.len)
+
+  changedResources.missions = missions
+  updateMissions(db, missions)
+
+  if not (battleEntryIds[0] in heroJammedBattleEntryIds):
+    allAreaObjects = getBattleFinishAreaObjects(db, battleEntryIds[0])
+  
+  updateAreaObjectsEx(db, allAreaObjects)
+
+  (changedResources, allAreaObjects, characterExps, rewards)
