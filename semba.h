@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-extern void NimMain(void);
-
 struct SembaExContext;
 
 extern struct SembaExContext *SembaExInit(const char *dbPath, int32_t gameVersion, int32_t *status);

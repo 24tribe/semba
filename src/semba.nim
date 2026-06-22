@@ -10,7 +10,6 @@ import ./semba/sembaprivate
 import ./semba/model_stable/battle
 import ./semba/model_stable/timestamp
 
-{.compile("NimInit.c", "-O3").}
 
 type SembaExGameVersion* = enum
     gameVersion_1_1_3_35 = 0
