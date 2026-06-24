@@ -32,8 +32,10 @@ import std/options
 import std/sets
 import std/sequtils
 import std/tables
+import std/strutils
 
 import db_connector/db_sqlite
+import zippy
 
 import ./protojson
 import ./semba_error
@@ -74,6 +76,9 @@ import ./model_stable/total_task
 import ./model_stable/tutorial_state
 import ./model_stable/user
 import ./model_stable/warp_point
+
+
+const gzipMagic = "\x1F\x8B"
 
 
 type SembaSave* = object
@@ -512,6 +517,12 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
     updateHappyWorkerItems(db, save.happyWorkerItems)
 
 
+proc toString(a: openArray[uint8]): string =
+  result = newStringOfCap(a.len)
+  for c in a:
+    result.add(c.char)
+
+
 proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
   const baseError = "Couldn't load save file"
 
@@ -519,7 +530,14 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
     return baseError & ", db is not initialized"
 
   let content = readFile(saves_dir & "/" & name & ".save")
-  var save = protoJsonTo(parseJson(content), SembaSave)
+
+  let uncompressedContent =
+    if content.startswith(gzipMagic):
+      uncompress(cast[seq[uint8]](content)).toString
+    else:
+      content
+
+  var save = parseJson(uncompressedContent).protoJsonTo(SembaSave)
 
   loadSembaSave(db, save)
 
@@ -572,7 +590,9 @@ proc createSaveFile*(db: DbConn, saves_dir: string, name: string): string =
 
   let jsonData = toProtoJson(getSaveFile(db))
 
-  writeFile(saves_dir & "/" & name & ".save", $jsonData)
+  let data = compress(cast[seq[uint8]]($jsonData)).toString
+
+  writeFile(saves_dir & "/" & name & ".save", data)
 
 
 proc deleteSaveFile*(saves_dir: string, name: string) =
