@@ -1,3 +1,4 @@
 *.save filter=lfs diff=lfs merge=lfs -text
 
-src/sqlite3.* linguist-vendored
+sqlite3.* linguist-vendored
+shell.c linguist-vendored
