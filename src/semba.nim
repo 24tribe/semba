@@ -3,6 +3,7 @@ import std/json
 import std/strutils
 import system/ansi_c
 
+from db_connector/sqlite3 import libversion_number
 import db_connector/db_sqlite
 
 import ./semba/sembastable
@@ -10,6 +11,7 @@ import ./semba/sembaprivate
 import ./semba/model_stable/battle
 import ./semba/model_stable/timestamp
 
+doAssert(libversionNumber() >= 3_050_004, "sqlite3 version must be >= 3.50.4")
 
 type SembaExGameVersion* = enum
     gameVersion_1_1_3_35 = 0
