@@ -11,3 +11,4 @@ srcDir        = "src"
 
 requires "nim >= 2.2.6"
 requires "db_connector"
+requires "zippy == 0.10.19"

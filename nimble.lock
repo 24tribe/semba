@@ -22,6 +22,18 @@
       "checksums": {
         "sha1": "4f2e67d0e4b61af9ac5575509305660b473f01a4"
       }
+    },
+    "zippy": {
+      "version": "0.10.19",
+      "vcsRevision": "bcb8c1e1be6abb0a0e35a3c6040cdd9391cc993f",
+      "url": "https://github.com/guzba/zippy",
+      "downloadMethod": "git",
+      "dependencies": [
+        "nim"
+      ],
+      "checksums": {
+        "sha1": "706d8c10778f32d28b060dbcc84143ca4bfb9bcd"
+      }
     }
   },
   "tasks": {}
