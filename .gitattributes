@@ -2,3 +2,4 @@
 
 sqlite3.* linguist-vendored
 shell.c linguist-vendored
+*.sql linguist-vendored
