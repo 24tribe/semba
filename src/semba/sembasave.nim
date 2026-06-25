@@ -469,8 +469,7 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
   db.exec(sql"DELETE FROM dungeons")
 
   if save.version >= 10:
-    for dungeon in save.dungeons:
-      addDungeonTypeSafe(db, dungeon)
+    upsertDungeons(db, save.dungeons)
 
   db.exec(sql"DELETE FROM magicOrbs")
   db.exec(sql"DELETE FROM items")

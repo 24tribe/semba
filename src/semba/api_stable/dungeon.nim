@@ -49,6 +49,11 @@ type DungeonResumeResponse = object
   dungeonEnemies*: seq[DungeonEnemy]
   dungeonAreaItems*: seq[DungeonAreaItem]
 
+type DungeonEntryResponse* = object
+  currentDungeonDifficultyId*: Option[int]
+  prevAccessDungeonDifficultyId*: Option[int]
+  changedResources*: Resources
+
 
 proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   let dungeonDifficultyId = jsonReq["dungeonDifficultyId"].getInt()
@@ -104,23 +109,18 @@ proc dungeon_Resume*(db: DbConn, req: DungeonResumeRequest): DungeonResumeRespon
   result.dungeonAreaItems = getDungeonAreaItems(db, dungeonId)
 
 
-proc dungeon_Entry*(db: DbConn, jsonReq: JsonNode): JsonNode =
+proc dungeon_Entry*(db: DbConn, jsonReq: JsonNode): DungeonEntryResponse =
   let dungeonId = jsonReq["dungeonId"].getInt()
 
-  let status = getUserStatusTypeSafe(db)
-  var dungeons = newSeq[JsonNode]()
+  var changedResources: Resources
 
-  if getDungeon(db, dungeonId) == nil:
-    let dungeon = %*{"dungeonId": dungeonId, "isFinished": true}
-    addDungeon(db, dungeon)
-    dungeons.add(dungeon)
+  changedResources.status = some(getUserStatusTypeSafe(db))
 
-  result = %*{
-    "changedResources": {
-      "status": status,
-      "dungeons": dungeons,
-    }
-  }
+  if getDungeon(db, dungeonId).isNil:
+    changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: true)]
+    upsertDungeons(db, changedResources.dungeons)
+
+  result.changedResources = changedResources
 
 
 proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse = 

@@ -213,22 +213,17 @@ proc getDungeon*(db: DbConn, dungeonId: int): JsonNode =
     }
 
 
-proc addDungeon*(db: DbConn, dungeon: JsonNode) =
-  let dungeonId = dungeon["dungeonId"].getInt()
-  let isFinished = if dungeon.getOrDefault("isFinished").getBool(): 1 else: 0
-  db.exec(sql"""
-    INSERT INTO dungeons (dungeonId, isFinished) VALUES (?, ?)
-    ON CONFLICT (dungeonId) DO
-    UPDATE SET isFinished = excluded.isFinished
-  """, dungeonId, isFinished)
-
-
-proc addDungeonTypeSafe*(db: DbConn, dungeon: Dungeon) =
+proc addDungeon*(db: DbConn, dungeon: Dungeon) =
   db.exec(sql"""
     INSERT INTO dungeons (dungeonId, isFinished) VALUES (?, ?)
     ON CONFLICT (dungeonId) DO
     UPDATE SET isFinished = excluded.isFinished
   """, dungeon.dungeonId, if dungeon.isFinished: 1 else: 0)
+
+
+proc upsertDungeons*(db: DbConn, dungeons: openArray[Dungeon]) =
+  for dungeon in dungeons:
+    addDungeon(db, dungeon)
 
 
 proc parseBlocks(blocksJson: JsonNode): seq[Block] =

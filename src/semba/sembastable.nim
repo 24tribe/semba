@@ -80,7 +80,7 @@ proc getJsonResultStable*(
   of "/dungeon/acquire_area_item":
     result = dungeon_AcquireAreaItem(db, jsonReq.protoJsonTo(DungeonAcquireAreaItemRequest)).toProtoJson
   of "/dungeon/entry":
-    result = dungeon_Entry(db, jsonReq)
+    result = dungeon_Entry(db, jsonReq).toProtoJson
   of "/dungeon/start":
     result = dungeon_Start(db, jsonReq).toProtoJson
   of "/dungeon/finish":
