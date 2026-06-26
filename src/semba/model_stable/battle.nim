@@ -42,6 +42,7 @@ type BattleInfo* = object
   battleTriggers*: seq[BattleTrigger]
   dungeonDifficultyId*: Option[int]
   advantageType*: BattleAdvantageType
+  isDungeonBossBattle*: bool
 
 type MdBattleEntry = object
   id: int

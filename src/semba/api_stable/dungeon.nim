@@ -100,6 +100,7 @@ proc dungeon_BattleStart*(db: DbConn, jsonReq: JsonNode, lastBattleInfo: var Opt
     lineCharacterIds: req.lineCharacterIds,
     dungeonDifficultyId: some(req.dungeonDifficultyId),
     advantageType: req.advantageType,
+    isDungeonBossBattle: isDungeonBossBattle(db, dungeonId, req.entityIds)
   ))
 
 

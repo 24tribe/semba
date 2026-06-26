@@ -102,13 +102,19 @@ proc parseDungeonEnemy(
   )
 
 
-proc getDungeonEnemies*(db: DbConn, dungeonId: int): seq[DungeonEnemy] =
-  db.getAllRows(sql"""
+proc getDungeonEnemies*(db: DbConn, dungeonId: int, filterIds: openArray[int] = @[]): seq[DungeonEnemy] =
+  let filterSql =
+    if filterIds.len > 0:
+      "AND entityId IN " & sqlIntTuple(filterIds)
+    else:
+      ""
+
+  db.getAllRows(sql("""
     SELECT entityId, dungeonEnemyRateId, dungeonPieceId,
            dungeonPieceX, dungeonPieceY, dungeonPieceIndex, defeatedAt, isBoss
     FROM dungeonEnemies
-    WHERE dungeonId = ?
-  """, dungeonId).mapIt(parseDungeonEnemy(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7]))
+    WHERE dungeonId = ? """ & filterSql
+  ), dungeonId).mapIt(parseDungeonEnemy(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7]))
 
 
 proc dumpDungeonEnemies*(db: DbConn): seq[tuple[dungeonId: int, enemy: DungeonEnemy]] =
@@ -402,3 +408,7 @@ proc genDungeonEnemies*(
     dungeonPieceX: lastDungeonPiece.x,
     dungeonPieceY: lastDungeonPiece.y
   ))
+
+
+proc isDungeonBossBattle*(db: DbConn, dungeonId: int, entityIds: openArray[int]): bool =
+  return getDungeonEnemies(db, dungeonId, entityIds).findIt(it.isBoss) != -1
