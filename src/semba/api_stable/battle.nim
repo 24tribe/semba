@@ -139,7 +139,7 @@ proc battle_Finish*(
   let characterIds = lastBattleInfo.get().lineCharacterIds
   let battleTriggers = lastBattleInfo.get().battleTriggers
   let battleEntryIds = lastBattleInfo.get().battleEntryIds
-  let dungeonId = lastBattleInfo.get().dungeonId
+  let dungeonDifficultyId = lastBattleInfo.get().dungeonDifficultyId
 
   lastBattleInfo = none(BattleInfo)
 
@@ -159,7 +159,7 @@ proc battle_Finish*(
       result.changedResources, result.areaObjects, result.characterExps, result.rewards
     ) = getWonBattleFinishChangedResources(
       db, status, req.characterUpdates, characterIds, battleEntryIds,
-      battleTriggers, dungeonId, req.encounteredEnemyIds, req.battleTaskTopics
+      battleTriggers, req.encounteredEnemyIds, req.battleTaskTopics, dungeonDifficultyId
     )
 
 
@@ -172,5 +172,5 @@ proc battle_Skip*(db: DbConn, req: BattleSkipRequest): BattleSkipResponse =
     result.changedResources, result.areaObjects, result.characterExps, result.rewards
   ) = getWonBattleFinishChangedResources(
     db, status, @[], req.lineCharacterIds, @[req.battleEntryId],
-    @[req.battleTrigger], none(int), enemyIds, @[]
+    @[req.battleTrigger], enemyIds, @[], none(int)
   )

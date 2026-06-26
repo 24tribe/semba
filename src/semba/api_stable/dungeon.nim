@@ -98,7 +98,7 @@ proc dungeon_BattleStart*(db: DbConn, jsonReq: JsonNode, lastBattleInfo: var Opt
     battleEntryIds: battleEntryIds,
     battleTriggers: battleTriggers,
     lineCharacterIds: req.lineCharacterIds,
-    dungeonId: some(dungeonId),
+    dungeonDifficultyId: some(req.dungeonDifficultyId),
     advantageType: req.advantageType,
   ))
 

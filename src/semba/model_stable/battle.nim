@@ -40,7 +40,7 @@ type BattleInfo* = object
   battleEntryIds*: seq[int]
   lineCharacterIds*: seq[int]
   battleTriggers*: seq[BattleTrigger]
-  dungeonId*: Option[int]
+  dungeonDifficultyId*: Option[int]
   advantageType*: BattleAdvantageType
 
 type MdBattleEntry = object
@@ -358,9 +358,12 @@ proc getBattleTaskTopicsMissions*(db: DbConn, battleTaskTopics: openArray[Battle
 proc getWonBattleFinishChangedResources*(
   db: DbConn, status: Status, characterUpdates: openArray[CharacterUpdate],
   characterIds: openArray[int], battleEntryIds: openArray[int],
-  battleTriggers: openArray[BattleTrigger], dungeonId: Option[int],
-  encounteredEnemyIds: openArray[int], battleTaskTopics: openArray[BattleTaskTopic]
+  battleTriggers: openArray[BattleTrigger],
+  encounteredEnemyIds: openArray[int], battleTaskTopics: openArray[BattleTaskTopic],
+  dungeonDifficultyId: Option[int]
 ): (Resources, seq[AreaObject], seq[CharacterExp], seq[Rewards]) =
+  let dungeonId = dungeonDifficultyId.map(dungeonDifficultyIdToDungeonId)
+
   var changedResources = Resources()
 
   changedResources.status = some(status)
