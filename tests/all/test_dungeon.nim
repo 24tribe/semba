@@ -5,6 +5,7 @@ import std/sequtils
 import ../../src/semba/protojson
 import ../../src/semba/model_stable/resources
 import ../../src/semba/model_stable/mission
+import ../../src/semba/model_stable/dungeon
 import ../../src/semba/model_stable/dungeon_area_item
 import ../../src/semba/model_stable/city
 import ./utils
@@ -45,6 +46,19 @@ proc testGetMdDungeonAreaItemsForCity() =
   ) != -1)
 
 
+proc testIsDungeonBossBattle(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  loadSaveFile(ctx, savesDir, "savedungeon")
+
+  const dungeonId = 109202
+
+  const bossEntityId = 5
+
+  doAssert(isDungeonBossBattle(ctx.db, dungeonId, [bossEntityId]))
+
+
 proc testSuiteDungeon*(savesDir: string) =
   testDungeonFinish()
   testGetMdDungeonAreaItemsForCity()
+  testIsDungeonBossBattle(savesDir)
