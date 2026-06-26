@@ -129,20 +129,35 @@ proc removeDungeonEnemy*(db: DbConn, dungeonId: int, triggerId: int) =
   """, getDateNow(), dungeonId, triggerId)
 
 
+proc insertDungeonPiece(db: DbConn, dungeonId: int, dunDiffId: int, dungeonPiece: DungeonPiece) =
+  db.exec(sql"""
+    INSERT INTO dungeonStates
+    (dungeonId, dungeonDifficultyId, dungeonPieceX, dungeonPieceY, dungeonPieceRotate, dungeonPieceId)
+    VALUES
+    (?, ?, ?, ?, ?, ?)
+  """, dungeonId, dunDiffId, dungeonPiece.x, dungeonPiece.y, dungeonPiece.rotate, dungeonPiece.dungeonPieceId)
+
+
+proc loadDungeonStates*(db: DbConn, pieces: openArray[tuple[dungeonId: int, dunDiffId: int, piece: DungeonPiece]]) =
+  db.exec(sql"DELETE FROM dungeonStates")
+  for (dungeonId, dungeonDifficultyId, dungeonPiece) in pieces:
+    insertDungeonPiece(db, dungeonId, dungeonDifficultyId, dungeonPiece)
+
+
 proc updateDungeonState*(db: DbConn, dungeonId: int, dungeonState: DungeonState) =
   db.exec(sql"DELETE FROM dungeonStates WHERE dungeonId = ?", dungeonId)
 
   for dungeonPiece in dungeonState.dungeonPieces:
-    db.exec(
-      sql"""
-        INSERT INTO dungeonStates
-        (dungeonId, dungeonDifficultyId, dungeonPieceX, dungeonPieceY, dungeonPieceRotate, dungeonPieceId)
-        VALUES
-        (?, ?, ?, ?, ?, ?)
-      """,
-      dungeonId, dungeonState.dungeonDifficultyId,
-      dungeonPiece.x, dungeonPiece.y, dungeonPiece.rotate, dungeonPiece.dungeonPieceId
-    )
+    insertDungeonPiece(db, dungeonId, dungeonState.dungeonDifficultyId, dungeonPiece)
+
+
+proc parseDungeonPiece(x, y, rotate, dungeonPieceId: string): DungeonPiece =
+  DungeonDifficultyPiece(
+    x: parseInt(x),
+    y: parseInt(y),
+    rotate: parseInt(rotate),
+    dungeonPieceId: parseInt(dungeonPieceId),
+  )
 
 
 proc getDungeonState*(db: DbConn, dungeonId: int): DungeonState =
@@ -157,17 +172,21 @@ proc getDungeonState*(db: DbConn, dungeonId: int): DungeonState =
 
   for row in rows:
     dungeonDifficultyId = parseInt(row[0])
-    dungeonPieces.add(DungeonDifficultyPiece(
-      x: parseInt(row[1]),
-      y: parseInt(row[2]),
-      rotate: parseInt(row[3]),
-      dungeonPieceId: parseInt(row[4]),
-    ))
+    dungeonPieces.add(parseDungeonPiece(row[1], row[2], row[3], row[4]))
 
   result = DungeonState(
     dungeonDifficultyId: dungeonDifficultyId,
     dungeonPieces: dungeonPieces
   )
+
+
+proc dumpDungeonStates*(db: DbConn): seq[tuple[dungeonId: int, dunDiffId: int, piece: DungeonPiece]] =
+  db.getAllRows(sql"""
+    SELECT dungeons.dungeonId, dungeonDifficultyId, dungeonPieceX, dungeonPieceY, dungeonPieceRotate, dungeonPieceId
+    FROM dungeonStates JOIN dungeons ON dungeonStates.dungeonDifficultyId = dungeons.currentDungeonDifficultyId
+  """).mapIt((
+    parseInt(it[0]), parseInt(it[1]), parseDungeonPiece(it[2], it[3], it[4], it[5])
+  ))
 
 
 proc getDungeonDifficulty(db: DbConn, dungeonDifficultyId: int): MdDungeonDifficulty =

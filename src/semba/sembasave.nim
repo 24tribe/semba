@@ -41,6 +41,7 @@ import zippy
 import ./protojson
 import ./semba_error
 import ./enum_ex
+import ./dungeongen
 import ./api_stable/adventure
 import ./api_stable/battle
 import ./model_semba/offline_log
@@ -102,6 +103,7 @@ type SembaSave* = object
   clearedAchievements: seq[JsonNode]
   dungeons: seq[Dungeon]
   dungeonEnemies*: seq[tuple[dungeonId: int, enemy: DungeonEnemy]]
+  dungeonStates*: seq[tuple[dungeonId: int, dunDiffId: int, piece: DungeonPiece]]
   formations: seq[JsonNode]
   gears: seq[Gear]
   graffitiArts: seq[GraffitiArt]
@@ -518,6 +520,7 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
     updateHappyWorkerItems(db, save.happyWorkerItems)
 
   loadDungeonEnemies(db, save.dungeonEnemies)
+  loadDungeonStates(db, save.dungeonStates)
 
 
 proc toString(a: openArray[uint8]): string =
@@ -583,6 +586,7 @@ proc getSaveFile*(db: DbConn): SembaSave =
     happyWorkerItems: getHappyWorkerItems(db, [10, 13, 14]),
     missions: getMissions(db),
     dungeonEnemies: dumpDungeonEnemies(db),
+    dungeonStates: dumpDungeonStates(db),
   )
 
 
