@@ -2,6 +2,7 @@ import std/options
 import std/strutils
 import std/random
 import std/json
+import std/sequtils
 
 import db_connector/db_sqlite
 import ../semba_error
@@ -93,6 +94,19 @@ proc getMdRewardSet*(db: DbConn, rewardSetId: int): MdRewardSet =
     raise newException(SembaError, "Couldn't get reward set for id=" & $rewardSetId)
 
   result = MdRewardSet(`id`: rewardSetId, rewards: protoJsonTo(parseJson(row[0]), seq[MdReward]))
+
+
+proc getMdRatedRewardSet*(db: DbConn, ratedRewardSetId: int): MdRewardSet =
+  let rewards = db.getAllRows(sql"""
+    SELECT rewardId, rewardQuantity, rewardType FROM mdRatedRewardSet
+    WHERE id = ?
+  """, ratedRewardSetId).mapIt(MdReward(
+    id: parseInt(it[0]),
+    quantity: parseInt(it[1]),
+    `type`: parseInt(it[2]),
+  ))
+
+  MdRewardSet(id: ratedRewardSetId, rewards: rewards)
 
 
 proc getRewardGroupIdFromEnemyGroupId*(db: DbConn, enemyGroupId: int): Option[int] =

@@ -32,12 +32,12 @@ type MdDungeonEnemyRate* = object
   battleEntryId*: int
 
 type MdDungeonDifficulty = object
-  id: int
-  bonusRatedRewardSetIds: seq[int]
-  bossRatedRewardSetIds: seq[int]
-  enemyLevel: int
-  enemyTrainingScoreId: int
-  goalEnemyRateSetId: int
+  id*: int
+  bonusRatedRewardSetIds*: seq[int]
+  bossRatedRewardSetIds*: seq[int]
+  enemyLevel*: int
+  enemyTrainingScoreId*: int
+  goalEnemyRateSetId*: int
 
 type DungeonEnemy* = object
   entityId*: int
@@ -202,7 +202,7 @@ proc dumpDungeonStates*(db: DbConn): seq[tuple[dungeonId: int, dunDiffId: int, p
   ))
 
 
-proc getDungeonDifficulty(db: DbConn, dungeonDifficultyId: int): MdDungeonDifficulty =
+proc getDungeonDifficulty*(db: DbConn, dungeonDifficultyId: int): MdDungeonDifficulty =
   let row = db.getRow(sql"""
     SELECT bonusRatedRewardSetIds, bossRatedRewardSetIds,
            enemyLevel, enemyTrainingScoreId, goalEnemyRateSetId

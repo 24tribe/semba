@@ -10,6 +10,7 @@ import db_connector/db_sqlite
 
 import ../semba_error
 import ../extsqlite
+import ../rng
 import ./area_object
 import ./area_object_lock
 import ./battle_enum
@@ -356,12 +357,21 @@ proc getBattleTaskTopicsMissions*(db: DbConn, battleTaskTopics: openArray[Battle
     result.insert(getChangedBattleBetweenTheRevivedMissions(db, cityId), result.len)
 
 
+proc getDungeonBossBattleRewards(db: DbConn, dungeonDifficultyId: int): seq[Reward] =
+  let mdDungeonDifficulty = getDungeonDifficulty(db, dungeonDifficultyId)
+  for bossRatedRewardSetId in mdDungeonDifficulty.bossRatedRewardSetIds:
+    let rewardSet = getMdRatedRewardSet(db, bossRatedRewardSetId)
+    let mdReward = rewardSet.rewards.mySample()
+    if mdReward.quantity > 0:
+      result.add(Reward(id: mdReward.id, quantity: mdReward.quantity, `type`: mdReward.`type`))
+
+
 proc getWonBattleFinishChangedResources*(
   db: DbConn, status: Status, characterUpdates: openArray[CharacterUpdate],
   characterIds: openArray[int], battleEntryIds: openArray[int],
   battleTriggers: openArray[BattleTrigger],
   encounteredEnemyIds: openArray[int], battleTaskTopics: openArray[BattleTaskTopic],
-  dungeonDifficultyId: Option[int]
+  dungeonDifficultyId: Option[int], isDungeonBossBattle: bool
 ): (Resources, seq[AreaObject], seq[CharacterExp], seq[Rewards]) =
   let dungeonId = dungeonDifficultyId.map(dungeonDifficultyIdToDungeonId)
 
@@ -382,6 +392,9 @@ proc getWonBattleFinishChangedResources*(
   changedResources.areaObjectLocks = areaObjectLocks
 
   var allRewards = collectEnemyRewards(db, encounteredEnemyIds)
+
+  if isDungeonBossBattle:
+    allRewards.insert(getDungeonBossBattleRewards(db, dungeonDifficultyId.get()))
 
   let rewards = @[Rewards(`type`: some(6), contents: allRewards)]
 
