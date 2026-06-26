@@ -2,7 +2,9 @@ import std/options
 import std/json
 import std/sequtils
 
+import ../../src/semba/rng
 import ../../src/semba/protojson
+import ../../src/semba/api_stable/battle
 import ../../src/semba/model_stable/resources
 import ../../src/semba/model_stable/mission
 import ../../src/semba/model_stable/dungeon
@@ -46,7 +48,7 @@ proc testGetMdDungeonAreaItemsForCity() =
   ) != -1)
 
 
-proc testIsDungeonBossBattle(savesDir: string) =
+proc testDungeonBossDropsDungeonItems(savesDir: string) =
   var ctx = getInMemorySembaCtx()
 
   loadSaveFile(ctx, savesDir, "savedungeon")
@@ -57,8 +59,39 @@ proc testIsDungeonBossBattle(savesDir: string) =
 
   doAssert(isDungeonBossBattle(ctx.db, dungeonId, [bossEntityId]))
 
+  doAssert(ctx.sembaCall("/dungeon/battle/start", %*{
+    "dungeonDifficultyId": 10920201, "entityIds": [ 5 ],
+    "lineCharacterIds": [ 101101, 100801, 100201 ], "advantageType": "advantage", "isAttackHit": true
+  }) != nil)
+
+  let res = ctx.sembaCall("/battle/finish", %*{
+    "characterUpdates": [ { "characterId": 100201, "hp": 470 }, { "characterId": 101101 }, { "characterId": 100801 } ],
+    "battleTaskTopics": [
+      { "type": "qte", "count": 20 }, { "type": "heal_hp", "count": 50 }, { "type": "special_attack", "count": 4 }
+    ],
+    "encounteredEnemyIds": [ 209204, 209104 ],
+    "battleTimeSecond": 59,
+    "taskConditionResult": {
+      "usedSkills": [
+        { "characterSkillId": 1011016, "count": 4 }, { "characterSkillId": 1008016, "count": 3 },
+        { "characterSkillId": 1002016, "count": 13 }, { "characterSkillId": 1008014, "count": 1 },
+        { "characterSkillId": 1002014, "count": 3 }
+      ],
+      "enemyStabilityBreaks": [ { "enemyId": 209104, "count": 3 }, { "enemyId": 209204, "count": 11 } ]
+    }
+  }).protoJsonTo(Option[BattleFinishResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.items.findIt(it.itemId == 3101 and it.quantity == 2) != -1)
+  doAssert(changedResources.items.findIt(it.itemId == 3102 and it.quantity == 2) != -1)
+  doAssert(changedResources.items.findIt(it.itemId == 3103 and it.quantity == 2) != -1)
+  doAssert(changedResources.items.findIt(it.itemId == 3104 and it.quantity == 2) != -1)
+
 
 proc testSuiteDungeon*(savesDir: string) =
   testDungeonFinish()
   testGetMdDungeonAreaItemsForCity()
-  testIsDungeonBossBattle(savesDir)
+  testDungeonBossDropsDungeonItems(savesDir)

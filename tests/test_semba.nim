@@ -1,3 +1,5 @@
+import ../src/semba/rng
+
 import ./all/test_adventure
 import ./all/test_battle
 import ./all/test_character
@@ -16,6 +18,7 @@ import ./all/test_tip
 
 
 when isMainModule:
+  setIsRiggedRng(true)
   let savesDir = "test_saves"
   testSuiteAdventure(savesDir)
   testSuiteBattle(savesDir)
