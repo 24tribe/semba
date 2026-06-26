@@ -76,25 +76,29 @@ proc updateDungeonEnemies*(db: DbConn, dungeonId: int, dungeonEnemies: seq[Dunge
     )
 
 
+proc parseDungeonEnemy(
+  entityId, dungeonEnemyRateId, dungeonPieceId,
+  dungeonPieceX, dungeonPieceY, dungeonPieceIndex, defeatedAt, isBoss: string
+): DungeonEnemy =
+  DungeonEnemy(
+    entityId: parseInt(entityId),
+    dungeonEnemyRateId: parseInt(dungeonEnemyRateId),
+    dungeonPieceId: parseInt(dungeonPieceId),
+    dungeonPieceX: parseInt(dungeonPieceX),
+    dungeonPieceY: parseInt(dungeonPieceY),
+    dungeonPieceIndex: parseInt(dungeonPieceIndex),
+    defeatedAt: if defeatedAt != "": some(defeatedAt) else: none(string),
+    isBoss: isBoss == "true",
+  )
+
+
 proc getDungeonEnemies*(db: DbConn, dungeonId: int): seq[DungeonEnemy] =
-  let rows = db.getAllRows(sql"""
+  db.getAllRows(sql"""
     SELECT entityId, dungeonEnemyRateId, dungeonPieceId,
            dungeonPieceX, dungeonPieceY, dungeonPieceIndex, defeatedAt, isBoss
     FROM dungeonEnemies
     WHERE dungeonId = ?
-  """, dungeonId)
-
-  for row in rows:
-    result.add(DungeonEnemy(
-      entityId: parseInt(row[0]),
-      dungeonEnemyRateId: parseInt(row[1]),
-      dungeonPieceId: parseInt(row[2]),
-      dungeonPieceX: parseInt(row[3]),
-      dungeonPieceY: parseInt(row[4]),
-      dungeonPieceIndex: parseInt(row[5]),
-      defeatedAt: if row[6] != "": some(row[6]) else: none(string),
-      isBoss: row[7] == "true",
-    ))
+  """, dungeonId).mapIt(parseDungeonEnemy(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7]))
 
 
 proc removeDungeonEnemy*(db: DbConn, dungeonId: int, triggerId: int) =
