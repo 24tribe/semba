@@ -59,8 +59,10 @@ proc dungeon_Finish*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   let dungeonDifficultyId = jsonReq["dungeonDifficultyId"].getInt()
   let dungeonId = dungeonDifficultyIdToDungeonId(dungeonDifficultyId)
 
-  # FIXME: save dungeons to db?
   result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: true)]
+  upsertDungeons(db, result.changedResources.dungeons)
+  updateCurrentDungeonDifficultyId(db, dungeonId, none(int))
+
   result.changedResources.missions = getChangedRiftClearMissions(db, dungeonId)
   updateMissions(db, result.changedResources.missions)
 
@@ -116,11 +118,15 @@ proc dungeon_Entry*(db: DbConn, jsonReq: JsonNode): DungeonEntryResponse =
 
   changedResources.status = some(getUserStatusTypeSafe(db))
 
-  if getDungeon(db, dungeonId).isNil:
-    changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: true)]
-    upsertDungeons(db, changedResources.dungeons)
+  let (dungeon, currDifficultyId, prevDifficultyId) = getDungeon(db, dungeonId)
+  changedResources.dungeons = @[dungeon]
+  upsertDungeons(db, changedResources.dungeons)
 
-  result.changedResources = changedResources
+  DungeonEntryResponse(
+    changedResources: changedResources,
+    currentDungeonDifficultyId: currDifficultyId,
+    prevAccessDungeonDifficultyId: prevDifficultyId,
+  )
 
 
 proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse = 
@@ -148,7 +154,10 @@ proc dungeon_Start*(db: DbConn, jsonReq: JsonNode): DungeonStartResponse =
   result.dungeonAreaItems = genDungeonAreaItems(db, cityId, dungeonPieces, dungeonData)
   setDungeonAreaItems(db, dungeonId, result.dungeonAreaItems)
 
-  result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId)]
+  result.changedResources.dungeons = @[Dungeon(dungeonId: dungeonId, isFinished: false)]
+  upsertDungeons(db, result.changedResources.dungeons)
+
+  updateCurrentDungeonDifficultyId(db, dungeonId, some(dungeonDifficultyId))
 
 
 proc dungeon_AcquireAreaItem*(db: DbConn, req: DungeonAcquireAreaItemRequest): DungeonAcquireAreaItemResponse =

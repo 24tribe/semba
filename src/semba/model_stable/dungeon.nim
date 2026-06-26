@@ -9,6 +9,7 @@ import db_connector/db_sqlite
 import ../dungeongen
 import ../semba_error
 import ../protojson
+import ../extsqlite
 import timestamp
 import city
 import dungeon_area_item
@@ -50,6 +51,11 @@ type DungeonEnemy* = object
 
 
 const healthyOutlawsDungeonId* = 109202
+
+
+func dungeonDifficultyIdToDungeonId*(dungeonDifficultyId: int): int = dungeonDifficultyId div 100
+func dungeonDifficultyIdToCityId*(dungeonDifficultyId: int): int = dungeonDifficultyId div 1_000_000
+func dungeonPieceIdToDungeonPartId(dungeonPieceId: int): int = dungeonPieceId mod 10_000
 
 
 proc updateDungeonEnemies*(db: DbConn, dungeonId: int, dungeonEnemies: seq[DungeonEnemy]) =
@@ -202,15 +208,28 @@ proc getDungeons*(db: DbConn): seq[Dungeon] =
   ))
 
 
-proc getDungeon*(db: DbConn, dungeonId: int): JsonNode =
-  let row = db.getRow(sql"SELECT dungeonId, isFinished FROM dungeons WHERE dungeonId = ?", dungeonId)
+proc getDungeon*(
+  db: DbConn, dungeonId: int
+): tuple[dungeon: Dungeon, currDifficultyId: Option[int], prevDifficultyId: Option[int]] =
+  let row = db.getRow(sql"""
+    SELECT dungeonId, isFinished, currentDungeonDifficultyId, prevAccessDungeonDifficultyId
+    FROM dungeons WHERE dungeonId = ?
+  """, dungeonId)
+
+  result.dungeon = Dungeon(dungeonId: dungeonId, isFinished: true)
 
   if row[0] != "":
-    let isFinished = if parseInt(row[1]) == 1: true else: false
-    result = %*{
-      "dungeonId": dungeonId,
-      "isFinished": isFinished,
-    }
+    result = (
+      Dungeon(dungeonId: dungeonId, isFinished: if parseInt(row[1]) == 1: true else: false),
+      tryParseInt(row[2]),
+      tryParseInt(row[3]),
+    )
+
+
+proc updateCurrentDungeonDifficultyId*(db: DbConn, dungeonId: int, dungeonDifficultyId: Option[int]) =
+  db.exec(sql"""
+    UPDATE dungeons SET currentDungeonDifficultyId = ? WHERE dungeonId = ?
+  """, optionToSqlArg(dungeonDifficultyId), dungeonId)
 
 
 proc addDungeon*(db: DbConn, dungeon: Dungeon) =
@@ -267,10 +286,6 @@ proc getDungeonEnemy*(db: DbConn, dungeonId: int, entityId: int): DungeonEnemy =
     defeatedAt: if row[5] != "": some(row[5]) else: none(string),
     isBoss: row[6] == "true",
   )
-
-proc dungeonDifficultyIdToDungeonId*(dungeonDifficultyId: int): int = dungeonDifficultyId div 100
-proc dungeonDifficultyIdToCityId*(dungeonDifficultyId: int): int = dungeonDifficultyId div 1_000_000
-proc dungeonPieceIdToDungeonPartId(dungeonPieceId: int): int = dungeonPieceId mod 10_000
 
 
 proc findDungeonPart(dungeonData: openArray[DungeonPart], dungeonPieceId: int): DungeonPart =
