@@ -23,6 +23,7 @@ version 12: gears
 version 13: graffitis
 version 14: areaObjectLocks, happyWorkerItems
 version 15: missions
+version 16: dungeon states, dungeon area items, dungeon enemies
 ]#
 
 import std/json
@@ -100,6 +101,7 @@ type SembaSave* = object
   cities: seq[City]
   clearedAchievements: seq[JsonNode]
   dungeons: seq[Dungeon]
+  dungeonEnemies*: seq[tuple[dungeonId: int, enemy: DungeonEnemy]]
   formations: seq[JsonNode]
   gears: seq[Gear]
   graffitiArts: seq[GraffitiArt]
@@ -515,6 +517,8 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
   if save.version >= 14:
     updateHappyWorkerItems(db, save.happyWorkerItems)
 
+  loadDungeonEnemies(db, save.dungeonEnemies)
+
 
 proc toString(a: openArray[uint8]): string =
   result = newStringOfCap(a.len)
@@ -543,7 +547,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
 
 proc getSaveFile*(db: DbConn): SembaSave =
   result = SembaSave(
-    version: 15,
+    version: 16,
     formations: getFormations(db),
     tips: getTips(db),
     areaObjects: getAreaObjects(db),
@@ -578,6 +582,7 @@ proc getSaveFile*(db: DbConn): SembaSave =
     areaObjectLocks: getAreaObjectLocks(db),
     happyWorkerItems: getHappyWorkerItems(db, [10, 13, 14]),
     missions: getMissions(db),
+    dungeonEnemies: dumpDungeonEnemies(db),
   )
 
 

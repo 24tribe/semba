@@ -58,22 +58,26 @@ func dungeonDifficultyIdToCityId*(dungeonDifficultyId: int): int = dungeonDiffic
 func dungeonPieceIdToDungeonPartId(dungeonPieceId: int): int = dungeonPieceId mod 10_000
 
 
+proc insertDungeonEnemy(db: DbConn, dungeonId: int, dungeonEnemy: DungeonEnemy) =
+  db.exec(
+    sql"""
+      INSERT INTO dungeonEnemies
+      (dungeonId, entityId, dungeonEnemyRateId, dungeonPieceId,
+        dungeonPieceX, dungeonPieceY, dungeonPieceIndex, defeatedAt, isBoss)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """,
+    dungeonId, dungeonEnemy.entityId, dungeonEnemy.dungeonEnemyRateId, dungeonEnemy.dungeonPieceId,
+    dungeonEnemy.dungeonPieceX, dungeonEnemy.dungeonPieceY, dungeonEnemy.dungeonPieceIndex,
+    if dungeonEnemy.defeatedAt.isSome(): dungeonEnemy.defeatedAt.get() else: "",
+    dungeonEnemy.isBoss
+  )
+
+
 proc updateDungeonEnemies*(db: DbConn, dungeonId: int, dungeonEnemies: seq[DungeonEnemy]) =
   db.exec(sql"DELETE FROM dungeonEnemies WHERE dungeonId = ?", dungeonId)
 
   for dungeonEnemy in dungeonEnemies:
-    db.exec(
-      sql"""
-        INSERT INTO dungeonEnemies
-        (dungeonId, entityId, dungeonEnemyRateId, dungeonPieceId,
-         dungeonPieceX, dungeonPieceY, dungeonPieceIndex, defeatedAt, isBoss)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      """,
-      dungeonId, dungeonEnemy.entityId, dungeonEnemy.dungeonEnemyRateId, dungeonEnemy.dungeonPieceId,
-      dungeonEnemy.dungeonPieceX, dungeonEnemy.dungeonPieceY, dungeonEnemy.dungeonPieceIndex,
-      if dungeonEnemy.defeatedAt.isSome(): dungeonEnemy.defeatedAt.get() else: "",
-      dungeonEnemy.isBoss
-    )
+    insertDungeonEnemy(db, dungeonId, dungeonEnemy)
 
 
 proc parseDungeonEnemy(
@@ -99,6 +103,22 @@ proc getDungeonEnemies*(db: DbConn, dungeonId: int): seq[DungeonEnemy] =
     FROM dungeonEnemies
     WHERE dungeonId = ?
   """, dungeonId).mapIt(parseDungeonEnemy(it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7]))
+
+
+proc dumpDungeonEnemies*(db: DbConn): seq[tuple[dungeonId: int, enemy: DungeonEnemy]] =
+  db.getAllRows(sql"""
+    SELECT dungeonId, entityId, dungeonEnemyRateId, dungeonPieceId,
+           dungeonPieceX, dungeonPieceY, dungeonPieceIndex, defeatedAt, isBoss
+    FROM dungeonEnemies
+  """).mapIt((parseInt(it[0]), parseDungeonEnemy(
+    it[1], it[2], it[3], it[4], it[5], it[6], it[7], it[8]
+  )))
+
+
+proc loadDungeonEnemies*(db: DbConn, dungeonEnemies: openArray[tuple[dungeonId: int, enemy: DungeonEnemy]]) =
+  db.exec(sql"DELETE FROM dungeonEnemies")
+  for (dungeonId, enemy) in dungeonEnemies:
+    insertDungeonEnemy(db, dungeonId, enemy)
 
 
 proc removeDungeonEnemy*(db: DbConn, dungeonId: int, triggerId: int) =
