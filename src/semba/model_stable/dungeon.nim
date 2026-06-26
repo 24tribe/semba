@@ -58,6 +58,12 @@ func dungeonDifficultyIdToCityId*(dungeonDifficultyId: int): int = dungeonDiffic
 func dungeonPieceIdToDungeonPartId(dungeonPieceId: int): int = dungeonPieceId mod 10_000
 
 
+proc updateCurrentDungeonDifficultyId*(db: DbConn, dungeonId: int, dungeonDifficultyId: Option[int]) =
+  db.exec(sql"""
+    UPDATE dungeons SET currentDungeonDifficultyId = ? WHERE dungeonId = ?
+  """, optionToSqlArg(dungeonDifficultyId), dungeonId)
+
+
 proc insertDungeonEnemy(db: DbConn, dungeonId: int, dungeonEnemy: DungeonEnemy) =
   db.exec(
     sql"""
@@ -141,6 +147,7 @@ proc insertDungeonPiece(db: DbConn, dungeonId: int, dunDiffId: int, dungeonPiece
 proc loadDungeonStates*(db: DbConn, pieces: openArray[tuple[dungeonId: int, dunDiffId: int, piece: DungeonPiece]]) =
   db.exec(sql"DELETE FROM dungeonStates")
   for (dungeonId, dungeonDifficultyId, dungeonPiece) in pieces:
+    updateCurrentDungeonDifficultyId(db, dungeonId, some(dungeonDifficultyId))
     insertDungeonPiece(db, dungeonId, dungeonDifficultyId, dungeonPiece)
 
 
@@ -267,12 +274,6 @@ proc getDungeon*(
       tryParseInt(row[2]),
       tryParseInt(row[3]),
     )
-
-
-proc updateCurrentDungeonDifficultyId*(db: DbConn, dungeonId: int, dungeonDifficultyId: Option[int]) =
-  db.exec(sql"""
-    UPDATE dungeons SET currentDungeonDifficultyId = ? WHERE dungeonId = ?
-  """, optionToSqlArg(dungeonDifficultyId), dungeonId)
 
 
 proc addDungeon*(db: DbConn, dungeon: Dungeon) =

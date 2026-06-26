@@ -52,6 +52,32 @@ proc getMdDungeonAreaItem*(db: DbConn, dungeonAreaItemId: int): MdDungeonAreaIte
   )
 
 
+proc parseDungeonAreaItem(
+  entityId, dungeonAreaItemId, dungeonPieceId,
+  dungeonPieceX, dungeonPieceY, dungeonPieceIndex, acquiredAt: string
+): DungeonAreaItem =
+  DungeonAreaItem(
+    entityId: parseInt(entityId),
+    dungeonAreaItemId: parseInt(dungeonAreaItemId),
+    dungeonPieceId: parseInt(dungeonPieceId),
+    dungeonPieceX: parseInt(dungeonPieceX),
+    dungeonPieceY: parseInt(dungeonPieceY),
+    dungeonPieceIndex: parseInt(dungeonPieceIndex),
+    acquiredAt: tryParseTimestamp(acquiredAt),
+  )
+
+
+proc dumpDungeonAreaItems*(db: DbConn): seq[tuple[dungeonId: int, item: DungeonAreaItem]] =
+  db.getAllRows(sql"""
+    SELECT
+      dungeonId, entityId, dungeonAreaItemId, dungeonPieceId,
+      dungeonPieceX, dungeonPieceY, dungeonPieceIndex, acquiredAt
+    FROM dungeonAreaItems
+  """).mapIt((
+    parseInt(it[0]), parseDungeonAreaItem(it[1], it[2], it[3], it[4], it[5], it[6], it[7])
+  ))
+
+
 proc getDungeonAreaItems*(db: DbConn, dungeonId: int, filterEntityIds: openArray[int] = @[]): seq[DungeonAreaItem] =
   let filterSql =
     if filterEntityIds.len > 0:
@@ -64,15 +90,7 @@ proc getDungeonAreaItems*(db: DbConn, dungeonId: int, filterEntityIds: openArray
       entityId, dungeonAreaItemId, dungeonPieceId,
       dungeonPieceX, dungeonPieceY, dungeonPieceIndex, acquiredAt
     FROM dungeonAreaItems WHERE dungeonId = ? """ & filterSql 
-  ), dungeonId).mapIt(DungeonAreaItem(
-    entityId: parseInt(it[0]),
-    dungeonAreaItemId: parseInt(it[1]),
-    dungeonPieceId: parseInt(it[2]),
-    dungeonPieceX: parseInt(it[3]),
-    dungeonPieceY: parseInt(it[4]),
-    dungeonPieceIndex: parseInt(it[5]),
-    acquiredAt: tryParseTimestamp(it[6]),
-  ))
+  ), dungeonId).mapIt(parseDungeonAreaItem(it[0], it[1], it[2], it[3], it[4], it[5], it[6]))
 
 
 proc upsertDungeonAreaItem*(db: DbConn, dungeonId: int, dai: DungeonAreaItem) =
@@ -91,6 +109,12 @@ proc upsertDungeonAreaItem*(db: DbConn, dungeonId: int, dai: DungeonAreaItem) =
     dungeonId, dai.entityId, dai.dungeonAreaItemId, dai.dungeonPieceId,
     dai.dungeonPieceX, dai.dungeonPieceY, dai.dungeonPieceIndex, dai.acquiredAt.optionToSqlArg
   )
+
+
+proc loadDungeonAreaItems*(db: DbConn, items: openArray[tuple[dungeonId: int, item: DungeonAreaItem]]) =
+  db.exec(sql"DELETE FROM dungeonAreaItems")
+  for (dungeonId, dungeonAreaItem) in items:
+    upsertDungeonAreaItem(db, dungeonId, dungeonAreaItem)
 
 
 proc setDungeonAreaItems*(db: DbConn, dungeonId: int, dungeonAreaItems: openArray[DungeonAreaItem]) =

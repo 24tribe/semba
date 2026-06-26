@@ -59,6 +59,7 @@ import ./model_stable/character
 import ./model_stable/character_piece
 import ./model_stable/city
 import ./model_stable/dungeon
+import ./model_stable/dungeon_area_item
 import ./model_stable/formation
 import ./model_stable/gacha
 import ./model_stable/gear
@@ -104,6 +105,7 @@ type SembaSave* = object
   dungeons: seq[Dungeon]
   dungeonEnemies*: seq[tuple[dungeonId: int, enemy: DungeonEnemy]]
   dungeonStates*: seq[tuple[dungeonId: int, dunDiffId: int, piece: DungeonPiece]]
+  dungeonAreaItems*: seq[tuple[dungeonId: int, item: DungeonAreaItem]]
   formations: seq[JsonNode]
   gears: seq[Gear]
   graffitiArts: seq[GraffitiArt]
@@ -519,8 +521,9 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
   if save.version >= 14:
     updateHappyWorkerItems(db, save.happyWorkerItems)
 
-  loadDungeonEnemies(db, save.dungeonEnemies)
   loadDungeonStates(db, save.dungeonStates)
+  loadDungeonEnemies(db, save.dungeonEnemies)
+  loadDungeonAreaItems(db, save.dungeonAreaItems)
 
 
 proc toString(a: openArray[uint8]): string =
@@ -587,6 +590,7 @@ proc getSaveFile*(db: DbConn): SembaSave =
     missions: getMissions(db),
     dungeonEnemies: dumpDungeonEnemies(db),
     dungeonStates: dumpDungeonStates(db),
+    dungeonAreaItems: dumpDungeonAreaItems(db),
   )
 
 
