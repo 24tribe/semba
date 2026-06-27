@@ -4,7 +4,7 @@ fs = import('fs')
 
 nimble = find_program('nimble', required : true)
 
-python = find_program('python', required : true)
+python = find_program('python', 'python3', required : true)
 
 sqlite3_c = fs.copyfile('sqlite3.c')
 
