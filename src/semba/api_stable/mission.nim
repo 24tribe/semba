@@ -84,3 +84,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
 
   result.changedResources = changedResources
   result.rewards = rewards
+
+
+proc mission_CountRewardReceive*(db: DbConn, req: MissionCountRewardReceiveRequest): MissionCountRewardReceiveResponse =
+  discard

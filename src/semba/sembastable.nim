@@ -135,6 +135,8 @@ proc getJsonResultStable*(
 
   of "/mission/receive":
     result = toProtoJson(mission_Receive(db, protoJsonTo(jsonReq, MissionReceiveRequest)))
+  of "/mission/count_reward_receive":
+    result = mission_CountRewardReceive(db, jsonReq.protoJsonTo(MissionCountRewardReceiveRequest)).toProtoJson
 
   of "/news/user_list":
     result = news_UserList()
