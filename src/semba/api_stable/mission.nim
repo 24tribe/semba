@@ -9,6 +9,7 @@ import ../model_stable/challenge
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
 import ../model_stable/mission
+import ../model_stable/mission_count_reward_state
 import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
@@ -98,6 +99,11 @@ proc mission_CountRewardReceive*(db: DbConn, req: MissionCountRewardReceiveReque
   wallet.free = some(wallet.free.get(0) + 100)
   setWallet(db, wallet)
   changedResources.wallet = some(wallet)
+
+  var mcrs = getMissionCountRewardState(db, req.missionCountRewardId)
+  mcrs.receivedStepCount += 1
+  upsertMissionCountRewardState(db, mcrs)
+  changedResources.missionCountRewardStates = @[mcrs]
 
   result.changedResources = changedResources
   result.rewards = @[Reward(`type`: 1, id: 1, quantity: 100)]   
