@@ -1,8 +1,10 @@
 import std/sequtils
 import std/tables
+import std/options
 
 import db_connector/db_sqlite
 
+import ../semba_error
 import ../model_stable/challenge
 import ../model_stable/challenge_progress
 import ../model_stable/challenge_task
@@ -10,7 +12,7 @@ import ../model_stable/mission
 import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
-
+import ../model_stable/wallet
 
 type MissionReceiveRequest* = object
   missionIds*: seq[int]
@@ -87,4 +89,15 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
 
 
 proc mission_CountRewardReceive*(db: DbConn, req: MissionCountRewardReceiveRequest): MissionCountRewardReceiveResponse =
-  discard
+  if not (req.missionCountRewardId in [10, 13, 14]):
+    raise newException(SembaError, "missionCountRewardId == 100: Not implemented")
+
+  var changedResources: Resources
+    
+  var wallet = getWallet(db)
+  wallet.free = some(wallet.free.get(0) + 100)
+  setWallet(db, wallet)
+  changedResources.wallet = some(wallet)
+
+  result.changedResources = changedResources
+  result.rewards = @[Reward(`type`: 1, id: 1, quantity: 100)]   
