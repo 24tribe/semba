@@ -1,4 +1,6 @@
 import std/options
+import std/sequtils
+import std/tables
 
 import db_connector/db_sqlite
 
@@ -93,5 +95,9 @@ proc tensionCard_LevelLimitEnhance*(
   status.gold -= nextLevelLimit.goldCost
   setUserStatusTypeSafe(db, status)
   changedResources.status = some(status)
+
+  let negativeCounts = nextLevelLimit.itemCosts.mapIt((it.itemId, -it.quantity)).toTable
+  changedResources.items = addCountsToItems(db, negativeCounts)
+  updateItems(db, changedResources.items)
 
   result.changedResources = changedResources
