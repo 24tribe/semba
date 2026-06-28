@@ -31,6 +31,7 @@ import ./happy_worker
 import ./item
 import ./magic_orb
 import ./mission
+import ./mission_count_reward_state
 import ./nine_sequence
 import ./notification
 import ./reward
@@ -82,7 +83,7 @@ type Resources* = object
   loginBonuses: Option[seq[JsonNode]] # FIXME: LoginBonus
   magicOrbs*: seq[MagicOrb]
   missions*: seq[Mission]
-  missionCountRewardStates: Option[seq[JsonNode]] # FIXME: MissionCountRewardState
+  missionCountRewardStates*: seq[MissionCountRewardState]
   nineSequences*: seq[NineSequence]
   notifications*: Option[Notifications]
   profile*: Option[JsonNode] # FIXME: Profile

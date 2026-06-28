@@ -22,6 +22,7 @@ import ../model_stable/item
 import ../model_stable/lux_phantasma
 import ../model_stable/magic_orb
 import ../model_stable/mission
+import ../model_stable/mission_count_reward_state
 import ../model_stable/nine_sequence
 import ../model_stable/notification
 import ../model_stable/resources
@@ -93,6 +94,7 @@ proc user_LogIn*(db: DbConn): UserLogInResponse =
     items: getItems(db),
     magicOrbs: getMagicOrbs(db),
     missions: getMissions(db),
+    missionCountRewardStates: getMissionCountRewardStates(db),
     nineSequences: getNineSequences(db),
     notifications: some(getNotifications(db)),
     profile: some(%*{"name": "Yo Kuronaka3", "profileBannerId": 2010011, "characterLikabilityScale": 500}),
