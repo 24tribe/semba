@@ -2,6 +2,7 @@ import std/json
 import std/options
 import std/sequtils
 import std/sets
+import std/tables
 
 import ./utils
 import ../../src/semba/protojson
@@ -68,6 +69,7 @@ proc testTensionCardLevelLimitEnhance(savesDir: string) =
   ctx.loadSaveFile(savesDir, "before lvl break tc")
 
   let status = getUserStatusTypeSafe(ctx.db)
+  let items = getItemsTable(ctx.db)
 
   let res = ctx.sembaCall("/tension_card/level_limit_enhance", %*{
     "entityId": 4
@@ -82,7 +84,16 @@ proc testTensionCardLevelLimitEnhance(savesDir: string) =
 
   doAssert(status.gold - 10000 == changedResources.status.get().gold)
 
-  # FIXME: check consumed items
+  proc checkItemDeducted(itemId, count: int, items: openArray[Item], itemsBefore: Table[int, Item]) =
+    let index = items.findIt(it.itemId == itemId)
+    doAssert(index != -1)
+    let item = items[index]
+    doAssert(item.quantity == itemsBefore[itemId].quantity - count)
+
+  checkItemDeducted(50011, 5, changedResources.items, items)
+  checkItemDeducted(3103, 3, changedResources.items, items)
+  checkItemDeducted(5031, 1, changedResources.items, items)
+ 
   # FIXME: check consumed mission 1041039
 
 
