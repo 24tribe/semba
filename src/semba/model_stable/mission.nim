@@ -114,6 +114,10 @@ proc getMdMissionsWithIds*(db: DbConn, ids: openArray[int]): seq[MdMission] =
   )).toSeq()
 
 
+proc getTCLevelCapMissions*(db: DbConn): seq[MdMission] =
+  getMdMissionsWithIds(db, [1041039])
+
+
 proc getAttackTestMissionMinChars*(missionId: int): int =
   case missionId:
   of 1041041: 1
@@ -287,6 +291,14 @@ proc getFieldResearchMissionIdsWithItemIds*(db: DbConn, itemIds: openArray[int])
 
 proc getChangedLinkedSignpostsMissions*(db: DbConn, cityId: int): seq[Mission] =
   let mdMissions = getLinkedSignpostsMissionsForCity(db, cityId)
+
+  getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
+    some(mi.count.get(0) + 1)
+  )
+
+
+proc getChangedTCLevelCapMissions*(db: DbConn): seq[Mission] =
+  let mdMissions = getTCLevelCapMissions(db)
 
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
     some(mi.count.get(0) + 1)

@@ -9,6 +9,7 @@ import ../model_stable/resources
 import ../model_stable/tension_card
 import ../model_stable/tension_card_level_limit
 import ../model_stable/status
+import ../model_stable/mission
 
 
 type TensionCardEnhanceRequest* = object
@@ -99,5 +100,8 @@ proc tensionCard_LevelLimitEnhance*(
   let negativeCounts = nextLevelLimit.itemCosts.mapIt((it.itemId, -it.quantity)).toTable
   changedResources.items = addCountsToItems(db, negativeCounts)
   updateItems(db, changedResources.items)
+
+  changedResources.missions = getChangedTCLevelCapMissions(db)
+  updateMissions(db, changedResources.missions)
 
   result.changedResources = changedResources
