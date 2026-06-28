@@ -89,4 +89,9 @@ proc tensionCard_LevelLimitEnhance*(
   changedResources.tensionCards = @[tensionCard]
   upsertTensionCards(db, changedResources.tensionCards)
 
+  var status = getUserStatusTypeSafe(db)
+  status.gold -= nextLevelLimit.goldCost
+  setUserStatusTypeSafe(db, status)
+  changedResources.status = some(status)
+
   result.changedResources = changedResources
