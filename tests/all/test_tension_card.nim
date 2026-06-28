@@ -61,7 +61,29 @@ proc testGetNextTCLevelLimit() =
     MdItem(itemId: 5011, quantity: 1),
   ].toHashSet)
 
+    
+proc testTensionCardLevelLimitEnhance(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(savesDir, "before lvl break tc")
+
+  let res = ctx.sembaCall("/tension_card/level_limit_enhance", %*{
+    "entityId": 4
+  }).protoJsonTo(Option[ChangedResourcesResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.tensionCards.len == 1)
+  doAssert(changedResources.tensionCards[0].maxLevel == 20)
+
+  # FIXME: check consumed items
+  # FIXME: check consumed mission 1041039
+  # FIXME: check consumed kane in changedResources.status
+
 
 proc testSuiteTensionCard*(savesDir: string) =
   testTensionCardEnhance()
   testGetNextTCLevelLimit()
+  testTensionCardLevelLimitEnhance(savesDir)
