@@ -2,7 +2,6 @@ import std/options
 import std/json
 import std/sequtils
 
-import ../../src/semba/rng
 import ../../src/semba/protojson
 import ../../src/semba/api_stable/battle
 import ../../src/semba/model_stable/resources
