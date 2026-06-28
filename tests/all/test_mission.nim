@@ -12,9 +12,11 @@ import ../../src/semba/model_stable/area_object_lock
 import ../../src/semba/model_stable/challenge_progress
 import ../../src/semba/model_stable/city
 import ../../src/semba/model_stable/mission
+import ../../src/semba/model_stable/mission_count_reward_state
+import ../../src/semba/model_stable/reward
 import ../../src/semba/model_stable/timestamp
 import ../../src/semba/model_stable/total_task
-
+import ../../src/semba/model_stable/wallet
 
 proc testMissionReceive() =
   var ctx = getInMemorySembaCtx()
@@ -188,6 +190,32 @@ proc testBuggedSaveFileWithMissingTotalTaskChallengesIsFixed(saves_dir: string) 
   doAssert(isChallengeProgressComplete(ctx.db, 1010201))
 
 
+proc testMissionCountRewardReceive(saves_dir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  let wallet = getWallet(ctx.db)
+  
+  let res = ctx.sembaCall("/mission/count_reward_receive", %*{
+    "missionCountRewardId": 10
+  }).protoJsonTo(Option[MissionCountRewardReceiveResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.wallet.isSome)
+  # FIXME: remove Option from wallet.free
+  doAssert(wallet.free.get(0) + 100 == changedResources.wallet.get().free.get())
+
+  doAssert(changedResources.missionCountRewardStates == @[MissionCountRewardState(
+    missionCountRewardId: 10, receivedStepCount: 1
+  )])
+
+  doAssert(res.get().rewards == @[Reward(
+    `type`: 1, id: 1, quantity: 100   
+  )])
+  
+
 proc testSuiteMission*(savesDir: string) =
   testMissionReceive()
   testUnlockFullMarkGates()
@@ -198,3 +226,4 @@ proc testSuiteMission*(savesDir: string) =
   testMissionReceiveReturnsChallenges(savesDir)
   testMissionReceiveDoesntReturnFinishedChallenges(savesDir)
   testBuggedSaveFileWithMissingTotalTaskChallengesIsFixed(savesDir)
+  testMissionCountRewardReceive(savesDir) 

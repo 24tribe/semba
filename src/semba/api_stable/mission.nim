@@ -19,6 +19,13 @@ type MissionReceiveResponse* = object
   changedResources*: Resources
   rewards*: seq[Reward]
 
+type MissionCountRewardReceiveRequest* = object  
+  missionCountRewardId*: int
+
+type MissionCountRewardReceiveResponse* = object
+  changedResources*: Resources
+  rewards*: seq[Reward]
+
 
 proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveResponse =
   let missions = getMissionsWithIds(db, req.missionIds).mapIt((it.missionId, it)).toTable()
