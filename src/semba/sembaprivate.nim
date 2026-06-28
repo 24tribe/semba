@@ -143,7 +143,8 @@ proc semba_SetStdGachaRates(db: DbConn, jsonReq: JsonNode) =
 
 proc semba_ResetDb(db: DbConn) =
   let lines = sembaSql.split('\n')
-  let withoutBeginCommit = lines.toOpenArray(1, lines.len - 2).join("\n")
+  let skipLines = ["BEGIN;", "COMMIT;"]
+  let withoutBeginCommit = lines.filterIt(not (it.strip in skipLines)).join("\n")
   loadSql(db, withoutBeginCommit)
 
 
