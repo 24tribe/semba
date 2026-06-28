@@ -24,6 +24,7 @@ version 13: graffitis
 version 14: areaObjectLocks, happyWorkerItems
 version 15: missions
 version 16: dungeon states, dungeon area items, dungeon enemies
+version 17: mission count reward states
 ]#
 
 import std/json
@@ -69,6 +70,7 @@ import ./model_stable/item
 import ./model_stable/lux_phantasma
 import ./model_stable/magic_orb
 import ./model_stable/mission
+import ./model_stable/mission_count_reward_state
 import ./model_stable/nine_sequence
 import ./model_stable/resources
 import ./model_stable/status
@@ -113,6 +115,7 @@ type SembaSave* = object
   items: seq[Item]
   magicOrbs: seq[MagicOrb]
   missions: seq[Mission]
+  missionCountRewardStates*: seq[MissionCountRewardState]
   nineSequences: seq[NineSequence]
   offlineLogs: seq[OfflineLog]
   questStates: seq[JsonNode]
@@ -525,6 +528,9 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
   loadDungeonEnemies(db, save.dungeonEnemies)
   loadDungeonAreaItems(db, save.dungeonAreaItems)
 
+  db.exec(sql"DELETE FROM missionCountRewardStates")
+  upsertMissionCountRewardStates(db, save.missionCountRewardStates)
+
 
 proc toString(a: openArray[uint8]): string =
   result = newStringOfCap(a.len)
@@ -553,7 +559,7 @@ proc loadSaveFile*(db: DbConn, saves_dir: string, name: string): string =
 
 proc getSaveFile*(db: DbConn): SembaSave =
   result = SembaSave(
-    version: 16,
+    version: 17,
     formations: getFormations(db),
     tips: getTips(db),
     areaObjects: getAreaObjects(db),
@@ -591,6 +597,7 @@ proc getSaveFile*(db: DbConn): SembaSave =
     dungeonEnemies: dumpDungeonEnemies(db),
     dungeonStates: dumpDungeonStates(db),
     dungeonAreaItems: dumpDungeonAreaItems(db),
+    missionCountRewardStates: getMissionCountRewardStates(db),
   )
 
 
