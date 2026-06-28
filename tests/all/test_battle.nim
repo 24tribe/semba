@@ -272,7 +272,7 @@ proc testBattleWithZeroSenseiMission(saves_dir: string) =
 
   let mission = changedResources.missions[missionIndex]
 
-  doAssert(mission.count == some(1))
+  doAssert(mission.count == 1)
 
 
 proc testBattleFinishTriggersANineSequence(savesDir: string) =

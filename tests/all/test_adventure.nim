@@ -24,7 +24,6 @@ import ../../src/semba/model_stable/nine_sequence
 import ../../src/semba/model_stable/resources
 import ../../src/semba/model_stable/reward
 import ../../src/semba/model_stable/sequence_request
-import ../../src/semba/model_stable/timestamp
 import ../../src/semba/model_stable/warp_point
 
 
@@ -587,10 +586,10 @@ proc testMagicOrbMissionInReadSequence(saves_dir: string) =
   doAssert(verityOrbMissionIdx != -1)
 
   let firstVerityOrbMission = changedResources.missions[verityOrbMissionIdx]
-  doAssert(firstVerityOrbMission.count == some(1))
+  doAssert(firstVerityOrbMission.count == 1)
   doAssert(firstVerityOrbMission.clearedAt.isSome)
 
-  doAssert(changedResources.missions.filterIt(it.missionId in [1041008, 1041009]).allIt(it.count == some(1)))
+  doAssert(changedResources.missions.filterIt(it.missionId in [1041008, 1041009]).allIt(it.count == 1))
 
 
 proc testUpdateCharacterStatus() =
@@ -644,7 +643,7 @@ proc testHappyWorkerChallengeAreaObjectsAreDeletedAfterCompletion(saves_dir: str
       .findIt(it.areaObjectId == some(100109) and it.areaPointId == 101311212) == -1
   )
 
-  doAssert(changedResources.missions == @[Mission(missionId: 1041002, count: some(1))])
+  doAssert(changedResources.missions == @[Mission(missionId: 1041002, count: 1)])
 
 
 proc testFieldResearchMission() =
@@ -674,7 +673,7 @@ proc testFieldResearchMission() =
 
   let missionIndex = changedResources.missions.findIt(it.missionId == fieldResearchMissionId)
   doAssert(missionIndex != -1)
-  doAssert(changedResources.missions[missionIndex].count == some(item.quantity - quantity))
+  doAssert(changedResources.missions[missionIndex].count == item.quantity - quantity)
 
 
 proc testLinkedSignpostsMission(saves_dir: string) =
@@ -710,8 +709,8 @@ proc testLinkedSignpostsMission(saves_dir: string) =
   doAssert(missionIndex != -1)
 
   let mission = changedResources.missions[missionIndex]
-  doAssert(mission.count.get(0) == beforeMission.count.get(0) + 1)
-  doAssert(mission.count.get(0) == 4)
+  doAssert(mission.count == beforeMission.count + 1)
+  doAssert(mission.count == 4)
 
 
 proc readFullMarksTutorialSequence(ctx: var SembaExContext): Option[AdventureReadSequenceResponse] =

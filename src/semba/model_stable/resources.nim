@@ -397,7 +397,7 @@ proc getChangedFieldResearchMissions*(db: DbConn, itemCounts: Table[int, int]): 
   let mdMissions = getMdMissionsWithIds(db, missionItemIds.keys.toSeq)
 
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
-    some(mi.count.get(0) + itemCounts[missionItemIds[mi.missionId]])
+    some(mi.count + itemCounts[missionItemIds[mi.missionId]])
   )
 
 

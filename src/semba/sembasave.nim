@@ -317,7 +317,7 @@ proc fixMissionCounts(
       if not missions.hasKey(mission.id):
         missions[mission.id] = Mission(missionId: mission.id)
 
-      missions[mission.id].count = some(count)
+      missions[mission.id].count = count
 
 
 proc fixTroubleshooterMissions(

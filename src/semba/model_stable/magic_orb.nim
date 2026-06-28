@@ -41,5 +41,5 @@ proc getChangedMagicOrbMissions*(db: DbConn, magicOrbsCount: int, cityId: int): 
   let mdMissions = getMagicOrbMissionsForCity(db, cityId)
 
   return getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
-    some(mi.count.get(0) + magicOrbsCount)
+    some(mi.count + magicOrbsCount)
   )

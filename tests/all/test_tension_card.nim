@@ -96,7 +96,7 @@ proc testTensionCardLevelLimitEnhance(savesDir: string) =
  
   doAssert(changedResources.missions.len == 1)
   doAssert(changedResources.missions[0].missionId == 1041039)
-  doAssert(changedResources.missions[0].count == some(1))
+  doAssert(changedResources.missions[0].count == 1)
 
 
 proc testSuiteTensionCard*(savesDir: string) =

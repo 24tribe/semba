@@ -20,8 +20,8 @@ proc testMissionReceive() =
   var ctx = getInMemorySembaCtx()
 
   updateMissions(ctx.db, [
-    Mission(missionId: 1041041, count: some(155), clearedAt: some(getTimestampNow())),
-    Mission(missionId: 1041042, count: some(155), clearedAt: some(getTimestampNow())),
+    Mission(missionId: 1041041, count: 155, clearedAt: some(getTimestampNow())),
+    Mission(missionId: 1041042, count: 155, clearedAt: some(getTimestampNow())),
   ])
 
   let missionIds = [1041041, 1041042]
@@ -90,7 +90,7 @@ proc testSaveFileWithBuggedAreaObjectLocksIsFixed(saves_dir: string) =
   let missions = getMissionsWithIds(ctx.db, shinagawaTroubleshooterMissionIds)
 
   doAssert(missions.len == shinagawaTroubleshooterMissionIds.len)
-  doAssert(missions.allIt(it.count == some(1)))
+  doAssert(missions.allIt(it.count == 1))
 
 
 proc testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir: string) =
@@ -104,7 +104,7 @@ proc testSaveFileWithBuggedGraffitiMissionsIsFixed(saves_dir: string) =
   missions.sort(cmpMissionsById)
   mdMissions.sort(cmpMdMissionsById)
 
-  let expected = mdMissions.mapIt(Mission(missionId: it.id, count: some(1)))
+  let expected = mdMissions.mapIt(Mission(missionId: it.id, count: 1))
 
   doAssert(missions == expected)
 
@@ -120,7 +120,7 @@ proc testSaveFileWithBuggedMagicOrbsMissionsIsFixed(saves_dir: string) =
   missions.sort(cmpMissionsById)
   mdMissions.sort(cmpMdMissionsById)
 
-  doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: some(1))))
+  doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: 1)))
 
 
 proc testSaveFileWithBuggedHelpfulDemeanorMissions(saves_dir: string) =
@@ -134,7 +134,7 @@ proc testSaveFileWithBuggedHelpfulDemeanorMissions(saves_dir: string) =
   missions.sort(cmpMissionsById)
   mdMissions.sort(cmpMdMissionsById)
 
-  doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: some(4))))
+  doAssert(missions == mdMissions.mapIt(Mission(missionId: it.id, count: 4)))
 
 
 proc testMissionReceiveReturnsChallenges(saves_dir: string) =

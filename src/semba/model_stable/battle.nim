@@ -293,14 +293,14 @@ proc getChangedVictorsRightsMissions*(db: DbConn, totalItems: int, cityId: int):
   let victorsRightsMissions = getVictorsRightsMissionsForCity(db, cityId)
 
   return getMissionsWithNewCount(db, victorsRightsMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
-    result = some(mission.count.get(0) + totalItems)
+    result = some(mission.count + totalItems)
   )
 
 
 proc getChangedBeAForeverWinnerMissions*(db: DbConn, cityId: int): seq[Mission] =
   let beAForeverWinnerMissions = getBeAForeverWinnerMissionsForCityId(db, cityId)
 
-  return getMissionsWithNewCount(db, beAForeverWinnerMissions, (mission, mdMission) => some(mission.count.get(0) + 1))
+  return getMissionsWithNewCount(db, beAForeverWinnerMissions, (mission, mdMission) => some(mission.count + 1))
 
 
 proc handleWonBattleTriggers*(

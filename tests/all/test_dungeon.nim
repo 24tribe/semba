@@ -28,7 +28,7 @@ proc testDungeonFinish() =
 
   let clearDungeonMission = changedResources.missions[clearDungeonMissionIdx]
 
-  doAssert(clearDungeonMission.count == some(1))
+  doAssert(clearDungeonMission.count == 1)
 
   doAssert(getMissionsWithIds(ctx.db, [clearDungeonMission.missionId]) == @[clearDungeonMission])
 

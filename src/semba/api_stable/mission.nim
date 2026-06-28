@@ -1,6 +1,5 @@
 import std/sequtils
 import std/tables
-import std/options
 
 import db_connector/db_sqlite
 
@@ -35,7 +34,7 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
 
     let steps = stepsWithIndex[mission.receivedStepCount .. stepsWithIndex.high]
 
-    let completedSteps = steps.filterIt(mission.count.get(0) >= it[1].count)
+    let completedSteps = steps.filterIt(mission.count >= it[1].count)
 
     for completedStep in completedSteps:
       let rewardSet = getMdRewardSet(db, completedStep[1].rewardSetId)

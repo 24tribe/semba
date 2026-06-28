@@ -21,7 +21,7 @@ type FlowerMarkLevel* = object
 
 type Mission* = object
   missionId*: int
-  count*: Option[int]
+  count*: int
   receivedStepCount*: int
   resetAt*: Option[Timestamp]
   clearedAt*: Option[Timestamp]
@@ -141,7 +141,7 @@ proc getMissionsWithIds*(db: DbConn, missionIds: openArray[int]): seq[Mission] =
   for row in rows:
     result.add(Mission(
       missionId: parseInt(row[0]),
-      count: tryParseInt(row[1]),
+      count: parseInt(row[1]),
       receivedStepCount: parseInt(row[2]),
       resetAt: if row[3] != "": some(row[3].Timestamp) else: none(Timestamp),
       clearedAt: if row[4] != "": some(row[4].Timestamp) else: none(Timestamp),
@@ -159,7 +159,7 @@ proc updateMissions*(db: DbConn, missions: openArray[Mission]) =
           count = excluded.count, receivedStepCount = excluded.receivedStepCount,
           resetAt = excluded.resetAt, clearedAt = excluded.clearedAt
       """,
-      mission.missionId, mission.count.get(0), mission.receivedStepCount,
+      mission.missionId, mission.count, mission.receivedStepCount,
       mission.resetAt.get("".Timestamp), mission.clearedAt.get("".Timestamp)
     )
 
@@ -171,7 +171,7 @@ proc getMissions*(db: DbConn): seq[Mission] =
 
   result = rows.mapIt(Mission(
     missionId: parseInt(it[0]),
-    count: some(parseInt(it[1])),
+    count: parseInt(it[1]),
     receivedStepCount: parseInt(it[2]),
     resetAt: tryParseTimestamp(it[3]),
     clearedAt: tryParseTimestamp(it[4]),
@@ -210,7 +210,7 @@ proc getMissionsWithNewCount*(
     let newCount = getNewCount(mission, mdMission)
 
     if newCount.isSome():
-      mission.count = newCount
+      mission.count = newCount.get()
 
       if newCount.get() >= mdMission.steps[mdMission.steps.high].count:
         mission.clearedAt = some(getTimestampNow())
@@ -221,7 +221,7 @@ proc getMissionsWithNewCount*(
 proc getChangedOpenChestMissions*(db: DbConn, cityId: int): seq[Mission] = 
   let openChestMissions = getOpenChestMissionsForCity(db, cityId)
   return getMissionsWithNewCount(db, openChestMissions, proc (mission: Mission, mdMission: MdMission): Option[int] =
-    result = some(mission.count.get(0) + 1)
+    result = some(mission.count + 1)
   )
 
 
@@ -239,7 +239,7 @@ proc getChangedHappyWorkaholicMissions*(db: DbConn, cityId: int): seq[Mission] =
   let missions = getHappyWorkaholicMissionsForCity(db, cityId)
 
   return getMissionsWithNewCount(db, missions, proc (mi: Mission, mdMi: MdMission): Option[int] =
-    some(mi.count.get(0) + 1)
+    some(mi.count + 1)
   )
 
 
@@ -261,7 +261,7 @@ proc getRiftClearMission*(db: DbConn, dungeonId: int): seq[MdMission] =
 proc getChangedRiftClearMissions*(db: DbConn, dungeonId: int): seq[Mission] =
   let mdMissions = getRiftClearMission(db, dungeonId)
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, mdMi: MdMission): Option[int] =
-    some(mi.count.get(0) + 1)
+    some(mi.count + 1)
   )
 
 
@@ -269,7 +269,7 @@ proc getChangedCompleteCityChallengeMissions*(db: DbConn, cityId: int): seq[Miss
   let mdMissions = getCompleteCityChallengeMissionsForCityId(db, cityId)
 
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
-    some(mi.count.get(0) + 1)
+    some(mi.count + 1)
   )
 
 
@@ -277,7 +277,7 @@ proc getChangedTroubleshooterMissions*(db: DbConn, cityId: int): seq[Mission] =
   let mdMissions = getTroubleshooterMissionsForCity(db, cityId)
 
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
-    some(mi.count.get(0) + 1)
+    some(mi.count + 1)
   )
 
 
@@ -293,7 +293,7 @@ proc getChangedLinkedSignpostsMissions*(db: DbConn, cityId: int): seq[Mission] =
   let mdMissions = getLinkedSignpostsMissionsForCity(db, cityId)
 
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
-    some(mi.count.get(0) + 1)
+    some(mi.count + 1)
   )
 
 
@@ -301,7 +301,7 @@ proc getChangedTCLevelCapMissions*(db: DbConn): seq[Mission] =
   let mdMissions = getTCLevelCapMissions(db)
 
   getMissionsWithNewCount(db, mdMissions, proc (mi: Mission, _: MdMission): Option[int] =
-    some(mi.count.get(0) + 1)
+    some(mi.count + 1)
   )
 
 
