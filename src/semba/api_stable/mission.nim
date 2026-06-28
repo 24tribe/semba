@@ -96,7 +96,7 @@ proc mission_CountRewardReceive*(db: DbConn, req: MissionCountRewardReceiveReque
   var changedResources: Resources
     
   var wallet = getWallet(db)
-  wallet.free = some(wallet.free.get(0) + 100)
+  wallet.free += 100
   setWallet(db, wallet)
   changedResources.wallet = some(wallet)
 

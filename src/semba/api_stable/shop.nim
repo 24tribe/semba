@@ -63,7 +63,7 @@ proc shop_Purchase*(db: DbConn, req: ShopPurchaseRequest): ChangedResourcesRespo
     case cost.`type`:
     of rewardPaidGem.int:
       var wallet = changedResources.wallet.get(getWallet(db))
-      wallet.paid = some(wallet.paid.get(0) - cost.quantity)
+      wallet.paid -= cost.quantity
       setWallet(db, wallet)
       changedResources.wallet = some(wallet)
     of rewardCostumeToken.int:

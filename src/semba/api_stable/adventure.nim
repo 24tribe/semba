@@ -282,7 +282,7 @@ proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): Adv
   result.rewards = @[Reward(`type`: rewardFreeGem.int, id: 1, quantity: graffitiFreeGems)]
 
   var wallet = getWallet(db)
-  wallet.free = some(wallet.free.get(0) + graffitiFreeGems)
+  wallet.free += graffitiFreeGems
   setWallet(db, wallet)
   result.changedResources.wallet = some(wallet)
 

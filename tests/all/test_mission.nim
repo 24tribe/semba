@@ -204,8 +204,7 @@ proc testMissionCountRewardReceive(saves_dir: string) =
   let changedResources = res.get().changedResources
 
   doAssert(changedResources.wallet.isSome)
-  # FIXME: remove Option from wallet.free
-  doAssert(wallet.free.get(0) + 100 == changedResources.wallet.get().free.get())
+  doAssert(wallet.free + 100 == changedResources.wallet.get().free)
 
   doAssert(changedResources.missionCountRewardStates == @[MissionCountRewardState(
     missionCountRewardId: 10, receivedStepCount: 1

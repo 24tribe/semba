@@ -1,12 +1,11 @@
 import std/strutils
-import std/options
 
 import db_connector/db_sqlite
 
 
 type Wallet* = object
-  free*: Option[int]
-  paid*: Option[int]
+  free*: int
+  paid*: int
 
 
 proc getWallet*(db: DbConn): Wallet =
@@ -21,9 +20,9 @@ proc getWallet*(db: DbConn): Wallet =
   if paidGems >= 5_000_000:
     paidGems = 4_000_000
 
-  result = Wallet(free: some(freeGems), paid: some(paidGems))
+  result = Wallet(free: freeGems, paid: paidGems)
 
 
 proc setWallet*(db: DbConn, wallet: Wallet) =
-  db.exec(sql"UPDATE userData SET val=? WHERE keyName='freeGems'", wallet.free.get(0))
-  db.exec(sql"UPDATE userData SET val=? WHERE keyName='paidGems'", wallet.paid.get(0))
+  db.exec(sql"UPDATE userData SET val=? WHERE keyName='freeGems'", wallet.free)
+  db.exec(sql"UPDATE userData SET val=? WHERE keyName='paidGems'", wallet.paid)

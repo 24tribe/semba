@@ -254,7 +254,7 @@ proc updateResourcesFromRewardsTypeSafe*(
     case intToEnum(reward.`type`, RewardType):
     of rewardFreeGem:
       var wallet = result.wallet.get(getWallet(db))
-      wallet.free = some(wallet.free.get(0) + reward.quantity)
+      wallet.free += reward.quantity
       setWallet(db, wallet)
       result.wallet = some(wallet)
     of rewardGearDrop:

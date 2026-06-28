@@ -44,7 +44,7 @@ proc testShopPurchase() =
   doAssert(changedResources.items == [Item(itemId: enigmaticPieceId, quantity: 20)])
 
   let walletAfter = getWallet(ctx.db)
-  doAssert(walletAfter.free.get(0) == walletBefore.free.get(0) + 240)
+  doAssert(walletAfter.free == walletBefore.free + 240)
 
 
 proc testSuiteShop*(savesDir: string) =
