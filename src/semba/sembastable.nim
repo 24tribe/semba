@@ -151,6 +151,8 @@ proc getJsonResultStable*(
   of "/shop/purchase":
     result = toProtoJson(shop_Purchase(db, protoJsonTo(jsonReq, ShopPurchaseRequest)))
 
+  of "/tension_card/level_limit_enhance":
+    result = tensionCard_LevelLimitEnhance(db, jsonReq.protoJsonTo(TensionCardLevelLimitEnhanceRequest)).toProtoJson
   of "/tension_card/limit_break_enhance":
     result = tensionCard_LimitBreakEnhance(db, protoJsonTo(jsonReq, TensionCardLimitBreakEnhanceRequest)).toProtoJson
   of "/tension_card/lock":

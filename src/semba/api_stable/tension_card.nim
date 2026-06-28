@@ -25,6 +25,9 @@ type TensionCardLockRequest* = object
   entityIds*: seq[int]
   isLock*: bool
 
+type TensionCardLevelLimitEnhanceRequest* = object
+  entityId: int
+
 
 proc tensionCard_LimitBreakEnhance*(db: DbConn, req: TensionCardLimitBreakEnhanceRequest): TensionCardLimitBreakEnhanceResponse =
   var tensionCard = getTensionCards(db, [req.entityId])[0]
@@ -71,3 +74,10 @@ proc tensionCard_Enhance*(db: DbConn, req: TensionCardEnhanceRequest): ChangedRe
   upsertTensionCard(db, tc)
 
   result.changedResources = changedResources
+
+
+proc tensionCard_LevelLimitEnhance*(
+  db: DbConn, req: TensionCardLevelLimitEnhanceRequest
+): ChangedResourcesResponse =
+  discard
+  
