@@ -94,7 +94,9 @@ proc testTensionCardLevelLimitEnhance(savesDir: string) =
   checkItemDeducted(3103, 3, changedResources.items, items)
   checkItemDeducted(5031, 1, changedResources.items, items)
  
-  # FIXME: check consumed mission 1041039
+  doAssert(changedResources.missions.len == 1)
+  doAssert(changedResources.missions[0].missionId == 1041039)
+  doAssert(changedResources.missions[0].count == some(1))
 
 
 proc testSuiteTensionCard*(savesDir: string) =
