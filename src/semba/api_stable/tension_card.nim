@@ -5,6 +5,7 @@ import db_connector/db_sqlite
 import ../model_stable/item
 import ../model_stable/resources
 import ../model_stable/tension_card
+import ../model_stable/tension_card_level_limit
 import ../model_stable/status
 
 
@@ -79,5 +80,13 @@ proc tensionCard_Enhance*(db: DbConn, req: TensionCardEnhanceRequest): ChangedRe
 proc tensionCard_LevelLimitEnhance*(
   db: DbConn, req: TensionCardLevelLimitEnhanceRequest
 ): ChangedResourcesResponse =
-  discard
-  
+  var changedResources: Resources
+
+  var tensionCard = getTensionCards(db, [req.entityId])[0]
+  let nextLevelLimit = getNextTCLevelLimit(db, tensionCard.tensionCardId, tensionCard.maxLevel)
+  tensionCard.maxLevel = nextLevelLimit.maxLevel 
+
+  changedResources.tensionCards = @[tensionCard]
+  upsertTensionCards(db, changedResources.tensionCards)
+
+  result.changedResources = changedResources
