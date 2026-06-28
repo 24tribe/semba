@@ -13,6 +13,10 @@ type Item* = object
   itemId*: int
   quantity*: int
 
+type MdItem* = object
+  item_id*: int
+  quantity*: int
+
 type ConsumedItem* = Item
 
 

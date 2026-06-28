@@ -1,6 +1,7 @@
 import std/json
 import std/options
 import std/sequtils
+import std/sets
 
 import ./utils
 import ../../src/semba/protojson
@@ -8,7 +9,7 @@ import ../../src/semba/model_stable/item
 import ../../src/semba/model_stable/resources
 import ../../src/semba/model_stable/status
 import ../../src/semba/model_stable/tension_card
-
+import ../../src/semba/model_stable/tension_card_level_limit
 
 proc testTensionCardEnhance() =
   var ctx = getInMemorySembaCtx()
@@ -46,5 +47,21 @@ proc testTensionCardEnhance() =
   doAssert(tc.exp == beforeTensionCard.exp + consumedTcExp)
 
 
+proc testGetNextTCLevelLimit() =
+  var ctx = getInMemorySembaCtx()
+  let tensionCardId = 20001
+  let levelLimit = getNextTCLevelLimit(ctx.db, tensionCardId, 10)
+
+  doAssert(levelLimit.maxLevel == 20)
+  doAssert(levelLimit.goldCost == 10000)
+
+  doAssert(levelLimit.itemCosts.toHashSet == [
+    MdItem(itemId: 50061, quantity: 5),
+    MdItem(itemId: 3103, quantity: 3),
+    MdItem(itemId: 5011, quantity: 1),
+  ].toHashSet)
+
+
 proc testSuiteTensionCard*(savesDir: string) =
   testTensionCardEnhance()
+  testGetNextTCLevelLimit()
