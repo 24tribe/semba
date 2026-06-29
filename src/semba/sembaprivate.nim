@@ -1,4 +1,3 @@
-import std/algorithm
 import std/strutils
 import std/json
 import std/os
@@ -108,8 +107,6 @@ proc semba_ListSaveFiles(req: SembaListSaveFilesRequest): SembaListSaveFilesResp
   for k in walkDir(req.savesDir, relative = true):
     if k.kind == pcFile and k.path.endswith(".save"):
       result.names.add(k.path.changeFileExt(""))
-
-  result.names.sort()
 
 
 proc semba_GetStdGachaRates(db: DbConn): JsonNode =
