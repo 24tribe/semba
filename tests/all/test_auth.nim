@@ -4,6 +4,7 @@ import std/options
 import ./utils
 import ../../src/semba/protojson
 import ../../src/semba/api_stable/auth
+import ../../src/semba/model_stable/user
 
 
 proc genFakeHex(byteCount: int): string =
@@ -25,5 +26,15 @@ proc testSignUp() =
   doAssert(res.get().userId == fakeUserId)
 
 
+proc testAuthSignIn() =
+  var ctx = getInMemorySembaCtx()
+  let res = ctx.sembaCall("/auth/sign_in", %*{}).protoJsonTo(Option[AuthSignInResponse])
+  doAssert(res.isSome)
+  doAssert(res.get().language == userLanguageEnglish)
+  doAssert(res.get().sessionToken == fakeSessionToken)
+  doAssert(not res.get().deviceChanged)
+
+
 proc testSuiteAuth*(savesDir: string) =
   testSignUp()
+  testAuthSignIn()
