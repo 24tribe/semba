@@ -18,7 +18,13 @@ import ./model_stable/status
 import ./model_semba/gear
 import ./model_semba/known_location
 
+
 const sembaSql = slurp("semba.sql")
+const sembaVersionStr = staticExec("git describe --abbrev=6 --dirty --always --tags")
+
+
+type SembaVersionResponse* = object
+  version*: string
 
 type SembaNewGameRequest = object
   skipTutorial: bool
@@ -229,6 +235,10 @@ proc semba_MoveToArea*(db: DbConn, req: SembaMoveToAreaRequest) =
   setUserStatusTypeSafe(db, status)
 
 
+proc semba_Version*(): SembaVersionResponse =
+  result.version = sembaVersionStr
+
+
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =
   if uri == "/semba/echo":
     let dataUpper = jsonReq["data"].getStr().toUpperAscii()
@@ -261,3 +271,5 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
     semba_MailGear(db, protoJsonTo(jsonReq, SembaMailGearRequest))
   elif uri == "/semba/move_to_area":
     semba_MoveToArea(db, protoJsonTo(jsonReq, SembaMoveToAreaRequest))
+  elif uri == "/semba/version":
+    result = semba_Version().toProtoJson
