@@ -16,6 +16,7 @@ import ./all/test_shop
 import ./all/test_status
 import ./all/test_tension_card
 import ./all/test_tip
+import ./all/test_user
 
 
 when isMainModule:
@@ -37,3 +38,4 @@ when isMainModule:
   testSuiteStatus(savesDir)
   testSuiteTensionCard(savesDir)
   testSuiteTip(savesDir)
+  testSuiteUser(savesDir)
