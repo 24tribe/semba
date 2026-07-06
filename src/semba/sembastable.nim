@@ -58,7 +58,7 @@ proc getJsonResultStable*(
   of "/auth/nonce":
     result = %*{"nonce": "6969696969696969"}
   of "/auth/sign_in":
-    result = %*{"sessionToken": "69696969-6969-6969-6969-696969696969", "language": 2}
+    result = auth_SignIn(db).toProtoJson
   of "/auth/sign_up":
     result = auth_SignUp().toProtoJson
 
