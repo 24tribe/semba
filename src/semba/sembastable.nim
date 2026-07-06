@@ -174,6 +174,8 @@ proc getJsonResultStable*(
     result = user_CrossDate(db, jsonReq)
   of "/user/log_in":
     result = user_LogIn(db).toProtoJson
+  of "/user/update_language":
+    user_UpdateLanguage(db, jsonReq.protoJsonTo(UserUpdateLanguageRequest))
   
   of "/xb/formation":
     result = xb_Formation(db, jsonReq)

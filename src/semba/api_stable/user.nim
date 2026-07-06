@@ -34,6 +34,7 @@ import ../model_stable/tip
 import ../model_stable/total_task
 import ../model_stable/tutorial_state
 import ../model_stable/tutorial
+import ../model_stable/user
 import ../model_stable/wallet
 import ../model_stable/warp_point
 
@@ -42,6 +43,9 @@ type UserLogInResponse* = object
   resources*: Resources
   masterData*: MasterData
   moveToAreaLocatorId*: Option[int]
+
+type UserUpdateLanguageRequest* = object
+  language*: int
 
 
 proc user_CrossDate*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -108,3 +112,7 @@ proc user_LogIn*(db: DbConn): UserLogInResponse =
     wallet: some(getWallet(db)),
     warpPoints: getWarpPoints(db),
   )
+
+
+proc user_UpdateLanguage*(db: DbConn, req: UserUpdateLanguageRequest) =
+  setUserLanguage(db, req.language)
