@@ -4,6 +4,7 @@ import std/options
 import db_connector/db_sqlite
 
 import ./api_stable/adventure
+import ./api_stable/auth
 import ./api_stable/battle
 import ./api_stable/character
 import ./api_stable/dungeon
@@ -58,6 +59,8 @@ proc getJsonResultStable*(
     result = %*{"nonce": "6969696969696969"}
   of "/auth/sign_in":
     result = %*{"sessionToken": "69696969-6969-6969-6969-696969696969", "language": 2}
+  of "/auth/sign_up":
+    result = auth_SignUp().toProtoJson
 
   of "/battle/start":
     result = toProtoJson(battle_Start(db, lastBattleInfo, jsonReq))
