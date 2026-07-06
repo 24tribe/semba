@@ -68,7 +68,8 @@ proc sembaExCallImpl*(
 
   result = if jsonRes != nil: $jsonRes else: ""
 
-  logFlowOffline(ctx.db, path, request, result)
+  if not path.startsWith("/auth"):
+    logFlowOffline(ctx.db, path, request, result)
 
 
 proc int32ToGameVersion(gameVersion: int32): Option[SembaExGameVersion] =
