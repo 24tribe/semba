@@ -16,7 +16,7 @@ proc itemsTableExists(db: DbConn): bool =
 
 
 proc test_reset_db() =
-  var ctx = SembaExContext(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
+  var ctx = SembaExContextRef(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
 
   doAssert(not itemsTableExists(ctx.db))
 

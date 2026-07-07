@@ -30,6 +30,8 @@ type SembaExContext* = object
   gameVersion*: SembaExGameVersion
   lastBattleInfo*: Option[BattleInfo]
 
+type SembaExContextRef* = ref SembaExContext
+
 
 proc logFlowOffline*(db: DbConn, uri: string, req: string, res: string) =
   db.exec(
@@ -45,7 +47,7 @@ proc dupString*(str: string): cstring =
 
 
 proc sembaExCallImpl*(
-    ctx: var SembaExContext, path: string, request: string
+  ctx: SembaExContextRef, path: string, request: string
 ): string =
   let jsonReq = if request != "": parseJson(request) else: nil
   var jsonRes: JsonNode
@@ -80,7 +82,7 @@ proc int32ToGameVersion(gameVersion: int32): Option[SembaExGameVersion] =
 
 proc sembaExInit(
     dbPath: cstring, gameVersion: int32, status: ptr int32
-): ptr SembaExContext {.exportc: "SembaExInit", dynlib.} =
+): SembaExContextRef {.exportc: "SembaExInit", dynlib.} =
     let version = int32ToGameVersion(gameVersion)
 
     if version.isNone():
@@ -97,23 +99,15 @@ proc sembaExInit(
             status[] = statusDbError.int32
         return nil
 
-    result = cast[ptr SembaExContext](c_malloc(sizeof(SembaExContext).csize_t))
-
-    if result == nil:
-        if status != nil:
-            status[] = statusAllocError.int32
-        return nil
-
-    zeroMem(result, sizeof(SembaExContext))
-
-    result[] = SembaExContext(db: db, gameVersion: version.get(), lastBattleInfo: none(BattleInfo))
+    result = SembaExContextRef(db: db, gameVersion: version.get(), lastBattleInfo: none(BattleInfo))
+    GC_ref(result)
 
     if status != nil:
         status[] = statusOk.int32
 
 
 proc sembaExCall(
-    ctx: ptr SembaExContext, path: cstring, req: cstring, status: ptr int32
+    ctx: SembaExContextRef, path: cstring, req: cstring, status: ptr int32
 ): cstring {.exportc: "SembaExCall", dynlib.} =
     if ctx == nil:
       if status != nil:
@@ -121,7 +115,7 @@ proc sembaExCall(
       return nil
 
     try:
-        let res = sembaExCallImpl(ctx[], $path, $req)
+        let res = sembaExCallImpl(ctx, $path, $req)
         result = if res != "": dupString(res) else: nil
         if status != nil:
             status[] = statusOk.int32
@@ -136,7 +130,7 @@ proc sembaExFreeResponse(response: cstring) {.exportc: "SembaExFreeResponse", dy
     c_free(response)
 
 
-proc sembaExDeinit(ctx: ptr SembaExContext) {.exportc: "SembaExDeinit", dynlib.} =
+proc sembaExDeinit(ctx: SembaExContextRef) {.exportc: "SembaExDeinit", dynlib.} =
     if ctx != nil:
         close(ctx.db)
-    c_free(ctx)
+        GC_unref(ctx)

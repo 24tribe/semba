@@ -713,7 +713,7 @@ proc testLinkedSignpostsMission(saves_dir: string) =
   doAssert(mission.count == 4)
 
 
-proc readFullMarksTutorialSequence(ctx: var SembaExContext): Option[AdventureReadSequenceResponse] =
+proc readFullMarksTutorialSequence(ctx: SembaExContextRef): Option[AdventureReadSequenceResponse] =
   ctx.sembaCall("/adventure/read_sequence", %*{
     "sequenceRequestIds": [ fullMarksGateTutorialSeqReqId ],
     "nineSequences": [{ "id": 95011001, "choices": "{\"Selections\":[]}" } ],
