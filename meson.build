@@ -46,6 +46,12 @@ else
     if host_machine.system() == 'windows'
         semba_output = 'libsemba.dll'
     else
+        b_sanitize = get_option('b_sanitize')
+
+        if b_sanitize != 'none'
+            nim_release_args += ['--passL:-fsanitize=' + b_sanitize, '--passC:-fsanitize=' + b_sanitize]
+        endif
+
         semba_output = 'libsemba.so'
     endif
     app_arg = '--app:lib'
