@@ -17,11 +17,13 @@ import ./all/test_status
 import ./all/test_tension_card
 import ./all/test_tip
 import ./all/test_user
+import ./all/test_ffi
 
 
 when isMainModule:
   setIsRiggedRng(true)
   let savesDir = "test_saves"
+  testSuiteFfi(savesDir)
   testSuiteAuth(savesDir)
   testSuiteAdventure(savesDir)
   testSuiteBattle(savesDir)
