@@ -1,0 +1,1 @@
+option('thread_support', type : 'boolean', value: false)

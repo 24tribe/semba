@@ -15,6 +15,10 @@ sqlite3 = executable('sqlite3', 'shell.c', sqlite3_c, dependencies : m_dep)
 
 nim_release_args = ['--cc:gcc', '--gcc.exe=cc', '--gcc.linkerexe=cc']
 
+if get_option('thread_support')
+    nim_release_args += ['--threads:on']
+endif
+
 semba_db = custom_target(
     'semba_db',
     input : 'src/semba/semba.sql',
