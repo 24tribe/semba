@@ -236,8 +236,12 @@ proc semba_MoveToArea*(db: DbConn, req: SembaMoveToAreaRequest) =
 
 
 proc semba_Version*(): SembaVersionResponse =
-  result.version = sembaVersionStr
-
+  const hasThreadSupport = compileOption("threads")
+  when hasThreadSupport:
+    result.version = sembaVersionStr & " (threads on)"
+  else:
+    result.version = sembaVersionStr
+    
 
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =
   if uri == "/semba/echo":

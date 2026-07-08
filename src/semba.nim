@@ -8,6 +8,7 @@ import db_connector/db_sqlite
 
 import ./semba/sembastable
 import ./semba/sembaprivate
+import ./semba/protojson
 import ./semba/model_stable/battle
 import ./semba/model_stable/timestamp
 
@@ -25,10 +26,17 @@ type SembaExStatus* = enum
     statusAllocError = 4
     statusInvalidContext = 5
 
+
+const hasThreadSupport = compileOption("threads")
+
+
 type SembaExContext* = object
   db*: DbConn
   gameVersion*: SembaExGameVersion
-  lastBattleInfo*: Option[BattleInfo]
+  when hasThreadSupport:
+    lastBattleInfo*: cstring
+  else:
+    lastBattleInfo*: Option[BattleInfo]
 
 type SembaExContextRef* = ref SembaExContext
 
@@ -56,11 +64,26 @@ proc sembaExCallImpl*(
 
   var committed = false
 
+  var lastBattleInfo =
+    when hasThreadSupport:
+      if ctx.lastBattleInfo.isNil:
+        none(BattleInfo)
+      else:
+        parseJson($ctx.lastBattleInfo).protoJsonTo(Option[BattleInfo])
+    else:
+      ctx.lastBattleInfo
+
   try:
     if path.startsWith("/semba/"):
       jsonRes = getJsonResultPrivateApi(path, jsonReq, ctx.db)
     else:
-      jsonRes = getJsonResultStable(path, jsonReq, ctx.db, ctx.lastBattleInfo)
+      jsonRes = getJsonResultStable(path, jsonReq, ctx.db, lastBattleInfo)
+
+    when hasThreadSupport:
+      c_free(ctx.lastBattleInfo)
+      ctx.lastBattleInfo = dupString($(lastBattleInfo.toProtoJson))
+    else:
+      ctx.lastBattleInfo = lastBattleInfo
 
     ctx.db.exec(sql"COMMIT")
     committed = true
@@ -99,7 +122,12 @@ proc sembaExInit(
             status[] = statusDbError.int32
         return nil
 
-    result = SembaExContextRef(db: db, gameVersion: version.get(), lastBattleInfo: none(BattleInfo))
+    when hasThreadSupport:
+      let lastBattleInfo: cstring = nil
+    else:
+      let lastBattleInfo = none(BattleInfo)
+
+    result = SembaExContextRef(db: db, gameVersion: version.get(), lastBattleInfo: lastBattleInfo)
     GC_ref(result)
 
     if status != nil:
