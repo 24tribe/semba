@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.2.0"
+version       = "0.3.0"
 author        = "gyubid"
 description   = "Server part of TNZ"
 license       = "MIT"
