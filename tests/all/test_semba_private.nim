@@ -6,7 +6,6 @@ import db_connector/db_sqlite
 import ../../src/semba
 import ../../src/semba/sembaprivate
 import ../../src/semba/protojson
-import ../../src/semba/model_stable/battle
 import ../../src/semba/model_stable/status
 import ./utils
 
@@ -16,7 +15,7 @@ proc itemsTableExists(db: DbConn): bool =
 
 
 proc test_reset_db() =
-  var ctx = SembaExContextRef(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
+  var ctx = SembaExContextRef(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb())
 
   doAssert(not itemsTableExists(ctx.db))
 

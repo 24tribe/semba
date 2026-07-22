@@ -1,10 +1,8 @@
-import std/options
 import std/json
 
 import db_connector/db_sqlite
 
 import ../../src/semba
-import ../../src/semba/model_stable/battle
 
 
 proc initMemoryDb*(): DbConn = open(":memory:", "", "", "")
@@ -19,7 +17,7 @@ proc sembaCall*(ctx: SembaExContextRef, path: string, body: JsonNode): JsonNode 
 
 
 proc getInMemorySembaCtx*(): SembaExContextRef =
-  result = SembaExContextRef(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb(), lastBattleInfo: none(BattleInfo))
+  result = SembaExContextRef(gameVersion: gameVersion_1_1_3_35, db: initMemoryDb())
   discard sembaCall(result, "/semba/reset_db", nil)
 
 
