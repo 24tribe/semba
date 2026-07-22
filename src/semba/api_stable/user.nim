@@ -16,6 +16,7 @@ import ../model_stable/character_piece
 import ../model_stable/city
 import ../model_stable/dungeon
 import ../model_stable/formation
+import ../model_stable/gacha
 import ../model_stable/graffiti_art
 import ../model_stable/gear
 import ../model_stable/item
@@ -73,7 +74,9 @@ proc user_Notification*(db: DbConn): JsonNode =
 proc user_LogIn*(db: DbConn): UserLogInResponse =
   if isFirstLogin(db):
     setFirstLogin(db, false)
-    if not getSkipTutorial(db):
+    if getSkipTutorial(db):
+      setAfterTutorialGacha(db)
+    else:
       resetToTutorial(db)
 
   result.masterData.shopProducts = getShopProducts(db)
