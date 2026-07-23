@@ -53,6 +53,8 @@ proc getJsonResultStable*(
     result = toProtoJson(adventure_Hospital(db))
   of "/adventure/access_warp_point":
     result = toProtoJson(adventure_AccessWarpPoint(db, jsonReq))
+  of "/adventure/track_target":
+    result = adventure_TrackTarget(db, jsonReq.protoJsonTo(AdventureTrackTargetRequest)).toProtoJson
 
   of "/auth/steam_user":
     result = %*{"userId": 696969696969}

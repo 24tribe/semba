@@ -77,6 +77,11 @@ type AdventureReadSequenceRequest* = object
   areaKeyId*: int
   currentLocation*: CurrentLocation
 
+type AdventureTrackTargetRequest* = object
+  warpPointId*: Option[int]
+  fieldBossId*: Option[int]
+  dungeonId*: Option[int]
+
 
 proc adventure_WarpAreaLocator*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
   resetAreaEnemies(db)
@@ -287,3 +292,15 @@ proc adventure_FindGraffiti*(db: DbConn, req: AdventureFindGraffitiRequest): Adv
   result.changedResources.wallet = some(wallet)
 
   result.changedResources.status = some(getUserStatusTypeSafe(db))
+
+
+proc adventure_TrackTarget*(db: DbConn, req: AdventureTrackTargetRequest): ChangedResourcesResponse =
+  var status = db.getUserStatusTypeSafe()
+
+  status.trackingWarpPointId = req.warpPointId
+  status.trackingFieldBossId = req.fieldBossId
+  status.trackingDungeonId = req.dungeonId
+
+  db.setUserStatusTypeSafe(status)
+
+  result.changedResources.status = some(status)
