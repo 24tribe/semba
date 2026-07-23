@@ -871,7 +871,32 @@ proc testAdventureTrackTarget() =
   doAssert(status.trackingFieldBossId == some(109201))
   doAssert(status.trackingWarpPointId.isNone)
   doAssert(status.trackingDungeonId.isNone)
- 
+
+
+proc testAreaAfterSharkFirstBattleHasAreaBehavior(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+
+  ctx.loadSaveFile(savesDir, "bugged shark objective")
+
+  let res = ctx.sembaCall("/adventure/move_to_area", %*{
+    "areaId": 100211,
+    "currentLocation": {
+      "areaType": 1,
+      "direction": 5,
+      "positionCoordinates": {
+        "x": 0.17,
+        "y": 3.04166675,
+        "z": -4.49
+      },
+      "areaKeyId": 100211
+    }
+  }).protoJsonTo(Option[AdventureMoveToAreaResponse])
+
+  doAssert(res.isSome)
+  let areaBehavior = res.get().areaBehavior
+  doAssert(areaBehavior.isSome)
+  doAssert(areaBehavior.get().actionSequenceId == 8010271)
+
 
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
@@ -900,3 +925,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testBuggedElevatorSaveFileIsFixed(savesDir)
   testBuggedSaveFileHasAreaObjectLocks(savesDir)
   testAdventureTrackTarget()
+  testAreaAfterSharkFirstBattleHasAreaBehavior(savesDir)
