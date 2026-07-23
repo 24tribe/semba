@@ -25,7 +25,7 @@ type AreaBehavior* = object
 type MdAreaBehaviorConditionType* = enum
   mdABCStartedChallengeProgress = 1
   mdABCClearedChallengeProgress = 2
-  mdABCRespawnAtHospital = 10
+  mdABCHospital = 10
 
 
 proc getAreaBgms*(db: DbConn): seq[JsonNode] =
@@ -119,12 +119,27 @@ proc updateAreaBgm*(db: DbConn, areaId: int, id: int, eventName: string) =
 
 
 proc getAreaBehavior*(db: DbConn, areaId: int): Option[AreaBehavior] = 
+  let row = db.getRow(
+    sql"""
+      SELECT actionSequenceId
+      FROM mdAreaBehavior
+        JOIN challengeProgresses ON challengeProgresses.challengeProgressId = mdAreaBehavior.conditionId
+      WHERE areaId = ? AND ((conditionType = ? AND state = ?) OR (conditionType = ? AND state = ?))
+      ORDER BY CAST(priority AS INT) DESC
+    """,
+    areaId,
+    mdABCStartedChallengeProgress.int, challengeProgressStateStarted.int,
+    mdABCClearedChallengeProgress.int, challengeProgressStateCleared.int
+  )
+
+  if row[0] != "":
+    result = some(AreaBehavior(actionSequenceId: parseInt(row[0])))
+
+
+proc getAreaBehaviorHospital*(db: DbConn, areaId: int): Option[AreaBehavior] =
   let row = db.getRow(sql"""
-    SELECT actionSequenceId
-    FROM mdAreaBehavior
-      JOIN challengeProgresses ON challengeProgresses.challengeProgressId = mdAreaBehavior.conditionId
-    WHERE conditionType = ? AND areaId = ? AND state = ?
-  """, mdABCStartedChallengeProgress.int, areaId, challengeProgressStateStarted.int)
+    SELECT actionSequenceId FROM mdAreaBehavior WHERE areaId = ? AND conditionType = ?
+  """, areaId, mdABCHospital.int)
 
   if row[0] != "":
     result = some(AreaBehavior(actionSequenceId: parseInt(row[0])))

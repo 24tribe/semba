@@ -51,7 +51,7 @@ type AdventureAccessWarpPointResponse* = object
 type AdventureMoveToAreaRequest* = object
   areaId*: int
   currentLocation*: Option[CurrentLocation]
-  respawnAtHospital*: Option[bool]
+  respawnAtHospital*: bool
 
 type AdventureMoveToAreaResponse* = object
   changedResources*: Resources
@@ -142,7 +142,11 @@ proc adventure_MoveToArea*(db: DbConn, req: AdventureMoveToAreaRequest): Adventu
   result.changedResources.status = some(status)
   result.changedResources.areas = changedAreas
 
-  result.areaBehavior = db.getAreaBehavior(req.areaId)
+  result.areaBehavior =
+    if req.respawnAtHospital:
+      db.getAreaBehaviorHospital(req.areaId)
+    else:
+      db.getAreaBehavior(req.areaId)
 
 
 proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
