@@ -314,13 +314,6 @@ proc updateResourcesFromRewardsTypeSafe*(
   result.characters = characters
 
 
-proc updateStatusFromCurrentLocation*(status: var Status, currentLocation: CurrentLocation) =
-  status.currentAreaType = currentLocation.areaType
-  status.currentDirection = currentLocation.direction
-  status.currentPositionCoordinates = currentLocation.positionCoordinates
-  status.currentAreaKeyId = currentLocation.areaKeyId
-
-
 proc rewardsToChangedItems*(db: DbConn, rewards: seq[Reward]): (seq[Item], int) =
   var itemsTable = getItemsTable(db)
 

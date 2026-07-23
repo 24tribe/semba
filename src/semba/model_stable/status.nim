@@ -59,3 +59,19 @@ proc updateStatusFromStatusLocation*(status: var Status, otherStatus: Status) =
   status.currentDirection = otherStatus.currentDirection
   status.currentPositionCoordinates = otherStatus.currentPositionCoordinates
   status.currentAreaKeyId = otherStatus.currentAreaKeyId
+
+
+proc getCurrentLocation*(status: Status): CurrentLocation = 
+  CurrentLocation(
+    areaType: status.currentAreaType,
+    areaKeyId: status.currentAreaKeyId,
+    positionCoordinates: status.currentPositionCoordinates,
+    direction: status.currentDirection,
+  )
+
+
+proc updateStatusFromCurrentLocation*(status: var Status, currentLocation: CurrentLocation) =
+  status.currentAreaType = currentLocation.areaType
+  status.currentDirection = currentLocation.direction
+  status.currentPositionCoordinates = currentLocation.positionCoordinates
+  status.currentAreaKeyId = currentLocation.areaKeyId

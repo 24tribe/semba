@@ -9,6 +9,7 @@ import ./api_stable/battle
 import ./api_stable/character
 import ./api_stable/dungeon
 import ./api_stable/event
+import ./api_stable/field_boss
 import ./api_stable/follow
 import ./api_stable/formation
 import ./api_stable/gacha
@@ -97,6 +98,9 @@ proc getJsonResultStable*(
     result = event_ListNode(db)
   of "/event/finish_node":
     result = event_FinishNode(db, jsonReq)
+
+  of "/field_boss/entry":
+    result = fieldBoss_Entry(db, jsonReq.protoJsonTo(FieldBossEntryRequest)).toProtoJson
 
   of "/follow/list":
     result = toProtoJson(follow_List())
