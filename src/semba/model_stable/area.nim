@@ -7,6 +7,7 @@ import db_connector/db_sqlite
 
 import ../semba_error
 import ./area_change_lock
+import ./challenge_progress
 
 
 type Area* = object
@@ -19,6 +20,9 @@ type AreaBgm* = object
 
 type AreaBehavior* = object
   actionSequenceId*: int
+
+type MdAreaBehaviorConditionType* = enum
+  mdABCStartedChallengeProgress = 1
 
 
 proc getAreaBgms*(db: DbConn): seq[JsonNode] =
@@ -157,3 +161,15 @@ proc updateAreaBgm*(db: DbConn, areaId: int, id: int, eventName: string) =
     sql"UPDATE areaBgm SET id = ?, eventName = ? WHERE areaId = ?",
     id, eventName, areaId
   )
+
+
+proc getAreaBehavior*(db: DbConn, areaId: int): Option[AreaBehavior] = 
+  let row = db.getRow(sql"""
+    SELECT actionSequenceId
+    FROM mdAreaBehavior
+      JOIN challengeProgresses ON challengeProgresses.challengeProgressId = mdAreaBehavior.conditionId
+    WHERE conditionType = ? AND areaId = ? AND state = ?
+  """, mdABCStartedChallengeProgress.int, areaId, challengeProgressStateStarted.int)
+
+  if row[0] != "":
+    result = some(AreaBehavior(actionSequenceId: parseInt(row[0])))

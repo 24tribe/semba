@@ -142,6 +142,9 @@ proc adventure_MoveToArea*(db: DbConn, req: AdventureMoveToAreaRequest): Adventu
   result.changedResources.status = some(status)
   result.changedResources.areas = changedAreas
 
+  # TODO: implement the other two areaBehaviorCondition types and get rid of getActionSequenceId?
+  result.areaBehavior = db.getAreaBehavior(req.areaId)
+
   let actionSequenceId = getActionSequenceId(db, req.areaId)
 
   if actionSequenceId != 0:
