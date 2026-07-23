@@ -3,7 +3,6 @@ import std/random
 
 import db_connector/db_sqlite
 
-import ../model_stable/area
 import ../model_stable/gacha
 import ../model_stable/resources
 
@@ -63,4 +62,3 @@ proc gacha_Execute*(db: DbConn, jsonReq: JsonNode): GachaExecuteResponse =
 
   if gachaId == gachaIdTutorial.int:
     setAfterTutorialGacha(db)
-    addAreaActionSequenceId(db, %*{"areaId": 300202, "actionSequenceId": 8000161})

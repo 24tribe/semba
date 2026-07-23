@@ -89,7 +89,6 @@ const gzipMagic = "\x1F\x8B"
 type SembaSave* = object
   version*: int
   adventureVariables: seq[AdventureVariable]
-  areaActionSequenceIds: seq[JsonNode]
   areaBgms: seq[JsonNode]
   areaChangeLocks: seq[AreaChangeLock]
   areaEnemies: seq[JsonNode]
@@ -201,12 +200,6 @@ proc loadSaveFileVer5(db: DbConn, save: SembaSave, dontDeleteAllAreaObjects: boo
   db.exec(sql"DELETE FROM challengeTasks")
 
   upsertChallengeTasks(db, save.challengeTasks)
-
-  db.exec(sql"DELETE FROM areaActionSequenceIds")
-  db.exec(sql"INSERT INTO areaActionSequenceIds SELECT * FROM defaultAreaActionSequenceIds")
-
-  for areaActionSequenceId in save.areaActionSequenceIds:
-    addAreaActionSequenceId(db, areaActionSequenceId)
 
   db.exec(sql"DELETE FROM questStates")
 
@@ -395,13 +388,6 @@ proc fixHeroJammedNineSequence(db: DbConn, save: SembaSave) =
 
 
 proc sanityChecks(db: DbConn, save: var SembaSave) =
-  # https://github.com/24tribe/zero/issues/24
-  if (
-    isChallengeProgressComplete(db, 1010071) and
-    not isChallengeProgressComplete(db, 1010081)
-  ):
-    updateActionSequenceId(db, 101311, 8010081)
-
   # https://github.com/24tribe/zero/issues/26
   if isChallengeProgressComplete(db, 1010042):
     updateAreaObjects(db, %*[
@@ -575,7 +561,6 @@ proc getSaveFile*(db: DbConn): SembaSave =
     tutorialStates: getTutorialStates(db),
     adventureVariables: getAdventureVariables(db),
     challengeTasks: getChallengeTasks(db),
-    areaActionSequenceIds: getAreaActionSequenceIds(db),
     questStates: getQuestStates(db),
     clearedAchievements: getClearedAchievements(db),
     challenges: getChallenges(db),

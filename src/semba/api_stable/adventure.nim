@@ -142,13 +142,7 @@ proc adventure_MoveToArea*(db: DbConn, req: AdventureMoveToAreaRequest): Adventu
   result.changedResources.status = some(status)
   result.changedResources.areas = changedAreas
 
-  # TODO: implement the other two areaBehaviorCondition types and get rid of getActionSequenceId?
   result.areaBehavior = db.getAreaBehavior(req.areaId)
-
-  let actionSequenceId = getActionSequenceId(db, req.areaId)
-
-  if actionSequenceId != 0:
-    result.areaBehavior = some(AreaBehavior(actionSequenceId: actionSequenceId))
 
 
 proc adventure_UpdateCharacterStatus*(db: DbConn, jsonReq: JsonNode): ChangedResourcesResponse =
@@ -201,11 +195,6 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
 
     updateAreaObjectsEx(db, result.areaObjects)
     updateResources(db, result.changedResources) 
-
-    let readSequenceAreaAction = getReadSequenceAreaAction(db, seqReqId)
-
-    if readSequenceAreaAction.areaId != 0:
-      updateActionSequenceId(db, readSequenceAreaAction.areaId, readSequenceAreaAction.actionSequenceId)
 
     let readSequenceAreaBgm = getReadSequenceAreaBgm(db, seqReqId)
 
