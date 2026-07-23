@@ -21,8 +21,11 @@ type AreaBgm* = object
 type AreaBehavior* = object
   actionSequenceId*: int
 
+# same as AreaObjectBehaviorConditionType?
 type MdAreaBehaviorConditionType* = enum
   mdABCStartedChallengeProgress = 1
+  mdABCClearedChallengeProgress = 2
+  mdABCRespawnAtHospital = 10
 
 
 proc getAreaBgms*(db: DbConn): seq[JsonNode] =
