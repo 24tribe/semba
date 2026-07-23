@@ -853,6 +853,26 @@ proc testBuggedSaveFileHasAreaObjectLocks(savesDir: string) =
   doAssert(areaObjectLocks.findIt(it.areaObjectLockId == 10512802) != -1)
 
 
+proc testAdventureTrackTarget() =
+  var ctx = getInMemorySembaCtx()
+
+  let res = ctx.sembaCall("/adventure/track_target", %*{
+    "fieldBossId": 109201
+  }).protoJsonTo(Option[ChangedResourcesResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.status.isSome)
+
+  let status = changedResources.status.get()
+
+  doAssert(status.trackingFieldBossId == some(109201))
+  doAssert(status.trackingWarpPointId.isNone)
+  doAssert(status.trackingDungeonId.isNone)
+ 
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -879,3 +899,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testReadSequenceReturnsAreaChangeLock(savesDir)
   testBuggedElevatorSaveFileIsFixed(savesDir)
   testBuggedSaveFileHasAreaObjectLocks(savesDir)
+  testAdventureTrackTarget()
