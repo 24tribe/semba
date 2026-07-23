@@ -21,10 +21,10 @@ def write_area_behavior_sql(f, area_behavior_json):
     def xprint(*args):
         print(*args, file=f)
 
-    xprint("INSERT INTO mdAreaBehavior (actionSequenceId, areaId, conditionId, conditionType, id) VALUES")
+    xprint("INSERT INTO mdAreaBehavior (actionSequenceId, areaId, conditionId, conditionType, id, priority) VALUES")
 
     write_rows(xprint, f, [
-        (it["action_sequence_id"], it["area_id"], it["condition"]["id"], it["condition"]["type"], it["id"])               
+        (it["action_sequence_id"], it["area_id"], it["condition"]["id"], it["condition"]["type"], it["id"], it["priority"])               
         for it in area_behavior_json
     ])
 
