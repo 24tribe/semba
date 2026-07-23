@@ -18,6 +18,7 @@ import ./all/test_tension_card
 import ./all/test_tip
 import ./all/test_user
 import ./all/test_ffi
+import ./all/test_field_boss
 
 
 when isMainModule:
@@ -41,3 +42,4 @@ when isMainModule:
   testSuiteTensionCard(savesDir)
   testSuiteTip(savesDir)
   testSuiteUser(savesDir)
+  testSuiteFieldBoss(savesDir)
