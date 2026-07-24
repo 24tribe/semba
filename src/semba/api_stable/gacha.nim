@@ -1,10 +1,13 @@
 import std/json
+import std/options
 import std/random
 
 import db_connector/db_sqlite
 
 import ../model_stable/gacha
 import ../model_stable/resources
+import ../model_stable/challenge_progress
+import ../model_stable/challenge_task
 
 
 type GachaExecuteResponse* = object
@@ -50,15 +53,38 @@ proc gacha_Execute*(db: DbConn, jsonReq: JsonNode): GachaExecuteResponse =
   var drawnRewards = newSeq[JsonNode]()
   let (characterPieces, tensionCards) = updateDbFromDrawnCards(db, drawnCards, drawnRewards)
 
-  result = GachaExecuteResponse(
-    gacha: gacha,
-    drawnCards: drawnCards,
-    drawnRewards: drawnRewards,
-    changedResources: Resources(
-      characterPieces: characterPieces,
-      tensionCards: tensionCards,
-    )
+  var changedResources = Resources(
+    characterPieces: characterPieces,
+    tensionCards: tensionCards,
   )
 
   if gachaId == gachaIdTutorial.int:
     setAfterTutorialGacha(db)
+
+    ## This should've been set by calling getChangedResourcesForCompletedChallengeTask 
+    ## but challengeTaskId=10001531 is the only one with a taskConditionType of 48 (gacha execute)
+    ## so it's not worth changing the implementation just for this
+
+    changedResources.challengeProgresses = @[
+      ChallengeProgress(
+        challengeProgressId: 1000153, clearedAt: some(getTimestampNow()), state: challengeProgressStateCleared.int
+      ),
+      ChallengeProgress(
+        challengeProgressId: 1000161, state: challengeProgressStateStarted.int
+      ),
+    ]
+
+    db.upsertChallengeProgresses(changedResources.challengeProgresses)
+
+    changedResources.challengeTasks = @[
+      ChallengeTask(challengeTaskId: 10001531, clearedAt: some(getTimestampNow()), count: some(1))
+    ]
+
+    db.upsertChallengeTasks(changedResources.challengeTasks)
+
+  result = GachaExecuteResponse(
+    gacha: gacha,
+    drawnCards: drawnCards,
+    drawnRewards: drawnRewards,
+    changedResources: changedResources,
+  )

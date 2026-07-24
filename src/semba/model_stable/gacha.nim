@@ -8,12 +8,12 @@ import std/sequtils
 
 import db_connector/db_sqlite
 
-import character
-import character_piece
-import timestamp
-import reward
-import entity
-import tension_card
+import ./character
+import ./character_piece
+import ./timestamp
+import ./reward
+import ./entity
+import ./tension_card
 import ../semba_error
 import ../extsqlite
 
