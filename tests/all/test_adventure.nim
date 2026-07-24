@@ -917,6 +917,30 @@ proc testAquariumCoralBarAfterSharkFirstBattleDoesntHaveAreaBehavior(savesDir: s
   doAssert(areaBehavior.isNone)
 
 
+proc testMoveToAreaRespawnAtHospital() =
+  var ctx = getInMemorySembaCtx()
+
+  let res = ctx.sembaCall("/adventure/move_to_area", %*{
+    "areaId": 820101,
+    "currentLocation": {
+      "areaType": 1,
+      "direction": 5,
+      "positionCoordinates": {
+        "x": 17.75,
+        "y": 20,
+        "z": 6.25
+      },
+      "areaKeyId": 820101
+    },
+    "respawnAtHospital": true
+  }).protoJsonTo(Option[AdventureMoveToAreaResponse])
+
+  doAssert(res.isSome)
+  let areaBehavior = res.get().areaBehavior
+  doAssert(areaBehavior.isSome)
+  doAssert(areaBehavior.get().actionSequenceId == 82900202)
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -946,3 +970,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testAdventureTrackTarget()
   testAreaAfterSharkFirstBattleHasAreaBehavior(savesDir)
   testAquariumCoralBarAfterSharkFirstBattleDoesntHaveAreaBehavior(savesDir)
+  testMoveToAreaRespawnAtHospital()
