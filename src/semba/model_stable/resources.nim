@@ -157,35 +157,28 @@ proc isChallengeProgressComplete(db: DbConn, challengeProgressId: int): bool =
   """, challengeProgressId).allIt(it[0] != "")
 
 
-proc getChangedResourcesForCompletedChallengeTask*(
-  db: DbConn, challengeTask: MdChallengeTask
-): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
-  var challengeProgresses = newSeq[ChallengeProgress]()
-  var challenges = newSeq[Challenge]()
-  var nineSequences = newSeq[NineSequence]()
+proc getChangedResourcesForChallengeProgress(
+  db: DbConn, challengeProgressId: int
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) = 
 
-  var challengeTasks = @[ChallengeTask(
-    challengeTaskId: challengeTask.id, count: some(1), clearedAt: some(getTimestampNow())
-  )]
+  var areaObjects: seq[AreaObject]
+  var challengeTasks: seq[ChallengeTask]
+  var challengeProgresses: seq[ChallengeProgress]
+  var challenges: seq[Challenge]
+  var nineSequences: seq[NineSequence]
 
-  db.upsertChallengeTasks(challengeTasks)
-
-  var areaObjects = getAreaObjectsWithCondition(
-    db, areaObjectConditionTypeClearedChallengeTask, challengeTask.id
-  )
-
-  if db.isChallengeProgressComplete(challengeTask.challengeProgressId):
+  if db.isChallengeProgressComplete(challengeProgressId):
     challengeProgresses.add(ChallengeProgress(
-      challengeProgressId: challengeTask.challengeProgressId,
+      challengeProgressId: challengeProgressId,
       state: challengeProgressStateCleared.int,
       clearedAt: some(getTimestampNow()),
     ))
 
     areaObjects.insert(getAreaObjectsWithCondition(
-      db, areaObjectConditionTypeClearedChallengeProgress, challengeTask.challengeProgressId
+      db, areaObjectConditionTypeClearedChallengeProgress, challengeProgressId
     ), areaObjects.len)
 
-    let nextChallengeProgressId = getNextChallengeProgress(db, challengeTask.challengeProgressId)
+    let nextChallengeProgressId = getNextChallengeProgress(db, challengeProgressId)
 
     if nextChallengeProgressId.isSome():
       challengeProgresses.add(ChallengeProgress(
@@ -206,16 +199,48 @@ proc getChangedResourcesForCompletedChallengeTask*(
       ), areaObjects.len)
     else:
       challenges.add(Challenge(
-        challengeId: getChallengeId(db, challengeTask.challengeProgressId),
+        challengeId: getChallengeId(db, challengeProgressId),
         state: challengeStateCompleted.int,
         clearedAt: some(getTimestampNow()),
         # expiresAt?
       ))
   else:
     challengeProgresses.add(ChallengeProgress(
-      challengeProgressId: challengeTask.challengeProgressId,
+      challengeProgressId: challengeProgressId,
       state: challengeProgressStateStarted.int,
     ))
+
+  result = (areaObjects, challenges, challengeProgresses, challengeTasks, nineSequences)
+
+
+proc getChangedResourcesForCompletedChallengeTask*(
+  db: DbConn, challengeTask: MdChallengeTask
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
+  var challenges = newSeq[Challenge]()
+
+  var challengeProgresses = newSeq[ChallengeProgress]()
+
+  var challengeTasks = @[ChallengeTask(
+    challengeTaskId: challengeTask.id, count: some(1), clearedAt: some(getTimestampNow())
+  )]
+
+  db.upsertChallengeTasks(challengeTasks)
+
+  var nineSequences = newSeq[NineSequence]()
+
+  var areaObjects = getAreaObjectsWithCondition(
+    db, areaObjectConditionTypeClearedChallengeTask, challengeTask.id
+  )
+
+  let (
+    ao, chals, chalProgs, chalTasks, nineSeqs
+  ) = db.getChangedResourcesForChallengeProgress(challengeTask.challengeProgressId)
+
+  areaObjects.insert(ao)
+  challenges.insert(chals)
+  challengeProgresses.insert(chalProgs)
+  challengeTasks.insert(chalTasks)
+  nineSequences.insert(nineSeqs)
 
   result = (areaObjects, challenges, challengeProgresses, challengeTasks, nineSequences)
 
