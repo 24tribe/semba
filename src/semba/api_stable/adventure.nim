@@ -189,8 +189,11 @@ proc adventure_ReadSequence*(db: DbConn, req: AdventureReadSequenceRequest): Adv
 
     const talkWithEnokiSeqReqId = 80100431
     const talkWithMiuSeqReqId = 80100432
+    const foundCastellaSeqReqId = 80102811
+    const specialCases = [80100421, 80100422, talkWithEnokiSeqReqId, talkWithMiuSeqReqId, foundCastellaSeqReqId]
+    const verityOrbSeqReqIds = [80102011, 100093011, 100154011, 100157011, 100092011]
 
-    if seqReqId in [80100421, 80100422, talkWithEnokiSeqReqId, talkWithMiuSeqReqId]:
+    if seqReqId in specialCases or seqReqId in verityOrbSeqReqIds:
       changeReadSequenceResponse(db, seqReqId, result.changedResources, result.areaObjects)
       result.changedResources.nineSequences = processNineSequenceRequests(db, nineSequenceRequests)
       result.changedResources.adventureVariables = getSequenceAdventureVariables(db, sequenceRequestIds)
