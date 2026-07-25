@@ -149,26 +149,32 @@ proc updateResources*(db: DbConn, changedResources: var Resources) =
   upsertTensionCards(db, changedResources.tensionCards)
 
 
+proc isChallengeProgressComplete(db: DbConn, challengeProgressId: int): bool =
+  db.getAllRows(sql"""
+    SELECT clearedAt FROM challengeTasks
+      RIGHT JOIN mdChallengeTask ON challengeTasks.challengeTaskId = mdChallengeTask.id
+      WHERE mdChallengeTask.challengeProgressId = ?
+  """, challengeProgressId).allIt(it[0] != "")
+
+
 proc getChangedResourcesForCompletedChallengeTask*(
   db: DbConn, challengeTask: MdChallengeTask
 ): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
-  var areaObjects = newSeq[AreaObject]()
-  var challengeTasks = newSeq[ChallengeTask]()
   var challengeProgresses = newSeq[ChallengeProgress]()
   var challenges = newSeq[Challenge]()
   var nineSequences = newSeq[NineSequence]()
 
-  challengeTasks.add(ChallengeTask(
+  var challengeTasks = @[ChallengeTask(
     challengeTaskId: challengeTask.id, count: some(1), clearedAt: some(getTimestampNow())
-  ))
+  )]
 
-  areaObjects = getAreaObjectsWithCondition(
+  db.upsertChallengeTasks(challengeTasks)
+
+  var areaObjects = getAreaObjectsWithCondition(
     db, areaObjectConditionTypeClearedChallengeTask, challengeTask.id
   )
 
-  let otherChallengeTasks = getOtherChallengeTasks(db, challengeTask)
-
-  if all(otherChallengeTasks, proc (x: MdChallengeTask): bool = isChallengeTaskComplete(db, x.id)):
+  if db.isChallengeProgressComplete(challengeTask.challengeProgressId):
     challengeProgresses.add(ChallengeProgress(
       challengeProgressId: challengeTask.challengeProgressId,
       state: challengeProgressStateCleared.int,
