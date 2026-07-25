@@ -984,6 +984,31 @@ proc testCollectAllVerityOrbsIsntCompleteUntilHaveAllVerityOrbs(savesDir: string
   ) != -1)
 
 
+proc testCollectFirstVerityOrbChallTasksDoesntHaveChallTasksOfNotStartedChallengeProg(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+  ctx.loadSaveFile(savesDir, "before first verity orb")
+
+  let res = ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 80102011, 80102012 ],
+    "nineSequences": [ { "id": 95016001, "choices": "{\"Selections\":[]}" } ],
+    "currentLocation": {
+      "areaType": 1, "direction": 4, "positionCoordinates": { "x": -2.7, "y": 0.019291561, "z": -1.3 },
+      "areaKeyId": 101313
+    },
+    "areaType": 1, "areaKeyId": 101313
+  }).protoJsonTo(Option[AdventureReadSequenceResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.challengeTasks.len == 1)
+  let ct = changedResources.challengeTasks[0]
+  doAssert(ct.challengeTaskId == 10101911)
+  doAssert(ct.clearedAt.isSome)
+  doAssert(ct.count == some(1))
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -1015,3 +1040,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testAquariumCoralBarAfterSharkFirstBattleDoesntHaveAreaBehavior(savesDir)
   testMoveToAreaRespawnAtHospital()
   testCollectAllVerityOrbsIsntCompleteUntilHaveAllVerityOrbs(savesDir)
+  testCollectFirstVerityOrbChallTasksDoesntHaveChallTasksOfNotStartedChallengeProg(savesDir)
