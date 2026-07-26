@@ -158,6 +158,11 @@ proc isChallengeProgressComplete(db: DbConn, challengeProgressId: int): bool =
   """, challengeProgressId).allIt(it[0] != "")
 
 
+proc getChangedResourcesFromTotalTasks*(
+  db: DbConn
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence])
+
+
 proc getChangedResourcesForChallengeProgress(
   db: DbConn, challengeProgressId: int
 ): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) = 
@@ -182,11 +187,6 @@ proc getChangedResourcesForChallengeProgress(
     let nextChallengeProgressId = getNextChallengeProgress(db, challengeProgressId)
 
     if nextChallengeProgressId.isSome():
-      challengeProgresses.add(ChallengeProgress(
-        challengeProgressId: nextChallengeProgressId.get(),
-        state: challengeProgressStateStarted.int,
-      ))
-
       let nineSequenceId = getNineTrigger(db, nextChallengeProgressId.get())
 
       if nineSequenceId.isSome:
@@ -198,6 +198,36 @@ proc getChangedResourcesForChallengeProgress(
       areaObjects.insert(getAreaObjectsWithCondition(
         db, areaObjectConditionTypeStartedChallengeProgress, nextChallengeProgressId.get()
       ), areaObjects.len)
+
+      db.upsertChallengeProgresses([ChallengeProgress(
+        challengeProgressId: nextChallengeProgressId.get(),
+        state: challengeProgressStateStarted.int,
+      )])
+
+      block:
+        let (
+          ao, chals, chalProgs, chalTasks, nineSeqs
+        ) = db.getChangedResourcesFromTotalTasks()
+        areaObjects.insert(ao)
+        challenges.insert(chals)
+        challengeProgresses.insert(chalProgs)
+        challengeTasks.insert(chalTasks)
+        nineSequences.insert(nineSeqs)
+
+        db.upsertChallengeTasks(chalTasks)
+
+      block:
+        # TODO: add recursion limit?
+        let (
+          ao, chals, chalProgs, chalTasks, nineSeqs
+        ) = db.getChangedResourcesForChallengeProgress(nextChallengeProgressId.get())
+
+        # TODO: area objects conflict strategy?
+        areaObjects.insert(ao)
+        challenges.insert(chals)
+        challengeProgresses.insert(chalProgs)
+        challengeTasks.insert(chalTasks)
+        nineSequences.insert(nineSeqs)
     else:
       challenges.add(Challenge(
         challengeId: getChallengeId(db, challengeProgressId),
@@ -503,3 +533,6 @@ proc changeReadSequenceResponse*(
   changedResources.challengeProgresses.insert(chalProgs)
   changedResources.challengeTasks.insert(chalTasks)
   changedResources.nineSequences.insert(nineSeqs)
+
+  # FIXME: is there a way to not need to do this?
+  changedResources.challengeProgresses = deduplicateChallengeProgresses(changedResources.challengeProgresses)

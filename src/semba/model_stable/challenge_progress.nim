@@ -1,6 +1,7 @@
 import std/options
 import std/strutils
 import std/sequtils
+import std/tables
 
 import db_connector/db_sqlite
 
@@ -84,3 +85,14 @@ proc getChallengeId*(db: DbConn, challengeProgressId: int): int =
     raise newException(SembaError, "Couldn't get challengeId for challengeProgressId " & $challengeProgressId)
 
   result = parseInt(row[0])
+
+
+proc deduplicateChallengeProgresses*(challengeProgresses: openArray[ChallengeProgress]): seq[ChallengeProgress] =
+  var chalProgs: Table[int, ChallengeProgress]
+
+  for chalProg in challengeProgresses:
+    let currentChalProg = chalProgs.getOrDefault(chalProg.challengeProgressId, chalProg)
+    if chalProg.state >= currentChalProg.state:
+      chalProgs[chalProg.challengeProgressId] = chalProg
+
+  chalProgs.values.toSeq
