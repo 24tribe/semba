@@ -358,6 +358,13 @@ proc fixMissions(db: DbConn, save: var SembaSave, areaObjectLockCounts: CountTab
   save.missions = missions.values().toSeq()
 
 
+proc fixTotalTasksFirstVerityOrb(db: DbConn, save: SembaSave) =
+  # I used to store the totalTasks in the db without a count (:facepalm:)
+  # and now some of them have a zero as count...
+  if save.challengeTasks.findIt(it.challengeTaskId == 10101911 and it.clearedAt.isSome) != -1:
+    db.upsertTotalTasks([TotalTask(conditionId: 1011, count: 1.ProtoJsonInt64)])
+
+
 proc fixTotalTaskChallenges(db: DbConn, save: SembaSave) =
   let totalTasks = [TotalTask(conditionId: flowerMarksTotalTaskConditionId, count: save.status.flowerMark.ProtoJsonInt64)]
   db.upsertTotalTasks(totalTasks)
@@ -416,6 +423,7 @@ proc sanityChecks(db: DbConn, save: var SembaSave) =
   let areaObjectLocksCounts = ensureAlreadyDoneMiniGameThingsAreUnlocked(db, save)
 
   fixMissions(db, save, areaObjectLocksCounts)
+  fixTotalTasksFirstVerityOrb(db, save)
   fixTotalTaskChallenges(db, save)
   fixHeroJammedDrones(db, save)
   fixHeroJammedNineSequence(db, save)
