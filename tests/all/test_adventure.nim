@@ -941,6 +941,49 @@ proc testMoveToAreaRespawnAtHospital() =
   doAssert(areaBehavior.get().actionSequenceId == 82900202)
 
 
+proc testCollectAllVerityOrbsIsntCompleteUntilHaveAllVerityOrbs(savesDir: string) = 
+  var ctx = getInMemorySembaCtx()
+  ctx.loadSaveFile(savesDir, "after castella")
+
+  let res = ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 100092011, 100092012 ],
+    "currentLocation": {
+      "areaType": 1, "direction": 3, "areaKeyId": 101211,
+      "positionCoordinates": { "x": -16.92338, "y": 13.969482, "z": -20.25}
+    },
+    "areaType": 1,
+    "areaKeyId": 101211
+  }).protoJsonTo(Option[AdventureReadSequenceResponse])
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.challenges.len == 1)
+  doAssert(changedResources.challenges[0].challengeId == 106001)
+  doAssert(changedResources.challenges[0].state == 6)
+  doAssert(changedResources.challenges[0].clearedAt.isSome)
+
+  doAssert(changedResources.challengeTasks.len == 2)
+
+  doAssert(changedResources.challengeTasks.findIt(
+     it.challengeTaskId == 106001011 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  # why count is zero in the online logs?
+  doAssert(changedResources.challengeTasks.findIt(
+     it.challengeTaskId == 10102722 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  doAssert(changedResources.challengeProgresses.len == 2)
+
+  doAssert(changedResources.challengeProgresses.findIt(
+    it.challengeProgressId == 10600101 and it.clearedAt.isSome and it.state == challengeProgressStateCleared.int
+  ) != -1)
+
+  doAssert(changedResources.challengeProgresses.findIt(
+    it.challengeProgressId == 1010272 and it.clearedAt.isNone and it.state == challengeProgressStateStarted.int
+  ) != -1)
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -971,3 +1014,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testAreaAfterSharkFirstBattleHasAreaBehavior(savesDir)
   testAquariumCoralBarAfterSharkFirstBattleDoesntHaveAreaBehavior(savesDir)
   testMoveToAreaRespawnAtHospital()
+  testCollectAllVerityOrbsIsntCompleteUntilHaveAllVerityOrbs(savesDir)
