@@ -359,9 +359,12 @@ proc fixMissions(db: DbConn, save: var SembaSave, areaObjectLockCounts: CountTab
 
 
 proc fixTotalTaskChallenges(db: DbConn, save: SembaSave) =
-  let (_, challenges, challengeProgresses, challengeTasks, nineSequences) = getChangedResourcesFromTotalTasks(
-    db, [TotalTask(conditionId: flowerMarksTotalTaskConditionId, count: save.status.flowerMark.ProtoJsonInt64)]
-  )
+  let totalTasks = [TotalTask(conditionId: flowerMarksTotalTaskConditionId, count: save.status.flowerMark.ProtoJsonInt64)]
+  db.upsertTotalTasks(totalTasks)
+
+  let (
+    _, challenges, challengeProgresses, challengeTasks, nineSequences
+  ) = getChangedResourcesFromTotalTasks(db)
 
   upsertChallengesIfNotComplete(db, challenges)
   upsertChallengeProgressesIfNotComplete(db, challengeProgresses)

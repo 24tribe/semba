@@ -13,6 +13,7 @@ import ../model_stable/mission_count_reward_state
 import ../model_stable/nine_sequence
 import ../model_stable/resources
 import ../model_stable/reward
+import ../model_stable/total_task
 import ../model_stable/wallet
 
 type MissionReceiveRequest* = object
@@ -64,14 +65,14 @@ proc mission_Receive*(db: DbConn, req: MissionReceiveRequest): MissionReceiveRes
   var changedResources = updateResourcesFromRewardsTypeSafe(db, rewards, unused)
   changedResources.missions = changedMissions
 
+  db.upsertTotalTasks(changedResources.totalTasks)
+
   # TODO: do something with the area objects?
   let (
     _,
     challenges, challengeProgresses, challengeTasks,
     nineSequences
-  ) = getChangedResourcesFromTotalTasks(
-    db, changedResources.totalTasks
-  )
+  ) = getChangedResourcesFromTotalTasks(db)
 
   changedResources.challenges = challenges
   upsertChallenges(db, challenges)

@@ -8,6 +8,7 @@ import db_connector/db_sqlite
 
 import ../enum_ex
 import ../protojson
+import ../extsqlite
 import ./adventure_variable
 import ./area
 import ./area_item
@@ -245,33 +246,6 @@ proc getChangedResourcesForCompletedChallengeTask*(
   result = (areaObjects, challenges, challengeProgresses, challengeTasks, nineSequences)
 
 
-#[
-Swap the changed areaObjects, challengeTasks and challengeProgresses taken from
-the online logs with the ones from the master data
-]# 
-proc changeReadSequenceResponse*(
-  db: DbConn, seqReqId: int, changedResources: var Resources, areaObjects: var seq[AreaObject]
-) =
-  areaObjects = @[]
-
-  changedResources.challenges = @[]
-  changedResources.challengeTasks = @[]
-  changedResources.challengeProgresses = @[]
-
-  let challengeTask = getMdChallengeTaskForSequenceRequestId(db, seqReqId)
-
-  if challengeTask.isSome():
-    (
-      areaObjects,
-      changedResources.challenges,
-      changedResources.challengeProgresses,
-      changedResources.challengeTasks,
-      changedResources.nineSequences
-    ) = getChangedResourcesForCompletedChallengeTask(
-      db, challengeTask.get()
-    )
-
-
 proc updateResourcesFromRewardsTypeSafe*(
   db: DbConn, rewards: var seq[Reward], itemCounts: var Table[int, int]
 ): Resources =
@@ -446,10 +420,38 @@ proc acquireAreaItemRewards*(
   (changedResources, rewards)
 
 
-proc getChangedResourcesFromTotalTask(
-  db: DbConn, totalTask: TotalTask
+proc getMdChallengeTasksWithTotalTask*(db: DbConn): seq[MdChallengeTask] =
+  db.getAllRows(sql"""
+    SELECT mdChallengeTask.challengeProgressId, taskConditionKeyId, id, summaryChallengeId, targetAreaObjectBehaviorId,
+           targetAreaPointId, targetNineSequenceId, targetRadius, taskConditionType, mdChallengeTask.count,
+           mdChallengeTask.totalTaskConditionId
+    FROM mdChallengeTask
+      JOIN challengeProgresses ON mdChallengeTask.challengeProgressId = challengeProgresses.challengeProgressId
+      JOIN totalTasks ON mdChallengeTask.totalTaskConditionId = totalTasks.conditionId
+      LEFT JOIN challengeTasks ON mdChallengeTask.id = challengeTasks.challengeTaskId
+    WHERE
+      totalTasks.count >= mdChallengeTask.count
+      AND challengeTasks.clearedAt IS NULL
+      AND challengeProgresses.state = ? 
+  """, challengeProgressStateStarted.int).mapIt(MdChallengeTask(
+    challengeProgressId: parseInt(it[0]),
+    taskConditionKeyId: tryParseInt(it[1]),
+    id: parseInt(it[2]),
+    summaryChallengeId: tryParseInt(it[3]),
+    targetAreaObjectBehaviorId: tryParseInt(it[4]),
+    targetAreaPointId: tryParseInt(it[5]),
+    targetNineSequenceId: tryParseInt(it[6]),
+    targetRadius: tryParseInt(it[7]),
+    taskConditionType: tryParseInt(it[8]),
+    count: tryParseInt(it[9]),
+    totalTaskConditionId: tryParseInt(it[10]),
+  ))
+
+
+proc getChangedResourcesFromTotalTasks*(
+  db: DbConn
 ): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
-  let mdChallengeTasks = getMdChallengeTasksWithTotalTask(db, totalTask)
+  let mdChallengeTasks = getMdChallengeTasksWithTotalTask(db)
 
   for mdChallengeTask in mdChallengeTasks:
     let (
@@ -467,19 +469,37 @@ proc getChangedResourcesFromTotalTask(
     result[4].insert(nineSequences)
 
 
-proc getChangedResourcesFromTotalTasks*(
-  db: DbConn, totalTasks: openArray[TotalTask]
-): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
-  for totalTask in totalTasks:
-    let (
+#[
+Swap the changed areaObjects, challengeTasks and challengeProgresses taken from
+the online logs with the ones from the master data
+]# 
+proc changeReadSequenceResponse*(
+  db: DbConn, seqReqId: int, changedResources: var Resources, areaObjects: var seq[AreaObject]
+) =
+  areaObjects = @[]
+
+  changedResources.challenges = @[]
+  changedResources.challengeTasks = @[]
+  changedResources.challengeProgresses = @[]
+
+  upsertTotalTasks(db, changedResources.totalTasks)
+
+  let challengeTask = getMdChallengeTaskForSequenceRequestId(db, seqReqId)
+
+  if challengeTask.isSome():
+    (
       areaObjects,
-      challenges, challengeProgresses, challengeTasks,
-      nineSequences
-    ) = getChangedResourcesFromTotalTask(
-      db, totalTask
+      changedResources.challenges,
+      changedResources.challengeProgresses,
+      changedResources.challengeTasks,
+      changedResources.nineSequences
+    ) = getChangedResourcesForCompletedChallengeTask(
+      db, challengeTask.get()
     )
-    result[0].insert(areaObjects)
-    result[1].insert(challenges)
-    result[2].insert(challengeProgresses)
-    result[3].insert(challengeTasks)
-    result[4].insert(nineSequences)
+
+  let (ao, chals, chalProgs, chalTasks, nineSeqs) = db.getChangedResourcesFromTotalTasks()
+  areaObjects.insert(ao)
+  changedResources.challenges.insert(chals)
+  changedResources.challengeProgresses.insert(chalProgs)
+  changedResources.challengeTasks.insert(chalTasks)
+  changedResources.nineSequences.insert(nineSeqs)
