@@ -61,6 +61,18 @@ type MdAreaObjectBehavior* = object
   priority*: int
 
 
+proc getAreaObjectWithAreaPointIds*(db: DbConn, areaPointIds: openArray[int]): seq[AreaObject] =
+  db.getAllRows(sql("""
+    SELECT areaObjectId, areaPointId, areaObjectBehaviorId, action
+    FROM areaObjects WHERE areaPointId IN """ & sqlIntTuple(areaPointIds)
+  )).mapIt(AreaObject(
+    areaObjectId: some(parseInt(it[0])),
+    areaPointId: parseInt(it[1]),
+    areaObjectBehaviorId: some(parseInt(it[2])),
+    action: tryParseJson(it[3]).map(proc (x: JsonNode): AreaObjectAction = x.protoJsonTo(AreaObjectAction)) 
+  ))
+
+
 proc getAreaObjects*(db: DbConn): seq[JsonNode] =
   let rows = db.getAllRows(sql"""
     SELECT areaId, areaObjectId, areaPointId, areaObjectBehaviorId, action
@@ -453,3 +465,14 @@ proc toAreaObject*(aob: MdAreaObjectBehavior): AreaObject =
     areaPointId: aob.areaPointId,
     action: aob.action,
   )
+
+
+proc deduplicateAreaObjects*(areaObjects: openArray[AreaObject]): seq[AreaObject] =
+  var areaObjectsTable: Table[int, AreaObject]
+
+  for areaObject in areaObjects:
+    # first ones have priority
+    if not (areaObject.areaPointId in areaObjectsTable):
+      areaObjectsTable[areaObject.areaPointId] = areaObject
+
+  areaObjectsTable.values.toSeq

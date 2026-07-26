@@ -536,3 +536,4 @@ proc changeReadSequenceResponse*(
 
   # FIXME: is there a way to not need to do this?
   changedResources.challengeProgresses = deduplicateChallengeProgresses(changedResources.challengeProgresses)
+  areaObjects = deduplicateAreaObjects(areaObjects)
