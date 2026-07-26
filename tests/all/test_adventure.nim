@@ -110,13 +110,13 @@ proc test_talk_to_branch_manager_after_hoimi_read_sequence(saves_dir: string) =
   
   doAssert(challengeProgresses.len == 2)
 
-  doAssert(challengeProgresses[0].challengeProgressId == 1010042)
-  doAssert(challengeProgresses[0].clearedAt.isSome())
-  doAssert(challengeProgresses[0].state == challengeProgressStateCleared.int)
+  doAssert(challengeProgresses.findIt(
+    it.challengeProgressId == 1010042 and it.clearedAt.isSome and it.state == challengeProgressStateCleared.int
+  ) != -1)
 
-  doAssert(challengeProgresses[1].challengeProgressId == 1010043)
-  doAssert(challengeProgresses[1].clearedAt.isNone())
-  doAssert(challengeProgresses[1].state == challengeProgressStateStarted.int)
+  doAssert(challengeProgresses.findIt(
+    it.challengeProgressId == 1010043 and it.clearedAt.isNone and it.state == challengeProgressStateStarted.int
+  ) != -1)
 
   let challengeTasks = protoJsonTo(changedResources["challengeTasks"], seq[ChallengeTask])
 
