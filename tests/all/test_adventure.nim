@@ -1112,6 +1112,25 @@ proc testVerityOrbChallengeTasksAreReturnedInCastellaSeqReq(savesDir: string) =
     it.challengeProgressId == 1010281 and it.clearedAt.isNone and it.state == challengeProgressStateStarted.int
   ) != -1)
 
+  let areaObjects = ctx.db.getAreaObjectWithAreaPointIds([101401003, 101401118, 101621002])
+
+  doAssert(areaObjects.len == 3)
+
+  doAssert(areaObjects.findIt(
+    it.areaPointId == 101401003 and
+    it.action.isSome and it.action.get() == AreaObjectAction(`type`: 3, id: some(1), sequenceId: some(8010291))
+  ) != -1)
+
+  doAssert(areaObjects.findIt(
+    it.areaPointId == 101401118 and
+    it.action.isSome and it.action.get() == AreaObjectAction(`type`: 7, id: some(1))
+  ) != -1)
+
+  doAssert(areaObjects.findIt(
+    it.areaPointId == 101621002 and
+    it.action.isSome and it.action.get() == AreaObjectAction(`type`: 7, id: some(1))
+  ) != -1)
+
 
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
