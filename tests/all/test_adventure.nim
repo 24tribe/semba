@@ -941,6 +941,40 @@ proc testMoveToAreaRespawnAtHospital() =
   doAssert(areaBehavior.get().actionSequenceId == 82900202)
 
 
+proc testGetVerityOrbBeforeCastella(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+  ctx.loadSaveFile(savesDir, "bugged shark objective")
+
+  let res = ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 100092011, 100092012 ],
+    "currentLocation": {
+      "areaType": 1, "direction": 3, "areaKeyId": 101211,
+      "positionCoordinates": { "x": -16.92338, "y": 13.969482, "z": -20.25}
+    },
+    "areaType": 1,
+    "areaKeyId": 101211
+  }).protoJsonTo(Option[AdventureReadSequenceResponse])
+
+  let changedResources = res.get().changedResources
+
+  doAssert(changedResources.challenges.len == 1)
+  doAssert(changedResources.challenges[0].challengeId == 106001)
+  doAssert(changedResources.challenges[0].state == 6)
+  doAssert(changedResources.challenges[0].clearedAt.isSome)
+
+  doAssert(changedResources.challengeTasks.len == 1)
+
+  doAssert(changedResources.challengeTasks.findIt(
+     it.challengeTaskId == 106001011 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  doAssert(changedResources.challengeProgresses.len == 1)
+
+  doAssert(changedResources.challengeProgresses.findIt(
+    it.challengeProgressId == 10600101 and it.clearedAt.isSome and it.state == challengeProgressStateCleared.int
+  ) != -1)
+
+
 proc testCollectAllVerityOrbsIsntCompleteUntilHaveAllVerityOrbs(savesDir: string) = 
   var ctx = getInMemorySembaCtx()
   ctx.loadSaveFile(savesDir, "after castella")
@@ -1039,5 +1073,6 @@ proc testSuiteAdventure*(savesDir: string) =
   testAreaAfterSharkFirstBattleHasAreaBehavior(savesDir)
   testAquariumCoralBarAfterSharkFirstBattleDoesntHaveAreaBehavior(savesDir)
   testMoveToAreaRespawnAtHospital()
+  testGetVerityOrbBeforeCastella(savesDir)
   testCollectAllVerityOrbsIsntCompleteUntilHaveAllVerityOrbs(savesDir)
   testCollectFirstVerityOrbChallTasksDoesntHaveChallTasksOfNotStartedChallengeProg(savesDir)
