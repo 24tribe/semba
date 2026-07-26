@@ -23,6 +23,7 @@ import ../../src/semba/model_stable/mission
 import ../../src/semba/model_stable/nine_sequence
 import ../../src/semba/model_stable/resources
 import ../../src/semba/model_stable/reward
+import ../../src/semba/model_stable/total_task
 import ../../src/semba/model_stable/sequence_request
 import ../../src/semba/model_stable/warp_point
 
@@ -1043,6 +1044,75 @@ proc testCollectFirstVerityOrbChallTasksDoesntHaveChallTasksOfNotStartedChalleng
   doAssert(ct.count == some(1))
 
 
+proc testVerityOrbChallengeTasksAreReturnedInCastellaSeqReq(savesDir: string) =
+  var ctx = getInMemorySembaCtx()
+  ctx.loadSaveFile(savesDir, "all verity orbs, before castella")
+
+  let beforeChalProgs = ctx.db.getChallengeProgresses() 
+  doAssert(beforeChalProgs.findIt(it.challengeProgressId == 1010272) == -1)
+
+  # bug in savefile
+  doAssert(ctx.db.getTotalTasks().findIt(it.conditionId == 1011 and it.count == 1.ProtoJsonInt64) != -1)
+
+  let res = ctx.sembaCall("/adventure/read_sequence", %*{
+    "sequenceRequestIds": [ 80102811, 80102812 ],
+    "currentLocation": {
+      "areaType": 1, "direction": 5,
+      "positionCoordinates": { "x": 0.52, "y": 0.015003443, "z": 5.76 },
+      "areaKeyId": 101621
+    },
+    "areaType": 1, "areaKeyId": 101621
+  }).protoJsonTo(Option[AdventureReadSequenceResponse])
+
+  doAssert(res.isSome)
+
+  let changedResources = res.get().changedResources
+
+  let chalTasks = changedResources.challengeTasks
+
+  doAssert(chalTasks.len == 6)
+
+  doAssert(chalTasks.findIt(
+    it.challengeTaskId == 10102711 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  doAssert(chalTasks.findIt(
+    it.challengeTaskId == 10102721 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  doAssert(chalTasks.findIt(
+    it.challengeTaskId == 10102722 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  doAssert(chalTasks.findIt(
+    it.challengeTaskId == 10102723 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  doAssert(chalTasks.findIt(
+    it.challengeTaskId == 10102724 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  doAssert(chalTasks.findIt(
+    it.challengeTaskId == 10102725 and it.clearedAt.isSome and it.count == some(1)
+  ) != -1)
+
+  let chalProgs = changedResources.challengeProgresses
+
+  doAssert(chalProgs.len == 3)
+
+  doAssert(chalProgs.findIt(
+    it.challengeProgressId == 1010271 and it.clearedAt.isSome and it.state == challengeProgressStateCleared.int
+  ) != -1)
+
+  doAssert(chalProgs.findIt(
+    it.challengeProgressId == 1010272 and it.clearedAt.isSome and it.state == challengeProgressStateCleared.int
+  ) != -1)
+
+  doAssert(chalProgs.findIt(
+    it.challengeProgressId == 1010281 and it.clearedAt.isNone and it.state == challengeProgressStateStarted.int
+  ) != -1)
+
+
 proc testSuiteAdventure*(savesDir: string) =
   test_talk_with_enoki_first(savesDir)
   test_talk_to_miu_after_enonki_read_sequence(savesDir)
@@ -1076,3 +1146,4 @@ proc testSuiteAdventure*(savesDir: string) =
   testGetVerityOrbBeforeCastella(savesDir)
   testCollectAllVerityOrbsIsntCompleteUntilHaveAllVerityOrbs(savesDir)
   testCollectFirstVerityOrbChallTasksDoesntHaveChallTasksOfNotStartedChallengeProg(savesDir)
+  testVerityOrbChallengeTasksAreReturnedInCastellaSeqReq(savesDir)
