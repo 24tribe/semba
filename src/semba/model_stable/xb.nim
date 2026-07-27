@@ -7,7 +7,7 @@ import db_connector/db_sqlite
 
 import ../semba_error
 import ../protojson
-import resources
+import ./resources
 
 
 type TensionData = object

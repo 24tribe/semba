@@ -46,6 +46,7 @@ import ./lux_phantasma
 import ./timestamp
 import ./wallet
 import ./warp_point
+import ./xb_types
 
 
 type ResourceEntities* = object
@@ -103,7 +104,7 @@ type Resources* = object
   tutorialStates*: seq[TutorialState]
   wallet*: Option[Wallet]
   warpPoints*: seq[WarpPoint]
-  xbStatuses: Option[seq[JsonNode]] # FIXME: XbStatus
+  xbStatuses*: seq[XbStatus]
 
 type ChangedResourcesResponse* = object
   changedResources*: Resources
