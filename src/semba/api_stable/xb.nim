@@ -6,7 +6,15 @@ import db_connector/db_sqlite
 import ../semba_error
 import ../protojson
 import ../model_stable/xb
+import ../model_stable/xb_types
 import ../model_stable/resources
+
+
+type XbStatusRequest* = object
+  xbId*: int
+
+type XbStatusResponse* = object
+  currentAtBatGameInfo*: XbGameInfo
 
 
 proc xb_Formation*(db: DbConn, jsonReq: JsonNode): JsonNode =
@@ -106,3 +114,9 @@ proc xb_Start*(db: DbConn, jsonReq: JsonNode): JsonNode =
   return %*{
     "nextAtBatGameInfo": startGameInfo
   }
+
+
+proc xb_Status*(db: DbConn, req: XbStatusRequest): XbStatusResponse =
+  let res = xb_Start(db, req.toProtoJson)
+  var currentAtBatGameInfo = res["nextAtBatGameInfo"].protoJsonTo(XbGameInfo)
+  result.currentAtBatGameInfo = currentAtBatGameInfo 

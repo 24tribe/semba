@@ -182,7 +182,9 @@ proc getJsonResultStable*(
     result = user_LogIn(db).toProtoJson
   of "/user/update_language":
     user_UpdateLanguage(db, jsonReq.protoJsonTo(UserUpdateLanguageRequest))
-  
+  of "/user/notification":
+    result = user_Notification(db)  
+
   of "/xb/formation":
     result = xb_Formation(db, jsonReq)
   of "/xb/start":
@@ -191,8 +193,8 @@ proc getJsonResultStable*(
     result = xb_UpdateTension(db, jsonReq)
   of "/xb/play":
     result = xb_Play(db, jsonReq)
-  of "/user/notification":
-    result = user_Notification(db)
+  of "/xb/status":
+    result = xb_Status(db, jsonReq.protoJsonTo(XbStatusRequest)).toProtoJson
 
   else:
     result = nil
