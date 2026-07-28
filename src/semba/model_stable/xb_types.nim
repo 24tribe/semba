@@ -49,6 +49,12 @@ type XbCommand* = object
   battedBallPredictionId*: Option[int]
   predictedUseSkillOrbIds*: seq[int]
 
+# XbZoneArea.index:
+# 2|1|0
+# -+-+-
+# 5|4|3
+# -+-+-
+# 8|7|6 
 type XbZoneArea* = object
   index*: int
   playerSuggests*: seq[XbSuggest]
