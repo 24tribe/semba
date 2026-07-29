@@ -92,9 +92,16 @@ proc getChallengeTaskIdsForChallengeProgressIds*(db: DbConn, challengeProgressId
   result = rows.mapIt(parseInt(it[0]))
 
 
-proc getChallengeTasks*(db: DbConn): seq[ChallengeTask] =
-  let rows = db.getAllRows(sql"SELECT challengeTaskId, clearedAt, count FROM challengeTasks")
-  result = rows.mapIt(ChallengeTask(
+proc getChallengeTasks*(db: DbConn, filterIds: openArray[int] = @[]): seq[ChallengeTask] =
+  let filterSql =
+    if filterIds.len > 0:
+      "WHERE challengeTaskId IN " & sqlIntTuple(filterIds)
+    else:
+      ""
+  
+  db.getAllRows(sql("""
+    SELECT challengeTaskId, clearedAt, count FROM challengeTasks """ & filterSql
+  )).mapIt(ChallengeTask(
     challengeTaskId: parseInt(it[0]),
     clearedAt: tryParseTimestamp(it[1]),
     count: tryParseInt(it[2]),
