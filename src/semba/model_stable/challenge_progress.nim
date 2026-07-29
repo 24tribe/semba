@@ -33,11 +33,17 @@ proc isChallengeProgressComplete*(db: DbConn, challengeProgressId: int): bool =
   """, challengeProgressId)[0] == $(challengeProgressStateCleared.int)
 
 
-proc getChallengeProgresses*(db: DbConn): seq[ChallengeProgress] =
-  db.getAllRows(sql"""
+proc getChallengeProgresses*(db: DbConn, filterIds: openArray[int] = @[]): seq[ChallengeProgress] =
+  let filterSql =
+    if filterIds.len > 0:
+      " WHERE challengeProgressId IN " & sqlIntTuple(filterIds)
+    else:
+      ""
+
+  db.getAllRows(sql("""
     SELECT challengeProgressId, clearedAt, state
-    FROM challengeProgresses
-  """).mapIt(ChallengeProgress(
+    FROM challengeProgresses """ & filterSql
+  )).mapIt(ChallengeProgress(
     challengeProgressId: parseInt(it[0]),
     clearedAt: tryParseTimestamp(it[1]),
     state: parseInt(it[2]),
