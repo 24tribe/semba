@@ -245,15 +245,15 @@ proc getChangedResourcesForChallengeProgress(
   result = (areaObjects, challenges, challengeProgresses, challengeTasks, nineSequences)
 
 
-proc getChangedResourcesForCompletedChallengeTask*(
-  db: DbConn, challengeTask: MdChallengeTask
+proc getChangedResourcesForCompletedChallengeTaskEx*(
+  db: DbConn, chalTaskId: int, chalProgId: int
 ): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
   var challenges = newSeq[Challenge]()
 
   var challengeProgresses = newSeq[ChallengeProgress]()
 
   var challengeTasks = @[ChallengeTask(
-    challengeTaskId: challengeTask.id, count: some(1), clearedAt: some(getTimestampNow())
+    challengeTaskId: chalTaskId, count: some(1), clearedAt: some(getTimestampNow())
   )]
 
   db.upsertChallengeTasks(challengeTasks)
@@ -261,12 +261,12 @@ proc getChangedResourcesForCompletedChallengeTask*(
   var nineSequences = newSeq[NineSequence]()
 
   var areaObjects = getAreaObjectsWithCondition(
-    db, areaObjectConditionTypeClearedChallengeTask, challengeTask.id
+    db, areaObjectConditionTypeClearedChallengeTask, chalTaskId
   )
 
   let (
     ao, chals, chalProgs, chalTasks, nineSeqs
-  ) = db.getChangedResourcesForChallengeProgress(challengeTask.challengeProgressId)
+  ) = db.getChangedResourcesForChallengeProgress(chalProgId)
 
   areaObjects.insert(ao)
   challenges.insert(chals)
@@ -276,6 +276,12 @@ proc getChangedResourcesForCompletedChallengeTask*(
 
   result = (areaObjects, challenges, challengeProgresses, challengeTasks, nineSequences)
 
+
+proc getChangedResourcesForCompletedChallengeTask*(
+  db: DbConn, challengeTask: MdChallengeTask
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
+  result = db.getChangedResourcesForCompletedChallengeTaskEx(challengeTask.id, challengeTask.challengeProgressId)
+  
 
 proc updateResourcesFromRewardsTypeSafe*(
   db: DbConn, rewards: var seq[Reward], itemCounts: var Table[int, int]
