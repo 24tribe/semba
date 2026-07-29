@@ -544,3 +544,22 @@ proc changeReadSequenceResponse*(
   # FIXME: is there a way to not need to do this?
   changedResources.challengeProgresses = deduplicateChallengeProgresses(changedResources.challengeProgresses)
   areaObjects = deduplicateAreaObjects(areaObjects)
+
+
+proc getCompletedIchinoseXbChangedResources*(
+  db: DbConn
+): (seq[AreaObject], seq[Challenge], seq[ChallengeProgress], seq[ChallengeTask], seq[NineSequence]) =
+  let chalTaskId = 10103111
+  let chalProgId = 1010311
+
+  db.getChangedResourcesForCompletedChallengeTaskEx(chalTaskId, chalProgId) 
+
+
+proc completeIchinoseXb*(db: DbConn) =
+  let (ao, chals, chalProgs, chalTasks, nineSeqs) = db.getCompletedIchinoseXbChangedResources()
+
+  db.updateAreaObjectsEx(ao)
+  db.upsertChallenges(chals)
+  db.upsertChallengeProgresses(chalProgs)
+  db.upsertChallengeTasks(chalTasks)
+  db.updateNineSequences(nineSeqs)

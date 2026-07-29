@@ -11,6 +11,7 @@ import ./sembasave
 import ./extsqlite
 import ./model_stable/tutorial
 import ./model_stable/reward
+import ./model_stable/resources
 import ./model_stable/mail
 import ./model_stable/gear
 import ./model_stable/timestamp
@@ -241,6 +242,10 @@ proc semba_Version*(): SembaVersionResponse =
     result.version = sembaVersionStr & " (threads on)"
   else:
     result.version = sembaVersionStr
+
+
+proc semba_CompleteIchinoseXb(db: DbConn) =
+  db.completeIchinoseXb()
     
 
 proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonNode =
@@ -277,3 +282,5 @@ proc getJsonResultPrivateApi*(uri: string, jsonReq: JsonNode, db: DbConn): JsonN
     semba_MoveToArea(db, protoJsonTo(jsonReq, SembaMoveToAreaRequest))
   elif uri == "/semba/version":
     result = semba_Version().toProtoJson
+  elif uri == "/semba/complete_ichinose_xb":
+    semba_CompleteIchinoseXb(db)
