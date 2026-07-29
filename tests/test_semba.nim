@@ -19,6 +19,7 @@ import ./all/test_tip
 import ./all/test_user
 import ./all/test_ffi
 import ./all/test_field_boss
+import ./all/test_xb
 
 
 when isMainModule:
@@ -43,3 +44,4 @@ when isMainModule:
   testSuiteTip(savesDir)
   testSuiteUser(savesDir)
   testSuiteFieldBoss(savesDir)
+  testSuiteXb(savesDir)
