@@ -467,6 +467,7 @@ proc loadSembaSave*(db: DbConn, save: var SembaSave) =
     loadSaveFileVer5(db, save, dontDeleteAllAreaObjects)
 
   if save.version >= 7:
+    db.exec(sql"DELETE FROM challenges")
     upsertChallenges(db, save.challenges)
 
   if save.version >= 8:
